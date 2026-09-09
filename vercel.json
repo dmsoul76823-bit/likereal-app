@@ -2,8 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/admin", "destination": "/lireal_admin.html" },
-    { "source": "/app", "destination": "/lireal_platform.html" }
+    { "source": "/admin", "destination": "/lireal_admin" },
+    { "source": "/app", "destination": "/lireal_platform" }
   ],
   "headers": [
     {

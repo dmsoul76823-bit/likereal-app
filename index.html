@@ -3,84 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LiReal · 本地測試入口</title>
+<title>LiReal · 沉浸式場域娛樂平台</title>
+<meta name="description" content="LiReal 提供沉浸式場域節目、直播互動、AI 夥伴陪伴與裸視 3D 精選商品，打造虛實整合的娛樂體驗。">
+<meta property="og:title" content="LiReal · 沉浸式場域娛樂平台">
+<meta property="og:description" content="沉浸節目、直播、AI 夥伴、場域售票與裸視 3D 精選。">
+<meta property="og:type" content="website">
 <style>
   :root{--bg:#0c0a12;--card:#181227;--card2:#1f1834;--line:rgba(167,139,206,.22);--line2:rgba(255,255,255,.07);
-    --brand:#8b6fca;--brand2:#b9a3e6;--brand3:#c9b6f0;--text:#f2f0f7;--muted:#9d97ac;--rose:#e08fc0;--ok:#3ddc84}
+    --brand:#8b6fca;--brand2:#b9a3e6;--brand3:#c9b6f0;--text:#f2f0f7;--muted:#9d97ac;--rose:#e08fc0}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(1100px 560px at 80% -10%,rgba(139,111,202,.18),transparent 60%),var(--bg);
+  body{background:
+      radial-gradient(1100px 560px at 78% -10%,rgba(139,111,202,.20),transparent 60%),
+      radial-gradient(900px 520px at 0% 10%,rgba(224,143,192,.10),transparent 55%),var(--bg);
     color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-    min-height:100vh;display:grid;place-items:center;padding:40px 20px;line-height:1.6}
-  .wrap{width:100%;max-width:880px}
-  .head{text-align:center;margin-bottom:36px}
-  .mark{width:56px;height:56px;border-radius:15px;background:linear-gradient(135deg,var(--brand),var(--rose));
-    display:grid;place-items:center;font-weight:800;font-size:26px;color:#fff;margin:0 auto 14px}
-  .head h1{font-size:30px;letter-spacing:2px;font-family:"Noto Serif TC",Georgia,serif}
-  .head p{color:var(--muted);font-size:14px;margin-top:6px}
-  .srv{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:rgba(61,220,132,.1);
-    border:1px solid rgba(61,220,132,.35);color:var(--ok);border-radius:999px;padding:7px 16px;font-size:13px}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:p 1.6s infinite}
-  @keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  a.card{display:block;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
-    border-radius:20px;padding:28px;text-decoration:none;color:inherit;transition:.25s}
-  a.card:hover{border-color:var(--line);transform:translateY(-5px);box-shadow:0 24px 60px rgba(20,8,40,.55)}
-  .ic{width:52px;height:52px;border-radius:14px;background:rgba(139,111,202,.16);border:1px solid var(--line);
-    display:grid;place-items:center;font-size:24px;margin-bottom:16px}
-  a.card h2{font-size:20px;margin-bottom:6px}
-  a.card p{color:var(--muted);font-size:13px;min-height:42px}
-  .go{color:var(--brand3);font-size:13px;font-weight:600;margin-top:12px;display:inline-block}
-  .note{margin-top:26px;background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:20px 22px}
-  .note h3{font-size:15px;margin-bottom:10px;color:var(--brand3)}
-  .note ul{list-style:none;display:flex;flex-direction:column;gap:8px}
-  .note li{font-size:13px;color:var(--muted);padding-left:18px;position:relative}
-  .note li::before{content:"✦";position:absolute;left:0;color:var(--brand)}
-  .note code{background:rgba(0,0,0,.35);padding:2px 7px;border-radius:5px;color:var(--brand3);font-size:12px}
-  .acc{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-  .acc div{background:rgba(0,0,0,.25);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;font-size:12px}
-  .acc b{color:var(--brand3);display:block;font-size:12px}
-  .acc span{color:var(--muted);font-size:11px}
-  @media(max-width:720px){.grid,.acc{grid-template-columns:1fr}}
+    min-height:100vh;display:grid;place-items:center;padding:48px 20px;line-height:1.6}
+  .wrap{width:100%;max-width:900px}
+  .head{text-align:center;margin-bottom:40px}
+  .mark{width:62px;height:62px;border-radius:17px;background:linear-gradient(135deg,var(--brand),var(--rose));
+    display:grid;place-items:center;font-weight:800;font-size:29px;color:#fff;margin:0 auto 18px;
+    box-shadow:0 14px 40px rgba(139,111,202,.4)}
+  .eyebrow{color:var(--brand3);letter-spacing:5px;font-size:12px;margin-bottom:12px}
+  .head h1{font-size:38px;letter-spacing:2px;font-family:"Noto Serif TC",Georgia,serif;line-height:1.25}
+  .head h1 span{background:linear-gradient(90deg,var(--brand),var(--brand2),var(--brand3));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .head p{color:var(--muted);font-size:15px;margin-top:12px;max-width:520px;margin-left:auto;margin-right:auto}
+  .cta{display:flex;gap:14px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+  .btn{border:none;cursor:pointer;font-size:15px;padding:15px 34px;border-radius:13px;font-weight:600;
+    text-decoration:none;display:inline-block;transition:.2s;font-family:inherit}
+  .btn-brand{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 10px 30px rgba(139,111,202,.4)}
+  .btn-brand:hover{transform:translateY(-2px)}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--brand);color:var(--brand3)}
+  .feat{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:46px}
+  .f{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:17px;padding:22px 18px;text-align:center;transition:.25s}
+  .f:hover{border-color:var(--line);transform:translateY(-4px)}
+  .f .i{font-size:26px;margin-bottom:10px}
+  .f h3{font-size:15px;margin-bottom:5px}
+  .f p{color:var(--muted);font-size:12px;line-height:1.55}
+  footer{margin-top:46px;text-align:center;color:var(--muted);font-size:12px}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line2)}
+  footer a:hover{color:var(--brand3)}
+  footer .sep{margin:0 10px;opacity:.4}
+  @media(max-width:760px){.feat{grid-template-columns:repeat(2,1fr)}.head h1{font-size:28px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
     <div class="mark">L</div>
-    <h1>LiReal 沉浸式場域</h1>
-    <p>本地測試入口 · 前台與後台資料已打通</p>
-    <div class="srv"><span class="dot"></span>本地伺服器運行中</div>
-  </div>
-
-  <div class="grid">
-    <a class="card" href="lireal_platform.html">
-      <div class="ic">◐</div>
-      <h2>前台網站</h2>
-      <p>沉浸節目、直播、AI 女友、場域售票、裸視 3D 電商與會員儲值。</p>
-      <span class="go">進入前台 →</span>
-    </a>
-    <a class="card" href="lireal_admin.html">
-      <div class="ic">⚙</div>
-      <h2>後台管理系統</h2>
-      <p>節目、創作者、商品、訂單、會員、驗票、場域設定與 SEO。</p>
-      <span class="go">進入後台 →</span>
-    </a>
-  </div>
-
-  <div class="note">
-    <h3>測試說明</h3>
-    <ul>
-      <li>後台的<b>節目、創作者、商品、跑馬燈、公告、Banner、圖片</b>都會即時反映到前台。</li>
-      <li>兩個分頁同時開著時，後台儲存後前台會<b>自動同步</b>並跳出提示。</li>
-      <li>資料存在瀏覽器 <code>localStorage</code>，重開仍在；後台可匯出／匯入圖片設定。</li>
-      <li>後台登入密碼可隨意輸入（示範用），帳號如下。</li>
-    </ul>
-    <div class="acc">
-      <div><b>admin@lireal.com</b><span>管理者 · 全功能</span></div>
-      <div><b>editor@lireal.com</b><span>編輯者 · 內容管理</span></div>
-      <div><b>staff@lireal.com</b><span>驗票員 · 驗票/訂單</span></div>
+    <div class="eyebrow">LIREAL · IMMERSIVE VENUE</div>
+    <h1>沉浸式場域<br><span>虛實整合娛樂平台</span></h1>
+    <p>360° 全息舞台、裸視 3D 觀看、AI 夥伴陪伴與場域限定票券，在同一個空間裡完整體驗。</p>
+    <div class="cta">
+      <a class="btn btn-brand" href="/app">進入平台</a>
+      <a class="btn btn-ghost" href="/app#ticket">場域售票</a>
     </div>
   </div>
+
+  <div class="feat">
+    <div class="f"><div class="i">🎭</div><h3>沉浸節目</h3><p>全息舞台與 360° 沉浸場域演出</p></div>
+    <div class="f"><div class="i">📡</div><h3>直播互動</h3><p>即時直播與 AI 夥伴陪伴</p></div>
+    <div class="f"><div class="i">🎟️</div><h3>場域售票</h3><p>線上選位購票，含包廂席次</p></div>
+    <div class="f"><div class="i">🕶️</div><h3>裸視 3D</h3><p>沉浸觀看裝備精選商品</p></div>
+  </div>
+
+  <footer>
+    © 2026 LiReal 沉浸式場域
+    <span class="sep">·</span>
+    <a href="/admin">管理後台</a>
+  </footer>
 </div>
 </body>
 </html>
