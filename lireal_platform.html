@@ -274,15 +274,19 @@
   .mobnav.open{display:flex}
   .mobnav a{padding:15px 24px;border-bottom:1px solid var(--line2);font-size:15px;color:var(--muted)}
   .mobnav a.on{color:var(--brand3);background:var(--brand-soft)}
-  /* 首頁入口卡片 */
-  .home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
-  .hcard{display:block;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
-    border-radius:19px;padding:24px;transition:.25s;color:inherit}
-  .hcard:hover{border-color:var(--line);transform:translateY(-5px);box-shadow:var(--shadow)}
-  .hcard .i{font-size:28px;margin-bottom:12px}
-  .hcard h3{font-size:18px;margin-bottom:5px}
-  .hcard p{color:var(--muted);font-size:13px;min-height:38px}
-  .hcard span{color:var(--brand3);font-size:13px;font-weight:600}
+  /* 首頁預覽區 */
+  section.hsec{padding:44px 0;border-top:1px solid var(--line2)}
+  .hg{display:grid;gap:20px;perspective:1100px}
+  .hg-2{grid-template-columns:repeat(2,1fr)}
+  .hg-3{grid-template-columns:repeat(3,1fr)}
+  .hg-4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:1000px){ .hg-4{grid-template-columns:repeat(3,1fr)} }
+  @media(max-width:760px){
+    .hg{gap:14px}
+    .hg-3,.hg-4{grid-template-columns:repeat(2,1fr)}
+    .hg-2{grid-template-columns:1fr}
+    section.hsec{padding:32px 0}
+  }
   /* 購票表單 */
   .bform{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .bf.full{grid-column:1/-1}
@@ -521,17 +525,54 @@
   </div>
 </div>
 
-<!-- 首頁入口卡片 -->
-<div class="wrap" data-page="home">
-  <div class="home-grid">
-    <a class="hcard" href="/programs" data-route="programs"><div class="i">🎭</div><h3>沉浸節目</h3><p>全息舞台與 360° 場域演出</p><span>查看節目 →</span></a>
-    <a class="hcard" href="/ticket" data-route="ticket"><div class="i">🎟️</div><h3>場域售票</h3><p>線上選位購票，含包廂席次</p><span>立即購票 →</span></a>
-    <a class="hcard" href="/live" data-route="live"><div class="i">📡</div><h3>直播大廳</h3><p>即時互動與幕後直擊</p><span>進入直播 →</span></a>
-    <a class="hcard" href="/ai" data-route="ai"><div class="i">💜</div><h3>AI 女友</h3><p>OnlyMate 專屬陪伴角色</p><span>認識創作者 →</span></a>
-    <a class="hcard" href="/shop" data-route="shop"><div class="i">🕶️</div><h3>裸視 3D 精選</h3><p>沉浸觀看裝備與周邊</p><span>逛逛商店 →</span></a>
-    <a class="hcard" href="/vip" data-route="vip"><div class="i">💎</div><h3>會員儲值</h3><p>專屬折扣與優先購票</p><span>查看方案 →</span></a>
+<!-- ===== 首頁：各區內容預覽 ===== -->
+<section class="hsec" data-page="home"><div class="wrap">
+  <div class="sec-head">
+    <div><span class="tag">IMMERSIVE PROGRAMS · 沉浸節目</span><h2 class="serif">正在沉浸放送</h2></div>
+    <a class="more" href="/programs" data-route="programs">觀看更多 →</a>
   </div>
-</div>
+  <div class="hg hg-3" id="hProg"></div>
+</div></section>
+
+<section class="hsec" data-page="home"><div class="wrap">
+  <div class="sec-head">
+    <div><span class="tag">VENUE · 場域售票</span><h2 class="serif">現場沉浸門票</h2></div>
+    <a class="more" href="/ticket" data-route="ticket">觀看更多 →</a>
+  </div>
+  <div class="hg hg-2" id="hTicket"></div>
+</div></section>
+
+<section class="hsec" data-page="home"><div class="wrap">
+  <div class="sec-head">
+    <div><span class="tag">LIVE HALL · 直播大廳</span><h2 class="serif">正在直播</h2></div>
+    <a class="more" href="/live" data-route="live">觀看更多 →</a>
+  </div>
+  <div class="hg hg-3" id="hLive"></div>
+</div></section>
+
+<section class="hsec" data-page="home"><div class="wrap">
+  <div class="sec-head">
+    <div><span class="tag">ONLYMATE · AI 女友互動</span><h2 class="serif">精選創作者</h2></div>
+    <a class="more" href="/ai" data-route="ai">觀看更多 →</a>
+  </div>
+  <div class="hg hg-3" id="hOM"></div>
+</div></section>
+
+<section class="hsec" data-page="home"><div class="wrap">
+  <div class="sec-head">
+    <div><span class="tag">3D GEAR · 沉浸觀看裝備</span><h2 class="serif">裸視 3D 精選</h2></div>
+    <a class="more" href="/shop" data-route="shop">觀看更多 →</a>
+  </div>
+  <div class="hg hg-4" id="hShop"></div>
+</div></section>
+
+<section class="hsec" data-page="home"><div class="wrap">
+  <div class="sec-head">
+    <div><span class="tag">MEMBERSHIP · 會員儲值</span><h2 class="serif">儲值方案</h2></div>
+    <a class="more" href="/vip" data-route="vip">全部方案 →</a>
+  </div>
+  <div class="hg hg-2" id="hPlan"></div>
+</div></section>
 
 <section id="programs" data-page="programs"><div class="wrap">
   <div class="sec-head">
@@ -935,7 +976,7 @@ else{m=`<g transform='translate(150 150)'>
 <rect x='-22' y='-30' width='44' height='60' rx='8' fill='${p[2]}' opacity='0.25'/></g>`;}
 return uri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>${b}${m}</svg>`);}
 
-function renderPrograms(){$("progGrid").innerHTML=programs.map((p,i)=>`
+function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=(lim?programs.slice(0,lim):programs).map((p,i)=>`
   <div class="card">
     <div class="prog-thumb" data-imgkey="prog${i}" style="background-image:url('${thumb('prog'+i,posterSVG(p.pal))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
@@ -950,7 +991,7 @@ function renderPrograms(){$("progGrid").innerHTML=programs.map((p,i)=>`
     </div>
   </div>`).join("");}
 
-function renderLives(){$("liveGrid").innerHTML=lives.map(l=>`
+function renderLives(el,lim){(el||$("liveGrid")).innerHTML=(lim?lives.slice(0,lim):lives).map(l=>`
   <div class="card">
     <div class="prog-thumb" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
@@ -963,7 +1004,7 @@ function renderLives(){$("liveGrid").innerHTML=lives.map(l=>`
     </div>
   </div>`).join("");}
 
-function renderTickets(){$("ticketGrid").innerHTML=tickets.map((t,i)=>`
+function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slice(0,lim):tickets).map((t,i)=>`
   <div class="ticket">
     <div class="tdate"><div class="d">${t.d}</div><div class="m">${t.m}</div></div>
     <div class="tinfo"><h4>${t.name}</h4><div class="meta">${t.meta}</div><div class="venue">📍 ${t.venue}</div></div>
@@ -971,7 +1012,7 @@ function renderTickets(){$("ticketGrid").innerHTML=tickets.map((t,i)=>`
       <button class="add" onclick="openSeats(${i})">選位購票</button></div>
   </div>`).join("");}
 
-function renderShop(){$("shopGrid").innerHTML=products.map((p,i)=>`
+function renderShop(el,lim){(el||$("shopGrid")).innerHTML=(lim?products.slice(0,lim):products).map((p,i)=>`
   <div class="card">
     <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}</div>
     <div class="prod-body">
@@ -981,7 +1022,7 @@ function renderShop(){$("shopGrid").innerHTML=products.map((p,i)=>`
     </div>
   </div>`).join("");}
 
-function renderPlans(){$("planGrid").innerHTML=plans.map(p=>`
+function renderPlans(el,lim){(el||$("planGrid")).innerHTML=(lim?plans.slice(0,lim):plans).map(p=>`
   <div class="plan ${p.feat?'feat':''}">
     <h3 class="serif">${p.n}</h3>
     <div class="amt">NT$${p.amt.toLocaleString()}<small>${p.unit}</small></div>
@@ -1003,11 +1044,23 @@ let creators=[
   {name:"Mia",slug:"mia",type:"偶像系",tier:"new",on:true,emoji:"🎤",desc:"舞台感十足的偶像系創作者，線上演出…",chips:["舞台","偶像","活力"],fans:"54K",hot:"5.8萬"},
 ];
 applyADBCreators();   // 套用後台創作者資料
-function renderAll(){renderPrograms();renderLives();renderTickets();renderShop();renderPlans();renderOM();bindTilt();}
+function renderHome(){
+  renderPrograms($("hProg"),6);
+  renderTickets($("hTicket"),6);
+  renderLives($("hLive"),6);
+  renderOM($("hOM"),6);
+  renderShop($("hShop"),8);
+  renderPlans($("hPlan"),2);
+}
+function renderAll(){
+  renderPrograms();renderLives();renderTickets();renderShop();renderPlans();renderOM();
+  renderHome();
+  bindTilt();
+}
 function omURL(slug){return OM_BASE+"/character/"+slug;}
 function goOM(slug){window.location.href=omURL(slug);}   // 點卡片直接進入 OnlyMate 角色頁
 function enterOM(){window.location.href=OM_BASE;}
-function renderOM(){$("omGrid").innerHTML=creators.map(c=>`
+function renderOM(el,lim){(el||$("omGrid")).innerHTML=(lim?creators.slice(0,lim):creators).map(c=>`
   <div class="om-card" onclick="goOM('${c.slug}')" title="進入 ${c.name} 的 OnlyMate 角色頁">
     <div class="om-photo" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}')">
       <div class="tl">
