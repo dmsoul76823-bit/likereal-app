@@ -250,8 +250,47 @@
   .bar{height:7px;background:#241c3d;border-radius:99px;overflow:hidden;margin-top:6px}
   .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
   @media(max-width:1080px){.stat-grid{grid-template-columns:repeat(2,1fr)}.scan-wrap{grid-template-columns:1fr}}
-  @media(max-width:820px){.shell.on{grid-template-columns:1fr}aside.side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;overflow:visible}
-    .side .brand{width:100%}.side .sp{display:none}.who{width:100%}.fgrid{grid-template-columns:1fr}main{padding:20px 16px 50px}}
+
+  /* ===== 手機版後台：側欄改為抽屜 ===== */
+  .mobbar{display:none;position:sticky;top:0;z-index:150;align-items:center;gap:12px;padding:10px 14px;
+    background:rgba(18,14,30,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line2)}
+  .mb-burger{background:none;border:1px solid var(--line2);color:var(--text);width:40px;height:40px;
+    border-radius:11px;font-size:18px;cursor:pointer;flex:none}
+  .mb-title{flex:1;font-weight:700;font-size:15px}
+  .side-mask{display:none;position:fixed;inset:0;background:rgba(4,2,10,.6);z-index:180}
+  .side-mask.on{display:block}
+  @media(max-width:900px){
+    .shell.on{grid-template-columns:1fr}
+    .mobbar{display:flex}
+    aside.side{position:fixed;top:0;left:-280px;width:260px;height:100vh;z-index:200;transition:left .28s;
+      box-shadow:14px 0 40px rgba(0,0,0,.5)}
+    aside.side.open{left:0}
+    main{padding:18px 14px 60px}
+    .top{margin-bottom:16px}.top h2{font-size:21px}
+    .stat-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+    .stat{padding:14px}.stat .v{font-size:24px}
+    .panel{padding:16px;border-radius:15px}
+    .panel-head{flex-direction:column;align-items:stretch;gap:10px}
+    .tools{width:100%}.tools input,.tools select{flex:1;min-width:0}
+    .fgrid{grid-template-columns:1fr}
+    /* 表格改為可橫向捲動 */
+    .panel table{min-width:640px}
+    #evTable,#crTable,#pdTable,#odTable,#mbTable,#stTable,#vnTable,#anTable,#bnTable,#dashProg,#dashOrders{
+      overflow-x:auto;-webkit-overflow-scrolling:touch}
+    /* 彈窗全螢幕 */
+    .modal{width:100%!important;max-width:100%;height:100%;max-height:100%;top:0;left:0;border-radius:0;transform:none}
+    .modal.on{transform:none}
+    .modal-head{padding:16px}.modal-body{padding:16px}.modal-foot{padding:12px 16px}
+    .modal-foot .btn{flex:1}
+    .tk-row{grid-template-columns:auto 1fr auto;row-gap:8px}
+    .tk-row select{grid-column:2/-1}
+    .row-act{flex-wrap:wrap;justify-content:flex-start}
+  }
+  @media(max-width:560px){
+    .stat-grid{grid-template-columns:1fr}
+    .scan-modes .mode{flex:1;text-align:center}
+  }
+  @media(hover:none){.card:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -274,7 +313,13 @@
 
 <!-- ======== SHELL ======== -->
 <div class="shell" id="shell">
-  <aside class="side">
+  <div class="mobbar">
+    <button class="mb-burger" id="sideToggle" aria-label="選單">☰</button>
+    <div class="mb-title" id="mbTitle">LiReal 後台</div>
+    <div id="mbSync" style="font-size:11px;color:var(--muted)"></div>
+  </div>
+  <div class="side-mask" id="sideMask"></div>
+  <aside class="side" id="side">
     <div class="brand"><div class="mark">L</div><h1 class="serif">LiReal</h1></div>
     <div id="navBox"></div>
     <div class="sp"></div>
@@ -619,7 +664,12 @@ async function syncPull(){
   if(!ONLINE)return false;
   try{
     const names=Object.keys(MAP);
-    const res=await Promise.all(names.map(n=>sb.from(MAP[n].tbl).select('*')));
+    const ORDER={venues:'created_at',events:'created_at',creators:'created_at',products:'created_at',orders:'created_at'};
+    const res=await Promise.all(names.map(n=>{
+      let q=sb.from(MAP[n].tbl).select('*');
+      if(ORDER[n])q=q.order(ORDER[n],{ascending:false});   // 最新建立的排最前面
+      return q;
+    }));
     const bad=res.find(r=>r.error);
     if(bad){toast('讀取失敗：'+bad.error.message);return false;}
     names.forEach((n,i)=>{ DB[n]=(res[i].data||[]).map(MAP[n].fromRow); });
@@ -658,9 +708,12 @@ async function syncPush(){
   finally{ pushing=false; }
 }
 function setSync(s){
-  const el=document.getElementById('syncDot'); if(!el)return;
-  el.textContent = s==='saving'?'● 儲存中…' : s==='err'?'● 儲存失敗' : '● 已同步';
-  el.style.color = s==='saving'?'var(--warn)' : s==='err'?'var(--err)' : 'var(--ok)';
+  const txt = s==='saving'?'● 儲存中…' : s==='err'?'● 儲存失敗' : '● 已同步';
+  const col = s==='saving'?'var(--warn)' : s==='err'?'var(--err)' : 'var(--ok)';
+  ['syncDot','mbSync'].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    el.textContent=txt; el.style.color=col;
+  });
 }
 
 /* ---- 把內建示範資料匯入資料庫（資料庫是空的時候用）---- */
@@ -696,8 +749,7 @@ const NAV=[
   {k:"orders",t:"訂單查詢",i:"▤",d:"票券與商品訂單"},
   {k:"members",t:"會員管理",i:"◍",d:"前台會員與儲值"},
   {k:"checkin",t:"驗票入場",i:"⛨",d:"QR / NFC / 條碼驗票"},
-  {k:"settings",t:"場域設定",i:"⚙",d:"跑馬燈、公告、Banner、圖片"},
-  {k:"seo",t:"SEO 設定",i:"◎",d:"搜尋與社群分享最佳化"},
+  {k:"settings",t:"網站設定",i:"⚙",d:"跑馬燈、公告、Banner、圖片與 SEO"},
   {k:"staff",t:"人員權限",i:"⚿",d:"後台帳號與功能權限"}
 ];
 let ME=null;
@@ -732,6 +784,13 @@ async function doLogin(){
   }catch(e){toast(e.message||'登入失敗');}
   finally{btn.disabled=false;btn.textContent='登入後台';}
 }
+/* 手機版側欄抽屜 */
+(function(){
+  const side=$("side"), mask=$("sideMask"), btn=$("sideToggle");
+  const set=o=>{side.classList.toggle('open',o);mask.classList.toggle('on',o);};
+  if(btn)btn.onclick=()=>set(!side.classList.contains('open'));
+  if(mask)mask.onclick=()=>set(false);
+})();
 $("logout").onclick=async()=>{
   if(ONLINE&&sb)await sb.auth.signOut();
   ME=null;$("shell").classList.remove('on');$("login").style.display='grid';$("liPass").value='';
@@ -758,7 +817,10 @@ function go(k){
   document.querySelectorAll('.nav-i').forEach(e=>e.classList.toggle('on',e.dataset.k===k));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   const pg=$("p-"+k); if(pg)pg.classList.add('on');
+  if(k==='settings'){const s=$("p-seo");if(s){s.classList.add('on');renderSeo();}}   // SEO 併入網站設定
+  $("side").classList.remove('open');   // 手機版點選後收合側欄
   const n=NAV.find(x=>x.k===k); $("pgTitle").textContent=n.t; $("pgDesc").textContent=n.d;
+  const mb=$("mbTitle"); if(mb)mb.textContent=n.t;
   ({dash:renderDash,events:renderEvents,venues:renderVenues,creators:renderCreators,products:renderProducts,orders:renderOrders,
     members:renderMembers,checkin:renderCheckin,settings:renderSettings,seo:renderSeo,staff:renderStaff}[k]||(()=>{}))();
 }
@@ -928,7 +990,7 @@ window.editVenue=id=>{
   </div>`,()=>{
     VE.name=v("v_name");if(!VE.name){toast('請填寫場地名稱');return false;}
     VE.stage=normStage(VE);VE.stage.shape=v("v_shape");VE.stage.label=v("v_slabel")||'STAGE · 舞台';
-    if(id)Object.assign(venueById(id),VE); else{VE.id=Date.now();(DB.venues=DB.venues||[]).push(VE);}
+    if(id)Object.assign(venueById(id),VE); else{VE.id=Date.now();(DB.venues=DB.venues||[]).unshift(VE);}
     renderVenues();toast(id?'場地已更新':'場地已新增');
   });
   const regen=()=>{VE.rows=Math.max(1,+v("v_rows")||1);VE.cols=Math.max(1,+v("v_cols")||1);
@@ -1031,7 +1093,7 @@ window.editEvent=id=>{
     if(!evCap(EV)){toast('請在座位圖上框選並指定票種範圍');return false;}
     const valid=new Set();EV.tickets.forEach(t=>t.seats.forEach(x=>valid.add(x)));
     EV.soldSeats=EV.soldSeats.filter(x=>valid.has(x));EV.sold=EV.soldSeats.length;EV.cap=evCap(EV);
-    if(id)Object.assign(DB.events.find(x=>x.id===id),EV); else{EV.id=Date.now();DB.events.push(EV);}
+    if(id)Object.assign(DB.events.find(x=>x.id===id),EV); else{EV.id=Date.now();DB.events.unshift(EV);}
     renderEvents();toast(id?'節目已更新':'節目已新增');
   });
   $("modal").classList.add('wide');
@@ -1104,7 +1166,7 @@ window.editCr=id=>{
   </div>`,()=>{
     if(!v("c_name")||!v("c_slug")){toast('名稱與 slug 為必填');return false;}
     const o={name:v("c_name"),slug:v("c_slug"),type:v("c_type"),tier:v("c_tier"),fans:v("c_fans"),hot:v("c_hot"),online:v("c_on")==='1',desc:v("c_desc")};
-    if(id)Object.assign(DB.creators.find(x=>x.id===id),o); else DB.creators.push(Object.assign({id:Date.now()},o));
+    if(id)Object.assign(DB.creators.find(x=>x.id===id),o); else DB.creators.unshift(Object.assign({id:Date.now()},o));
     renderCreators();toast(id?'創作者已更新':'創作者已新增');
   });
 };
@@ -1142,7 +1204,7 @@ window.editPd=id=>{
   </div>`,()=>{
     if(!v("d_name")){toast('請填寫商品名稱');return false;}
     const o={key:v("d_key"),name:v("d_name"),badge:v("d_badge"),price:+v("d_price")||0,old:+v("d_old")||0,stock:+v("d_stock")||0,on:v("d_on")==='1'};
-    if(id)Object.assign(DB.products.find(x=>x.id===id),o); else DB.products.push(Object.assign({id:Date.now()},o));
+    if(id)Object.assign(DB.products.find(x=>x.id===id),o); else DB.products.unshift(Object.assign({id:Date.now()},o));
     renderProducts();toast(id?'商品已更新':'商品已新增');
   });
 };
