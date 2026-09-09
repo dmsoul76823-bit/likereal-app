@@ -336,9 +336,12 @@
   .marquee{background:linear-gradient(90deg,rgba(139,111,202,.16),rgba(224,143,192,.10));border-bottom:1px solid var(--line2);
     overflow:hidden;white-space:nowrap;padding:9px 0;font-size:13px;color:var(--brand3)}
   .marquee:empty,.marquee.hide{display:none}
-  .mq-track{display:inline-block;padding-left:100%;animation:mq 52s linear infinite}
-  .mq-track span{margin-right:60px}
-  @keyframes mq{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+  .mq-track{display:inline-block;white-space:nowrap;will-change:transform;
+    animation:mq linear infinite;animation-duration:60s}
+  .mq-track span{margin-right:56px}
+  /* 內容剛好複製成兩份，位移 -50% 即為無縫循環 */
+  @keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media(prefers-reduced-motion:reduce){.mq-track{animation:none}}
   .bn{margin:22px 0 0;border-radius:18px;overflow:hidden;position:relative;min-height:150px;border:1px solid var(--line);
     background:linear-gradient(120deg,#2a1f45,#150f26);display:none}
   .bn.on{display:block}
@@ -361,7 +364,9 @@
   .ann-i .bd{color:var(--muted);font-size:13px;margin-top:8px;display:none}
   .ann-i.open .bd{display:block}
   /* 圖片後台 */
-  .admin-fab{position:fixed;bottom:22px;left:22px;z-index:130;width:52px;height:52px;border-radius:50%;background:rgba(20,16,32,.92);border:1px solid var(--line);color:var(--brand3);font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  /* 圖片改由後台管理，前台這個面板隱藏（避免兩套設定互相覆蓋） */
+  .admin-fab{display:none!important}
+  .admin-fab-legacy{position:fixed;bottom:22px;left:22px;z-index:130;width:52px;height:52px;border-radius:50%;background:rgba(20,16,32,.92);border:1px solid var(--line);color:var(--brand3);font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
   .admin-fab:hover{border-color:var(--brand);color:#fff}
   .admin{position:fixed;top:0;left:-470px;width:448px;max-width:94vw;height:100%;background:var(--bg2);border-right:1px solid var(--line);z-index:320;transition:.35s;display:flex;flex-direction:column;box-shadow:20px 0 60px rgba(0,0,0,.5)}
   .admin.open{left:0}
@@ -899,7 +904,8 @@ function applyADBCreators(){
       chips:b.chips||[c.type],fans:c.fans||'0',hot:c.hot||'0'};
   });
 }
-function syncImages(){ if(ADB.images) Object.keys(ADB.images).forEach(k=>{ if(!OV[k]) OV[k]=ADB.images[k]; }); }
+/* 後台（雲端）的圖片為準；本機自訂只保留雲端沒有的項目 */
+function syncImages(){ if(ADB.images) Object.keys(ADB.images).forEach(k=>{ OV[k]=ADB.images[k]; }); }
 
 /* ===== 向量插畫生成器（可替換：日後把 img 換成真實照片 URL 即可） ===== */
 const PAL={
@@ -1382,8 +1388,7 @@ renderAll();
 (function(){
   const stage=document.querySelector('.player');if(!stage)return;
   const bg=document.getElementById('heroBg'),dep=stage.querySelector('.depth');
-  const hv=thumb('hero','');
-  if(bg&&hv){bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';}
+  applyHero();
   stage.addEventListener('mousemove',e=>{
     const r=stage.getBoundingClientRect();
     const px=(e.clientX-r.left)/r.width-0.5, py=(e.clientY-r.top)/r.height-0.5;
@@ -1401,8 +1406,20 @@ function renderMarquee(){
   if(!txt){box.classList.add('hide');tr.innerHTML='';return;}
   box.classList.remove('hide');
   const parts=txt.split(/[｜|]/).map(s=>s.trim()).filter(Boolean);
-  tr.innerHTML=parts.concat(parts).map(p=>`<span>${escH(p)}</span>`).join('');
+  const one=parts.map(p=>`<span>${escH(p)}</span>`).join('');
+  tr.innerHTML=one;
+  // 內容太短（手機常見）時先重複到至少兩倍容器寬，避免出現大片空白
+  let guard=0;
+  const w=box.clientWidth||window.innerWidth;
+  while(tr.scrollWidth < w*2 && guard++ < 30) tr.insertAdjacentHTML('beforeend',one);
+  // 整組再複製一份，配合 -50% 位移形成無縫循環
+  tr.insertAdjacentHTML('beforeend', tr.innerHTML);
+  // 固定speed，長度不同時速度一致（約 38px/秒）
+  const dur=Math.max(18, Math.round(tr.scrollWidth/2/38));
+  tr.style.animationDuration=dur+'s';
 }
+// 轉向或改變視窗寬度時重算
+let mqT;window.addEventListener('resize',()=>{clearTimeout(mqT);mqT=setTimeout(renderMarquee,250);});
 function renderAnn(){
   const box=$("annBox");if(!box)return;
   const list=ADB.announcements||[];
@@ -1432,7 +1449,13 @@ function renderBanner(elId,pos){
 function renderCMS(){renderMarquee();renderAnn();renderBanner('bnTop','頂部');renderBanner('bnBot','底部');}
 renderCMS();
 
-function refreshAll(){ syncImages();applyADB();applyADBCreators();renderAll();renderCMS(); }
+/* 套用首頁主視覺（雲端圖片是非同步載入的，載完要重新套一次） */
+function applyHero(){
+  const bg=document.getElementById('heroBg');if(!bg)return;
+  const hv=thumb('hero','');
+  if(hv){bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';}
+}
+function refreshAll(){ syncImages();applyADB();applyADBCreators();renderAll();renderCMS();applyHero(); }
 
 /* ================= 分頁路由 ================= */
 const ROUTES={
