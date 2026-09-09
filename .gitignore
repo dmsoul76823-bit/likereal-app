@@ -1,0 +1,7 @@
+_*.png
+*.bat
+luxe_platform.html
+.DS_Store
+Thumbs.db
+node_modules/
+.vercel

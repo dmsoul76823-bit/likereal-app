@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiReal 後台管理系統</title>
+<style>
+  :root{
+    --bg:#0c0a12; --bg2:#141020; --card:#181227; --card2:#1f1834; --card3:#241c3d;
+    --line:rgba(167,139,206,.22); --line2:rgba(255,255,255,.07);
+    --brand:#8b6fca; --brand2:#b9a3e6; --brand3:#c9b6f0; --brand-soft:rgba(139,111,202,.14);
+    --text:#f2f0f7; --muted:#9d97ac; --rose:#e08fc0;
+    --ok:#3ddc84; --warn:#f0c06a; --err:#ff6b81; --info:#7aa8ff;
+    --shadow:0 24px 70px rgba(20,8,40,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1100px 560px at 82% -10%,rgba(139,111,202,.16),transparent 60%),var(--bg);
+    color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  input,select,textarea,button{font-family:inherit}
+  .serif{font-family:"Noto Serif TC",Georgia,serif}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#2a2340;border-radius:6px}
+
+  /* ---------- LOGIN ---------- */
+  .login{min-height:100vh;display:grid;place-items:center;padding:24px}
+  .login-card{width:100%;max-width:420px;background:linear-gradient(180deg,var(--card2),var(--card));
+    border:1px solid var(--line);border-radius:22px;padding:38px 32px;box-shadow:var(--shadow)}
+  .brand{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:6px}
+  .brand .mark{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--rose));display:grid;place-items:center;font-weight:800;color:#fff}
+  .brand h1{font-size:24px;letter-spacing:2px}
+  .login-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:26px}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .fld input,.fld select,.fld textarea{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;
+    padding:12px 14px;color:var(--text);font-size:14px;outline:none}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--brand)}
+  .btn{border:none;cursor:pointer;font-size:14px;padding:12px 20px;border-radius:11px;font-weight:600;transition:.2s}
+  .btn-brand{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+  .btn-brand:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(139,111,202,.35)}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--brand);color:var(--brand3)}
+  .btn-danger{background:rgba(255,80,110,.14);border:1px solid rgba(255,80,110,.4);color:#ff9db0}
+  .btn-danger:hover{background:rgba(255,80,110,.28)}
+  .btn-sm{padding:7px 12px;font-size:12px;border-radius:9px}
+  .demo{margin-top:22px;border-top:1px solid var(--line2);padding-top:16px}
+  .demo p{font-size:11px;color:var(--muted);margin-bottom:9px;letter-spacing:1px}
+  .demo-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border:1px solid var(--line2);
+    border-radius:10px;padding:9px 12px;margin-bottom:7px;cursor:pointer;font-size:12px}
+  .demo-row:hover{border-color:var(--line)}
+  .demo-row b{color:var(--brand3);font-weight:600}
+  .demo-row .r{color:var(--muted)}
+
+  /* ---------- SHELL ---------- */
+  .shell{display:none;min-height:100vh}
+  .shell.on{display:grid;grid-template-columns:248px 1fr}
+  aside.side{background:rgba(18,14,30,.9);border-right:1px solid var(--line2);padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .side .brand{justify-content:flex-start;margin:4px 6px 20px}
+  .side .brand h1{font-size:19px}
+  .nav-i{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;color:var(--muted);font-size:14px;cursor:pointer;transition:.18s}
+  .nav-i:hover{background:var(--brand-soft);color:var(--brand3)}
+  .nav-i.on{background:linear-gradient(135deg,rgba(139,111,202,.28),rgba(224,143,192,.14));color:#fff;border:1px solid var(--line)}
+  .nav-i .ic{width:20px;text-align:center}
+  .side .sp{flex:1}
+  .who{background:var(--card);border:1px solid var(--line2);border-radius:13px;padding:12px;margin-top:10px}
+  .who .n{font-size:13px;font-weight:700}
+  .who .r{font-size:11px;color:var(--brand3);margin-top:2px}
+  .who button{margin-top:9px;width:100%}
+
+  main{padding:26px 30px 60px;min-width:0}
+  .top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;gap:16px;flex-wrap:wrap}
+  .top h2{font-size:26px;font-weight:800}
+  .top .d{color:var(--muted);font-size:13px;margin-top:3px}
+  .page{display:none}.page.on{display:block}
+
+  /* cards / tables */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px}
+  .stat{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:16px;padding:18px}
+  .stat .l{color:var(--muted);font-size:12px;letter-spacing:1px}
+  .stat .v{font-size:30px;font-weight:800;margin-top:6px;color:var(--brand3)}
+  .stat .c{font-size:12px;color:var(--ok);margin-top:2px}
+  .panel{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:18px;padding:20px;margin-bottom:20px}
+  .panel h3{font-size:17px;margin-bottom:4px}
+  .panel .hint{color:var(--muted);font-size:12px;margin-bottom:16px}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}
+  td{padding:12px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(139,111,202,.06)}
+  .tag{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line2);display:inline-block}
+  .tag.ok{color:var(--ok);border-color:rgba(61,220,132,.4);background:rgba(61,220,132,.1)}
+  .tag.warn{color:var(--warn);border-color:rgba(240,192,106,.4);background:rgba(240,192,106,.1)}
+  .tag.err{color:var(--err);border-color:rgba(255,107,129,.4);background:rgba(255,107,129,.1)}
+  .tag.info{color:var(--info);border-color:rgba(122,168,255,.4);background:rgba(122,168,255,.1)}
+  .tag.b{color:var(--brand3);border-color:var(--line);background:var(--brand-soft)}
+  .row-act{display:flex;gap:6px;justify-content:flex-end}
+  .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .tools input,.tools select{background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;outline:none}
+  .tools input:focus{border-color:var(--brand)}
+  .empty{color:var(--muted);text-align:center;padding:34px;font-size:13px}
+  .thumb-sm{width:44px;height:56px;border-radius:8px;background:#0c0a14 center/cover no-repeat;border:1px solid var(--line2);flex:none}
+
+  /* form grid */
+  .fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .fgrid .full{grid-column:1/-1}
+  textarea{min-height:88px;resize:vertical}
+  .spec{background:rgba(122,168,255,.08);border:1px solid rgba(122,168,255,.28);border-radius:11px;padding:11px 13px;font-size:12px;color:#bcd3ff;margin-top:8px}
+  .spec b{display:block;color:#dbe7ff;margin-bottom:3px;font-size:12px}
+  .spec code{background:rgba(0,0,0,.3);padding:1px 6px;border-radius:5px;color:#fff}
+
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(4,2,10,.72);z-index:200;opacity:0;pointer-events:none;transition:.25s;backdrop-filter:blur(3px)}
+  .mask.on{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:210;top:50%;left:50%;transform:translate(-50%,-46%) scale(.97);opacity:0;pointer-events:none;transition:.25s;
+    width:760px;max-width:94vw;max-height:88vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+  .modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .modal-head{padding:20px 24px;border-bottom:1px solid var(--line2);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);z-index:2}
+  .modal-head h3{font-size:18px}
+  .modal-head .x{cursor:pointer;color:var(--muted);font-size:22px}
+  .modal-body{padding:22px 24px}
+  .modal-foot{padding:16px 24px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--bg2)}
+
+  /* ticket types editor */
+  .tt{display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:9px;margin-bottom:9px;align-items:center}
+  .tt input{background:var(--bg2);border:1px solid var(--line2);border-radius:9px;padding:9px 11px;color:var(--text);font-size:13px;outline:none;width:100%}
+  .tt input:focus{border-color:var(--brand)}
+  .xbtn{background:rgba(255,80,110,.12);border:1px solid rgba(255,80,110,.3);color:#ff9db0;border-radius:9px;width:34px;height:34px;cursor:pointer;flex:none}
+
+  /* seat map */
+  .tt{grid-template-columns:1.5fr .9fr .7fr .8fr .7fr auto}
+  .tt .cnt{font-size:12px;color:var(--brand3);text-align:center;white-space:nowrap}
+  .seatmap{background:linear-gradient(180deg,#160f26,#0f0b18);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:12px;overflow-x:auto}
+  .stage-bar{margin:0 auto 18px;max-width:420px;height:34px;border-radius:0 0 22px 22px;display:grid;place-items:center;font-size:12px;letter-spacing:4px;
+    color:var(--brand3);background:linear-gradient(180deg,rgba(139,111,202,.45),rgba(139,111,202,.08));border:1px solid var(--line);border-top:none}
+  .zone{margin-bottom:16px}
+  .zone-h{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:7px;color:var(--muted)}
+  .zone-h b{color:var(--text);font-size:13px}
+  .zone-h .sw{width:12px;height:12px;border-radius:3px}
+  .srow{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+  .srow .rl{width:22px;font-size:10px;color:var(--muted);text-align:right;margin-right:4px;flex:none}
+  .seat{width:18px;height:18px;border-radius:5px 5px 3px 3px;border:1px solid rgba(255,255,255,.12);cursor:pointer;flex:none;transition:.12s;
+    background:var(--zc,rgba(139,111,202,.35))}
+  .seat:hover{transform:scale(1.18);border-color:#fff}
+  .seat.sold{background:#2a2438;border-color:rgba(255,255,255,.06);cursor:not-allowed;opacity:.55}
+  .seat.sel{background:linear-gradient(135deg,var(--brand),var(--rose));border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+  .seat.hold{background:var(--warn);opacity:.8}
+  .legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(255,255,255,.12)}
+  .modal{width:980px}
+  .modal.wide{width:1180px;max-width:96vw}
+  .modal.full{width:96vw;max-width:96vw;max-height:94vh;height:94vh}
+  textarea{min-height:120px}
+  .fld.tall textarea{min-height:200px}
+  /* seat editor */
+  .grid-wrap{position:relative;user-select:none;-webkit-user-select:none}
+  .stage-pos{display:flex;gap:14px;align-items:flex-start}
+  .stage-pos.left,.stage-pos.right{flex-direction:row}
+  .stage-pos.right{flex-direction:row-reverse}
+  .stage-pos.top,.stage-pos.bottom{flex-direction:column;align-items:center}
+  .stage-pos.bottom{flex-direction:column-reverse}
+  .stage-v{writing-mode:vertical-rl;width:34px;min-height:220px;border-radius:0 22px 22px 0;display:grid;place-items:center;font-size:12px;letter-spacing:4px;
+    color:var(--brand3);background:linear-gradient(90deg,rgba(139,111,202,.45),rgba(139,111,202,.08));border:1px solid var(--line);border-left:none;align-self:stretch}
+  .stage-pos.right .stage-v{border-radius:22px 0 0 22px;border-left:1px solid var(--line);border-right:none;background:linear-gradient(270deg,rgba(139,111,202,.45),rgba(139,111,202,.08))}
+  .stage-pos.bottom .stage-bar{border-radius:22px 22px 0 0;border-top:1px solid var(--line);border-bottom:none;margin:18px auto 0;background:linear-gradient(0deg,rgba(139,111,202,.45),rgba(139,111,202,.08))}
+  .sgrid{display:inline-grid;gap:4px}
+  .cell{width:18px;height:18px;border-radius:5px 5px 3px 3px;border:1px solid rgba(255,255,255,.12);cursor:pointer;background:var(--zc,rgba(255,255,255,.14));position:relative;transition:.1s}
+  .cell.off{background:transparent;border-color:transparent;cursor:crosshair}
+  .cell.off:hover{border-color:rgba(255,255,255,.2)}
+  .cell.box{border-radius:4px;box-shadow:inset 0 0 0 2px rgba(240,192,106,.75)}
+  .cell.sold{background:#2a2438!important;opacity:.5}
+  .cell.pick{outline:2px solid #fff;outline-offset:-1px;filter:brightness(1.5)}
+  .cell.unassigned{background:rgba(255,255,255,.08)}
+  .cl{font-size:10px;color:var(--muted);width:18px;text-align:center;line-height:18px}
+  .rl2{font-size:10px;color:var(--muted);width:20px;text-align:right;line-height:18px;padding-right:2px}
+  .ed-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  .ed-tools .lbl{font-size:12px;color:var(--muted);margin-right:4px}
+  .seg{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  .seg button{background:transparent;border:none;color:var(--muted);padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--brand-soft);color:var(--brand3)}
+  .tk-row{display:grid;grid-template-columns:auto 1.5fr .9fr .9fr auto auto;gap:9px;align-items:center;margin-bottom:8px}
+  .tk-row input,.tk-row select{background:var(--bg2);border:1px solid var(--line2);border-radius:9px;padding:9px 11px;color:var(--text);font-size:13px;outline:none;width:100%;font-family:inherit}
+  .tk-row .sw{width:22px;height:22px;border-radius:6px;border:2px solid transparent;cursor:pointer}
+  .tk-row.on .sw{border-color:#fff;box-shadow:0 0 0 2px var(--brand)}
+  .tk-row .cnt{font-size:12px;color:var(--brand3);white-space:nowrap;text-align:center;min-width:56px}
+  .box-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .box-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(240,192,106,.1);border:1px solid rgba(240,192,106,.4);color:var(--warn);border-radius:9px;padding:6px 10px;font-size:12px}
+  .box-chip button{background:none;border:none;color:var(--warn);cursor:pointer;font-size:12px;opacity:.8}
+  .box-chip button:hover{opacity:1}
+  .sel-info{font-size:12px;color:var(--brand3);margin-left:auto}
+  /* 舞台物件（自由拖曳/縮放） + 地圖畫布 */
+  #vGrid,#eGrid{overflow:auto;max-width:100%;padding-bottom:6px}
+  .map-area{position:relative;display:inline-block}
+  .map-area .sgrid{position:absolute}
+  .stage-el{position:absolute;box-sizing:border-box;user-select:none;z-index:2}
+  .stage-el .stage-shape{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;letter-spacing:3px;color:var(--brand3);
+    background:linear-gradient(180deg,rgba(139,111,202,.55),rgba(139,111,202,.12));border:1px solid var(--line);overflow:hidden;text-align:center;padding:4px}
+  .stage-el.editable{cursor:move}
+  .stage-el.editable:hover .stage-shape{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+  .stage-el .rh{position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;background:var(--brand2);border:2px solid #fff;border-radius:5px;cursor:nwse-resize;z-index:3}
+  .shape-rect .stage-shape{border-radius:6px}
+  .shape-round .stage-shape{border-radius:18px}
+  .shape-ellipse .stage-shape{border-radius:50%}
+  .shape-trap .stage-shape{clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);border:none;background:linear-gradient(180deg,rgba(139,111,202,.7),rgba(139,111,202,.18))}
+  .shape-arc .stage-shape{border-radius:50% 50% 8px 8px / 100% 100% 8px 8px}
+  .cell.pick{outline:2px solid #fff;outline-offset:-1px;filter:brightness(1.6);z-index:1}
+  .cell.pick.off{outline:2px dashed rgba(255,255,255,.7);background:rgba(255,255,255,.08)}
+  /* checkin */
+  .scan-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .scanner{background:linear-gradient(160deg,#241a3a,#120c1e);border:1px solid var(--line);border-radius:18px;min-height:290px;display:grid;place-items:center;position:relative;overflow:hidden}
+  .scan-box{width:190px;height:190px;border-radius:16px;position:relative}
+  .scan-box i{position:absolute;width:34px;height:34px;border:3px solid var(--brand2)}
+  .scan-box i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+  .scan-box i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0;border-radius:0 12px 0 0}
+  .scan-box i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 12px}
+  .scan-box i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 12px 0}
+  .scan-line{position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,var(--brand2),transparent);animation:scan 2.1s ease-in-out infinite}
+  @keyframes scan{0%,100%{top:12%}50%{top:86%}}
+  .scan-modes{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .mode{font-size:12px;border:1px solid var(--line2);border-radius:999px;padding:7px 13px;cursor:pointer;color:var(--muted)}
+  .mode.on{background:var(--brand-soft);border-color:var(--line);color:var(--brand3)}
+  .res{border-radius:14px;padding:18px;border:1px solid var(--line2);background:var(--card);min-height:120px}
+  .res.ok{border-color:rgba(61,220,132,.5);background:rgba(61,220,132,.08)}
+  .res.err{border-color:rgba(255,107,129,.5);background:rgba(255,107,129,.08)}
+  .res .big{font-size:20px;font-weight:800;margin-bottom:6px}
+  .kv{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--line2)}
+  .kv:last-child{border:none}.kv span{color:var(--muted)}
+
+  /* misc */
+  .perm{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .perm label{display:flex;align-items:center;gap:6px;font-size:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:9px;padding:7px 11px;cursor:pointer}
+  .perm input{accent-color:var(--brand)}
+  .img-slot{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:11px;margin-bottom:9px}
+  .img-slot .i{flex:1;min-width:0}
+  .img-slot b{font-size:13px;display:block}.img-slot small{color:var(--muted);font-size:11px}
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card3);border:1px solid var(--line);
+    border-radius:12px;padding:12px 22px;font-size:14px;z-index:400;transition:.35s;opacity:0}
+  .toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+  .toast b{color:var(--brand3)}
+  .seo-prev{background:#fff;border-radius:11px;padding:14px 16px;color:#202124;margin-top:10px}
+  .seo-prev .u{color:#0b7a44;font-size:12px}
+  .seo-prev .t{color:#1a0dab;font-size:17px;margin:2px 0 3px}
+  .seo-prev .d{color:#4d5156;font-size:13px}
+  .fb-prev{background:#fff;border-radius:11px;overflow:hidden;margin-top:10px;color:#1c1e21}
+  .fb-prev .im{height:130px;background:#dfe3e8 center/cover no-repeat}
+  .fb-prev .b{padding:10px 12px}
+  .fb-prev .h{font-size:10px;color:#606770;text-transform:uppercase}
+  .fb-prev .t{font-weight:700;font-size:14px;margin:2px 0}
+  .fb-prev .d{font-size:12px;color:#606770}
+  .bar{height:7px;background:#241c3d;border-radius:99px;overflow:hidden;margin-top:6px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+  @media(max-width:1080px){.stat-grid{grid-template-columns:repeat(2,1fr)}.scan-wrap{grid-template-columns:1fr}}
+  @media(max-width:820px){.shell.on{grid-template-columns:1fr}aside.side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;overflow:visible}
+    .side .brand{width:100%}.side .sp{display:none}.who{width:100%}.fgrid{grid-template-columns:1fr}main{padding:20px 16px 50px}}
+</style>
+</head>
+<body>
+
+<!-- ======== LOGIN ======== -->
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="brand"><div class="mark">L</div><h1 class="serif">LiReal</h1></div>
+    <div class="sub">沉浸式場域 · 後台管理系統</div>
+    <div class="fld"><label>電子信箱</label><input id="liEmail" type="email" placeholder="admin@lireal.com"></div>
+    <div class="fld"><label>密碼</label><input id="liPass" type="password" placeholder="任意密碼即可（示範）"></div>
+    <button class="btn btn-brand" style="width:100%" id="liBtn">登入後台</button>
+    <div class="demo">
+      <p>登入說明</p>
+      <div class="demo-row" style="cursor:default"><b>用 Supabase 帳號</b><span class="r">Authentication → Users</span></div>
+      <div class="demo-row" style="cursor:default"><b>需在 staff 名單內</b><span class="r">否則無法進入</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SHELL ======== -->
+<div class="shell" id="shell">
+  <aside class="side">
+    <div class="brand"><div class="mark">L</div><h1 class="serif">LiReal</h1></div>
+    <div id="navBox"></div>
+    <div class="sp"></div>
+    <div class="who">
+      <div class="n" id="whoName">—</div>
+      <div class="r" id="whoRole">—</div>
+      <div id="syncDot" style="font-size:11px;margin-top:6px;color:var(--muted)">● 未連線</div>
+      <button class="btn btn-ghost btn-sm" id="logout">登出</button>
+    </div>
+  </aside>
+  <main>
+    <div class="top"><div><h2 id="pgTitle">儀表板</h2><div class="d" id="pgDesc"></div></div><div id="pgAct"></div></div>
+
+    <!-- 儀表板 -->
+    <section class="page" id="p-dash">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="panel"><h3>節目售票概況</h3><div class="hint">各沉浸場次的售出進度</div><div id="dashProg"></div></div>
+      <div class="panel"><h3>最近訂單</h3><div class="hint">最新 5 筆</div><div id="dashOrders"></div></div>
+    </section>
+
+    <!-- 節目 -->
+    <section class="page" id="p-events">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>節目 / 場次管理</h3><div class="hint" style="margin:0">沉浸式場域節目，含票種、場地、售票期間</div></div>
+          <div class="tools">
+            <input id="evQ" placeholder="搜尋節目名稱…">
+            <button class="btn btn-brand btn-sm" id="evAdd">＋ 新增節目</button>
+          </div>
+        </div>
+        <div id="evTable"></div>
+      </div>
+    </section>
+
+    <!-- 場地 -->
+    <section class="page" id="p-venues">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>場地管理</h3><div class="hint" style="margin:0">先建好座位圖範本，賣票時直接套用；可框選設定走道、包廂與舞台位置</div></div>
+          <div class="tools"><button class="btn btn-brand btn-sm" id="vnAdd">＋ 新增場地</button></div>
+        </div>
+        <div id="vnTable"></div>
+      </div>
+    </section>
+
+    <!-- 創作者 -->
+    <section class="page" id="p-creators">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>創作者 / AI 女友管理</h3><div class="hint" style="margin:0">OnlyMate 角色資料、上線狀態與人氣</div></div>
+          <div class="tools"><input id="crQ" placeholder="搜尋創作者…"><button class="btn btn-brand btn-sm" id="crAdd">＋ 新增創作者</button></div>
+        </div>
+        <div id="crTable"></div>
+      </div>
+    </section>
+
+    <!-- 商品 -->
+    <section class="page" id="p-products">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>商品管理</h3><div class="hint" style="margin:0">裸視 3D 系列電商商品</div></div>
+          <div class="tools"><input id="pdQ" placeholder="搜尋商品…"><button class="btn btn-brand btn-sm" id="pdAdd">＋ 新增商品</button></div>
+        </div>
+        <div id="pdTable"></div>
+      </div>
+    </section>
+
+    <!-- 訂單 -->
+    <section class="page" id="p-orders">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>訂單查詢</h3><div class="hint" style="margin:0">票券與商品訂單</div></div>
+          <div class="tools">
+            <input id="odQ" placeholder="訂單編號 / 姓名 / 電話…">
+            <select id="odS"><option value="">全部狀態</option><option>已付款</option><option>待付款</option><option>已退款</option></select>
+          </div>
+        </div>
+        <div id="odTable"></div>
+      </div>
+    </section>
+
+    <!-- 會員 -->
+    <section class="page" id="p-members">
+      <div class="panel">
+        <div class="panel-head"><div><h3>會員管理</h3><div class="hint" style="margin:0">前台消費會員與儲值狀況</div></div>
+        <div class="tools"><input id="mbQ" placeholder="搜尋會員…"></div></div>
+        <div id="mbTable"></div>
+      </div>
+    </section>
+
+    <!-- 驗票 -->
+    <section class="page" id="p-checkin">
+      <div class="scan-wrap">
+        <div>
+          <div class="scanner"><div class="scan-box"><i></i><i></i><i></i><i></i><div class="scan-line"></div></div></div>
+          <div class="scan-modes">
+            <div class="mode on" data-m="QR">📷 QR Code</div><div class="mode" data-m="NFC">📶 NFC 感應</div>
+            <div class="mode" data-m="BAR">▮▯ 條碼</div><div class="mode" data-m="MANUAL">⌨ 手動輸入</div>
+          </div>
+          <div class="tools" style="margin-top:12px">
+            <input id="ciCode" placeholder="票券編號，例：LR-2026-0001" style="flex:1;min-width:200px">
+            <button class="btn btn-brand btn-sm" id="ciGo">驗證</button>
+            <button class="btn btn-ghost btn-sm" id="ciDemo">模擬掃描</button>
+          </div>
+        </div>
+        <div>
+          <div class="panel" style="margin-bottom:14px"><h3>驗票結果</h3><div class="hint">掃描或輸入票券編號後顯示</div>
+            <div class="res" id="ciRes"><div style="color:var(--muted);font-size:13px">等待掃描…</div></div></div>
+          <div class="panel"><h3>今日入場統計</h3><div class="hint">即時更新</div><div id="ciStat"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 場域設定 -->
+    <section class="page" id="p-settings">
+      <div class="panel"><h3>跑馬燈</h3><div class="hint">顯示於前台導覽列下方</div>
+        <div class="fld"><textarea id="stMarquee" placeholder="輸入跑馬燈訊息，多則以「｜」分隔"></textarea></div>
+        <button class="btn btn-brand btn-sm" data-save="marquee">儲存跑馬燈</button></div>
+
+      <div class="panel">
+        <div class="panel-head"><div><h3>公告消息</h3><div class="hint" style="margin:0">前台公告區</div></div>
+        <button class="btn btn-brand btn-sm" id="anAdd">＋ 新增公告</button></div>
+        <div id="anTable"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div><h3>Banner 版位</h3><div class="hint" style="margin:0">單張不輪播，多張自動輪播</div></div>
+        <button class="btn btn-brand btn-sm" id="bnAdd">＋ 新增 Banner</button></div>
+        <div class="spec"><b>📐 建議素材規格</b>尺寸：<code>1600 × 500 px</code>（比例 16:5）· 格式：<code>JPG / WebP</code> · 建議 &lt; 500 KB<br>用於首頁頂部與底部橫幅輪播</div>
+        <div id="bnTable" style="margin-top:14px"></div>
+      </div>
+
+      <div class="panel">
+        <h3>圖片素材管理</h3><div class="hint">更換各版位圖片，變更儲存在此瀏覽器；可匯出設定給前台套用</div>
+        <div class="tools" style="margin-bottom:14px">
+          <button class="btn btn-brand btn-sm" id="seedBtn">匯入示範資料到資料庫</button>
+          <button class="btn btn-ghost btn-sm" id="imgExport">匯出圖片設定</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">匯入設定<input type="file" id="imgImport" accept="application/json" hidden></label>
+          <button class="btn btn-danger btn-sm" id="imgReset">全部重設</button>
+        </div>
+        <div id="imgSlots"></div>
+      </div>
+    </section>
+
+    <!-- SEO -->
+    <section class="page" id="p-seo">
+      <div class="panel"><h3>全站 SEO</h3><div class="hint">搜尋引擎與社群分享顯示設定</div>
+        <div class="fgrid">
+          <div class="fld full"><label>網站標題 (Title)</label><input id="seoT" maxlength="60"></div>
+          <div class="fld full"><label>網站描述 (Description)</label><textarea id="seoD" maxlength="160"></textarea></div>
+          <div class="fld"><label>關鍵字（逗號分隔）</label><input id="seoK"></div>
+          <div class="fld"><label>網站網址</label><input id="seoU"></div>
+          <div class="fld"><label>Google Analytics ID</label><input id="seoGA" placeholder="G-XXXXXXXXXX"></div>
+          <div class="fld"><label>Search Console 驗證碼</label><input id="seoSC"></div>
+          <div class="fld full"><label>社群分享圖網址 (OG Image)</label><input id="seoOG">
+            <div class="spec"><b>📐 建議素材規格</b>尺寸：<code>1200 × 630 px</code>（比例 1.91:1）· 格式：<code>JPG / PNG</code> · 建議 &lt; 300 KB<br>用於 Facebook / LINE / X 分享預覽卡片</div></div>
+        </div>
+        <button class="btn btn-brand btn-sm" data-save="seo" style="margin-top:6px">儲存 SEO 設定</button>
+      </div>
+      <div class="panel"><h3>顯示預覽</h3><div class="hint">實際在搜尋與社群上的樣子</div>
+        <div class="fgrid">
+          <div><small style="color:var(--muted);font-size:12px">Google 搜尋結果</small>
+            <div class="seo-prev"><div class="u" id="pvU">lireal.com</div><div class="t" id="pvT">—</div><div class="d" id="pvD">—</div></div></div>
+          <div><small style="color:var(--muted);font-size:12px">Facebook / LINE 分享</small>
+            <div class="fb-prev"><div class="im" id="pvI"></div><div class="b"><div class="h" id="pvH">lireal.com</div><div class="t" id="pvT2">—</div><div class="d" id="pvD2">—</div></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 權限 -->
+    <section class="page" id="p-staff">
+      <div class="panel">
+        <div class="panel-head"><div><h3>後台人員與權限</h3><div class="hint" style="margin:0">管理者可新增人員並個別設定可用功能</div></div>
+        <button class="btn btn-brand btn-sm" id="stAdd">＋ 新增人員</button></div>
+        <div id="stTable"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="modal" id="modal">
+  <div class="modal-head"><h3 id="mTitle">編輯</h3><div style="display:flex;gap:14px;align-items:center"><span class="x" id="mFull" title="放大 / 還原" style="font-size:16px">⤢</span><span class="x" id="mX">✕</span></div></div>
+  <div class="modal-body" id="mBody"></div>
+  <div class="modal-foot"><button class="btn btn-ghost btn-sm" id="mCancel">取消</button><button class="btn btn-brand btn-sm" id="mSave">儲存</button></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+/* ================= 資料層（Supabase） ================= */
+const KEY='LIREAL_ADMIN_DB';
+/* ---- 座位工具（場地格子模型）---- */
+const RL=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;};
+const sid=(r,c)=>r+'-'+c;
+function rng(r0,r1,c0,c1,off){const a=[];const o=new Set(off||[]);for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const id=sid(r,c);if(!o.has(id))a.push(id);}return a;}
+function mkVenue(id,name,rows,cols,stage,aisleCols,boxes){
+  const off=[];(aisleCols||[]).forEach(c=>{for(let r=0;r<rows;r++)off.push(sid(r,c));});
+  return {id,name,rows,cols,stage:stage||'top',off,boxes:boxes||[]};
+}
+const V1=mkVenue(1,"南港場域 A 廳",21,25,'top',[12],[{name:"包廂 1",seats:rng(20,20,0,4)},{name:"包廂 2",seats:rng(20,20,20,24)}]);
+const V2=mkVenue(2,"松菸場域 3D 館",20,25,'top',[],[]);
+const V3=mkVenue(3,"駁二場域 B 棟",10,20,'bottom',[10],[]);
+const V4=mkVenue(4,"中央場域 天幕廳",12,25,'left',[],[{name:"VIP 包廂",seats:rng(0,1,23,24)}]);
+
+const SEED={
+  venues:[V1,V2,V3,V4],
+  events:[
+    {id:1,name:"星夜沉浸劇場",venue:"台北 · 南港場域 A 廳",venueId:1,date:"2026-09-12",time:"19:30",cat:"沉浸場域",status:"售票中",
+     sale:"2026-08-01 ~ 2026-09-12",sold:458,cap:490,
+     tickets:[{n:"VIP 沉浸席",p:2880,unit:"seat",seats:rng(0,4,0,24,V1.off)},{n:"A 區",p:1880,unit:"seat",seats:rng(5,14,0,24,V1.off)},
+              {n:"B 區",p:1280,unit:"seat",seats:rng(15,19,0,24,V1.off)},{n:"沉浸包廂（整間）",p:9800,unit:"box",seats:rng(20,20,0,4).concat(rng(20,20,20,24))}],
+     intro:"360° 全息舞台，支援裸視 3D 同步觀看。",yt:"",img:""},
+    {id:2,name:"裸視 3D 沉浸體驗展",venue:"台北 · 松菸場域 3D 館",venueId:2,date:"2026-09-20",time:"11:00",cat:"3D 場域",status:"售票中",
+     sale:"2026-08-05 ~ 2026-09-20",sold:380,cap:500,
+     tickets:[{n:"全票",p:680,unit:"seat",seats:rng(0,15,0,24)},{n:"優惠票",p:520,unit:"seat",seats:rng(16,19,0,24)}],
+     intro:"無需眼鏡即享立體視覺的沉浸展覽。",yt:"",img:""},
+    {id:3,name:"AI 夥伴見面會 Vol.3",venue:"高雄 · 駁二場域 B 棟",venueId:3,date:"2026-10-04",time:"14:00",cat:"見面會",status:"即將售罄",
+     sale:"2026-08-20 ~ 2026-10-04",sold:182,cap:190,
+     tickets:[{n:"限量週邊席",p:2480,unit:"seat",seats:rng(0,9,0,19,V3.off)}],intro:"與 AI 夥伴角色的線下互動見面會。",yt:"",img:""},
+    {id:4,name:"星海漫遊沉浸夜場",venue:"台中 · 中央場域 天幕廳",venueId:4,date:"2026-10-18",time:"22:00",cat:"3D 場域",status:"已售罄",
+     sale:"2026-09-01 ~ 2026-10-18",sold:280,cap:280,
+     tickets:[{n:"夜場席 18+",p:1200,unit:"seat",seats:rng(0,11,0,22)},{n:"VIP 包廂（整間）",p:6800,unit:"box",seats:rng(0,1,23,24)}],
+     intro:"深夜天幕沉浸電音體驗。",yt:"",img:""},
+    {id:5,name:"月光交響 · 沉浸音樂會",venue:"台北 · 南港場域 B 廳",venueId:1,date:"2026-11-02",time:"19:00",cat:"沉浸場域",status:"未開賣",
+     sale:"2026-09-15 ~ 2026-11-02",sold:0,cap:480,
+     tickets:[{n:"前排席",p:2280,unit:"seat",seats:rng(0,5,0,24,V1.off)},{n:"一般席",p:1480,unit:"seat",seats:rng(6,19,0,24,V1.off)}],
+     intro:"環繞聲場的沉浸式古典演出。",yt:"",img:""}
+  ],
+  creators:[
+    {id:1,name:"婷婷",slug:"tingting",type:"治癒系",online:true,fans:"128K",hot:"9.8萬",tier:"精選",desc:"溫柔成熟的 AI 分身，專屬陪伴與深夜談心"},
+    {id:2,name:"Anna",slug:"anna",type:"御姐系",online:true,fans:"112K",hot:"9.2萬",tier:"精選",desc:"都會御姐系代表，自信魅力與成熟對話"},
+    {id:3,name:"Vivi",slug:"vivi",type:"時尚系",online:true,fans:"76K",hot:"8.6萬",tier:"精選",desc:"韓系時尚風格 AI 分身，精緻穿搭與質感"},
+    {id:4,name:"小柔",slug:"xiaorou",type:"清純系",online:true,fans:"64K",hot:"7.1萬",tier:"精選",desc:"清純學妹系人設，活潑可愛的校園互動"},
+    {id:5,name:"Hana",slug:"hana",type:"治癒系",online:true,fans:"36K",hot:"4.5萬",tier:"NEW",desc:"療癒系新聲，溫柔語音與晚安陪伴內容"},
+    {id:6,name:"Sora",slug:"sora",type:"清純系",online:false,fans:"42K",hot:"5.0萬",tier:"NEW",desc:"清新鄰家感的新銳創作者，短影音與日常"},
+    {id:7,name:"Coco",slug:"coco",type:"御姐系",online:true,fans:"48K",hot:"5.5萬",tier:"NEW",desc:"高端質感御姐路線，品牌合作與 VIP 粉絲"},
+    {id:8,name:"Mia",slug:"mia",type:"偶像系",online:true,fans:"54K",hot:"5.8萬",tier:"NEW",desc:"舞台感十足的偶像系創作者，線上演出"}
+  ],
+  products:[
+    {id:1,key:"p0",name:"裸視 3D 手機膜 · 星幕版",price:1280,old:1680,stock:180,badge:"熱賣",on:true},
+    {id:2,key:"p1",name:"抗藍光螢幕膜 · 極透系列",price:590,old:790,stock:420,badge:"新品",on:true},
+    {id:3,key:"p2",name:"3D 眼鏡 · 摺疊金屬框",price:880,old:0,stock:96,badge:"聯名",on:true},
+    {id:4,key:"p3",name:"裸視 3D 平板膜 · 大屏版",price:1580,old:1980,stock:60,badge:"限量",on:true},
+    {id:5,key:"p4",name:"裸視 3D 手機膜 · 極光版",price:1380,old:0,stock:140,badge:"人氣",on:true},
+    {id:6,key:"p5",name:"沉浸觀影禮盒組",price:1980,old:2560,stock:48,badge:"組合",on:true},
+    {id:7,key:"p6",name:"奈米鍍膜清潔套組",price:320,old:0,stock:300,badge:"",on:true},
+    {id:8,key:"p7",name:"3D 眼鏡 · 輕奢玳瑁款",price:1180,old:1480,stock:35,badge:"精選",on:false}
+  ],
+  orders:[
+    {id:"LR-2026-0001",name:"陳彥廷",phone:"0912-345-678",email:"yt@mail.com",item:"星夜沉浸劇場 · VIP 沉浸席 ×2",amt:5760,status:"已付款",pay:"信用卡",date:"2026-08-28",used:false},
+    {id:"LR-2026-0002",name:"林靜怡",phone:"0922-118-330",email:"jy@mail.com",item:"裸視 3D 沉浸體驗展 · 全票 ×3",amt:2040,status:"已付款",pay:"ATM",date:"2026-08-29",used:true},
+    {id:"LR-2026-0003",name:"王柏叡",phone:"0933-556-901",email:"br@mail.com",item:"AI 夥伴見面會 Vol.3 ×1",amt:2480,status:"待付款",pay:"超商",date:"2026-08-30",used:false},
+    {id:"LR-2026-0004",name:"黃詩涵",phone:"0955-240-118",email:"sh@mail.com",item:"裸視 3D 手機膜 · 星幕版 ×1",amt:1280,status:"已付款",pay:"信用卡",date:"2026-08-31",used:false},
+    {id:"LR-2026-0005",name:"張哲瑋",phone:"0966-773-284",email:"zw@mail.com",item:"星海漫遊沉浸夜場 ×2",amt:2400,status:"已退款",pay:"信用卡",date:"2026-09-01",used:false},
+    {id:"LR-2026-0006",name:"吳采恩",phone:"0977-902-441",email:"ce@mail.com",item:"星夜沉浸劇場 · A 區 ×1",amt:1880,status:"已付款",pay:"信用卡",date:"2026-09-01",used:false}
+  ],
+  members:[
+    {id:1,name:"陳彥廷",email:"yt@mail.com",phone:"0912-345-678",vip:"紫鑽卡",wallet:5200,orders:6,join:"2026-03-11"},
+    {id:2,name:"林靜怡",email:"jy@mail.com",phone:"0922-118-330",vip:"沉浸卡",wallet:1840,orders:4,join:"2026-04-02"},
+    {id:3,name:"王柏叡",email:"br@mail.com",phone:"0933-556-901",vip:"星紫卡",wallet:560,orders:2,join:"2026-05-19"},
+    {id:4,name:"黃詩涵",email:"sh@mail.com",phone:"0955-240-118",vip:"沉浸卡",wallet:2480,orders:5,join:"2026-06-08"},
+    {id:5,name:"張哲瑋",email:"zw@mail.com",phone:"0966-773-284",vip:"星紫卡",wallet:120,orders:1,join:"2026-07-21"}
+  ],
+  staff:[
+    {id:1,name:"Aden",email:"admin@lireal.com",role:"admin",perms:["dash","events","venues","creators","products","orders","members","checkin","settings","seo","staff"]},
+    {id:2,name:"內容編輯",email:"editor@lireal.com",role:"editor",perms:["dash","events","venues","creators","products","orders","settings","seo"]},
+    {id:3,name:"現場驗票",email:"staff@lireal.com",role:"staff",perms:["checkin","orders"]}
+  ],
+  announcements:[
+    {id:1,title:"9/12 星夜沉浸劇場 售票開跑",tag:"系統公告",date:"2026-08-25",body:"VIP 沉浸席限量 100 席，售完為止。"},
+    {id:2,title:"場域入場須知更新",tag:"入場須知",date:"2026-08-20",body:"請於開演前 30 分鐘抵達，並攜帶電子票券 QR Code。"},
+    {id:3,title:"裸視 3D 觀看模式上線",tag:"新功能",date:"2026-08-14",body:"搭配裸視 3D 手機膜即可享立體觀看體驗。"}
+  ],
+  banners:[
+    {id:1,pos:"頂部",title:"沉浸 · 無極限",sub:"LiReal 全息場域首映",link:"#",on:true},
+    {id:2,pos:"底部",title:"裸視 3D 精選",sub:"沉浸觀看裝備 9 折起",link:"#shop",on:true}
+  ],
+  marquee:"🎫 星夜沉浸劇場 售票中，剩 42 席｜🕶️ 裸視 3D 手機膜 限時 9 折｜📢 AI 夥伴見面會 Vol.3 開放預約",
+  seo:{t:"LiReal 沉浸式場域 | 虛擬與現實整合劇場",d:"LiReal 提供沉浸式場域節目、直播互動、AI 夥伴陪伴與裸視 3D 精選商品，打造虛實整合的娛樂體驗。",
+       k:"沉浸式劇場,裸視3D,沉浸式體驗,AI陪伴,場域售票",u:"https://lireal.com",ga:"",sc:"",og:""},
+  images:{}
+};
+let DB=JSON.parse(JSON.stringify(SEED));
+const clone=o=>JSON.parse(JSON.stringify(o));
+let SNAP=clone(DB);
+
+/* ---- Supabase 連線 ---- */
+const CFG=window.LIREAL_CONFIG||{};
+let sb=null, ONLINE=false;
+try{
+  if(window.supabase && CFG.SUPABASE_URL && !/貼上/.test(CFG.SUPABASE_URL)){
+    sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_KEY);
+    ONLINE=true;
+  }
+}catch(e){console.error('Supabase 初始化失敗',e);}
+
+/* ---- 欄位對應（JS 物件 ↔ 資料表欄位）---- */
+const MAP={
+  venues:{tbl:'venues',
+    toRow:v=>({id:v.id,name:v.name,n_rows:v.rows,n_cols:v.cols,stage:v.stage||{},off_seats:v.off||[],boxes:v.boxes||[]}),
+    fromRow:r=>({id:r.id,name:r.name,rows:r.n_rows,cols:r.n_cols,stage:r.stage||{},off:r.off_seats||[],boxes:r.boxes||[]})},
+  events:{tbl:'events',
+    toRow:e=>({id:e.id,name:e.name,venue:e.venue||'',venue_id:e.venueId||null,show_date:e.date||'',show_time:e.time||'',
+      cat:e.cat||'',status:e.status||'未開賣',sale:e.sale||'',sold:e.sold||0,cap:e.cap||0,
+      tickets:e.tickets||[],sold_seats:e.soldSeats||[],intro:e.intro||'',yt:e.yt||'',img:e.img||''}),
+    fromRow:r=>({id:r.id,name:r.name,venue:r.venue||'',venueId:r.venue_id,date:r.show_date||'',time:r.show_time||'',
+      cat:r.cat||'',status:r.status||'未開賣',sale:r.sale||'',sold:r.sold||0,cap:r.cap||0,
+      tickets:r.tickets||[],soldSeats:r.sold_seats||[],intro:r.intro||'',yt:r.yt||'',img:r.img||''})},
+  creators:{tbl:'creators',
+    toRow:c=>({id:c.id,name:c.name,slug:c.slug,ctype:c.type,tier:c.tier,online:c.online!==false,fans:c.fans||'',hot:c.hot||'',descr:c.desc||''}),
+    fromRow:r=>({id:r.id,name:r.name,slug:r.slug,type:r.ctype,tier:r.tier,online:r.online!==false,fans:r.fans||'',hot:r.hot||'',desc:r.descr||''})},
+  products:{tbl:'products',
+    toRow:p=>({id:p.id,img_key:p.key||'',name:p.name,price:p.price||0,old_price:p.old||0,stock:p.stock||0,badge:p.badge||'',on_sale:p.on!==false}),
+    fromRow:r=>({id:r.id,key:r.img_key||'',name:r.name,price:r.price||0,old:r.old_price||0,stock:r.stock||0,badge:r.badge||'',on:r.on_sale!==false})},
+  orders:{tbl:'orders',
+    toRow:o=>({id:o.id,name:o.name||'',phone:o.phone||'',email:o.email||'',item:o.item||'',amt:o.amt||0,
+      status:o.status||'待付款',pay:o.pay||'',order_date:o.date||'',used:!!o.used}),
+    fromRow:r=>({id:r.id,name:r.name||'',phone:r.phone||'',email:r.email||'',item:r.item||'',amt:r.amt||0,
+      status:r.status||'待付款',pay:r.pay||'',date:r.order_date||'',used:!!r.used})},
+  members:{tbl:'members',
+    toRow:m=>({id:m.id,name:m.name||'',email:m.email||'',phone:m.phone||'',vip:m.vip||'',wallet:m.wallet||0,orders_count:m.orders||0,join_date:m.join||''}),
+    fromRow:r=>({id:r.id,name:r.name||'',email:r.email||'',phone:r.phone||'',vip:r.vip||'',wallet:r.wallet||0,orders:r.orders_count||0,join:r.join_date||''})},
+  staff:{tbl:'staff',
+    toRow:s=>({id:s.id,email:s.email,name:s.name||'',role:s.role||'staff',perms:s.perms||[]}),
+    fromRow:r=>({id:r.id,email:r.email,name:r.name||'',role:r.role||'staff',perms:r.perms||[]})}
+};
+const SETTING_KEYS=['marquee','seo','announcements','banners','images'];
+
+function normalizeDB(){
+  const ALL=["dash","events","venues","creators","products","orders","members","checkin","settings","seo","staff"];
+  (DB.venues||[]).forEach(vv=>{vv.stage=normStage(vv);});
+  (DB.events||[]).forEach(e=>{ if((e.tickets||[]).some(t=>Array.isArray(t.seats))){
+    e.cap=e.tickets.reduce((s,t)=>s+(t.seats||[]).length,0);
+    e.sold=Array.isArray(e.soldSeats)?e.soldSeats.length:Math.min(+e.sold||0,e.cap);} });
+  (DB.staff||[]).forEach(s=>{ if(s.role==='admin')s.perms=ALL.slice(); });
+}
+
+/* ---- 從資料庫讀取全部 ---- */
+async function syncPull(){
+  if(!ONLINE)return false;
+  try{
+    const names=Object.keys(MAP);
+    const res=await Promise.all(names.map(n=>sb.from(MAP[n].tbl).select('*')));
+    const bad=res.find(r=>r.error);
+    if(bad){toast('讀取失敗：'+bad.error.message);return false;}
+    names.forEach((n,i)=>{ DB[n]=(res[i].data||[]).map(MAP[n].fromRow); });
+    const st=await sb.from('settings').select('*');
+    if(!st.error) (st.data||[]).forEach(row=>{
+      if(row.value && Object.prototype.hasOwnProperty.call(row.value,'v')) DB[row.key]=row.value.v;
+    });
+    normalizeDB(); SNAP=clone(DB);
+    return true;
+  }catch(e){toast('讀取失敗：'+(e.message||e));return false;}
+}
+
+/* ---- 寫回資料庫（只送有變動的）---- */
+let pushTimer=null, pushing=false;
+function save(){ if(!ONLINE)return; clearTimeout(pushTimer); pushTimer=setTimeout(syncPush,350); }
+async function syncPush(){
+  if(!ONLINE||pushing)return; pushing=true;
+  setSync('saving');
+  try{
+    for(const n of Object.keys(MAP)){
+      const m=MAP[n], cur=DB[n]||[], prev=SNAP[n]||[];
+      const prevById=new Map(prev.map(x=>[String(x.id),x]));
+      const ups=cur.filter(x=>{const p=prevById.get(String(x.id));return !p||JSON.stringify(p)!==JSON.stringify(x);});
+      if(ups.length){const {error}=await sb.from(m.tbl).upsert(ups.map(m.toRow));if(error)throw error;}
+      const curIds=new Set(cur.map(x=>String(x.id)));
+      const gone=prev.filter(x=>!curIds.has(String(x.id))).map(x=>x.id);
+      if(gone.length){const {error}=await sb.from(m.tbl).delete().in('id',gone);if(error)throw error;}
+    }
+    for(const k of SETTING_KEYS){
+      if(JSON.stringify(SNAP[k])!==JSON.stringify(DB[k])){
+        const {error}=await sb.from('settings').upsert({key:k,value:{v:DB[k]}});if(error)throw error;
+      }
+    }
+    SNAP=clone(DB); setSync('ok');
+  }catch(e){ setSync('err'); toast('儲存失敗：'+(e.message||e)); console.error(e); }
+  finally{ pushing=false; }
+}
+function setSync(s){
+  const el=document.getElementById('syncDot'); if(!el)return;
+  el.textContent = s==='saving'?'● 儲存中…' : s==='err'?'● 儲存失敗' : '● 已同步';
+  el.style.color = s==='saving'?'var(--warn)' : s==='err'?'var(--err)' : 'var(--ok)';
+}
+
+/* ---- 把內建示範資料匯入資料庫（資料庫是空的時候用）---- */
+async function seedToCloud(){
+  if(!ONLINE){toast('尚未連線資料庫');return;}
+  if(!confirm('將內建示範資料寫入資料庫？\n（會覆蓋同 ID 的既有資料，訂單與人員不受影響）'))return;
+  const s=clone(SEED);
+  try{
+    setSync('saving');
+    for(const n of ['venues','events','creators','products','members']){
+      const {error}=await sb.from(MAP[n].tbl).upsert((s[n]||[]).map(MAP[n].toRow));
+      if(error)throw error;
+    }
+    for(const k of SETTING_KEYS){
+      const {error}=await sb.from('settings').upsert({key:k,value:{v:s[k]!==undefined?s[k]:(k==='images'?{}:[])}});
+      if(error)throw error;
+    }
+    await syncPull(); go('dash'); setSync('ok'); toast('示範資料已匯入資料庫 ✓');
+  }catch(e){ setSync('err'); toast('匯入失敗：'+(e.message||e)); }
+}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tt;function toast(h){const e=$("toast");e.innerHTML=h;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2300);}
+
+/* ================= 權限與登入 ================= */
+const ROLE={admin:"管理者",editor:"編輯者",staff:"驗票員"};
+const NAV=[
+  {k:"dash",t:"儀表板",i:"◈",d:"整體營運概況"},
+  {k:"events",t:"節目管理",i:"◐",d:"沉浸場域節目與票種"},
+  {k:"venues",t:"場地管理",i:"▦",d:"座位圖範本：走道、包廂、舞台位置"},
+  {k:"creators",t:"創作者管理",i:"☺",d:"AI 女友 / 直播角色"},
+  {k:"products",t:"商品管理",i:"▣",d:"裸視 3D 電商商品"},
+  {k:"orders",t:"訂單查詢",i:"▤",d:"票券與商品訂單"},
+  {k:"members",t:"會員管理",i:"◍",d:"前台會員與儲值"},
+  {k:"checkin",t:"驗票入場",i:"⛨",d:"QR / NFC / 條碼驗票"},
+  {k:"settings",t:"場域設定",i:"⚙",d:"跑馬燈、公告、Banner、圖片"},
+  {k:"seo",t:"SEO 設定",i:"◎",d:"搜尋與社群分享最佳化"},
+  {k:"staff",t:"人員權限",i:"⚿",d:"後台帳號與功能權限"}
+];
+let ME=null;
+$("liBtn").onclick=doLogin;
+$("liPass").addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+async function enterShell(staffRow){
+  ME=MAP.staff.fromRow(staffRow);
+  const ok=await syncPull();
+  $("login").style.display='none';$("shell").classList.add('on');
+  $("whoName").textContent=ME.name||ME.email;
+  $("whoRole").textContent=(ROLE[ME.role]||ME.role)+' · '+ME.email;
+  buildNav();go((ME.perms&&ME.perms[0])||'dash');
+  if(ok){
+    setSync('ok');
+    const empty=!(DB.venues||[]).length&&!(DB.events||[]).length&&!(DB.creators||[]).length;
+    if(empty)toast('資料庫是空的 — 請到「場域設定」按<b>匯入示範資料</b>');
+  }
+}
+async function doLogin(){
+  if(!ONLINE){toast('尚未設定 config.js 的 Supabase 連線');return;}
+  const em=$("liEmail").value.trim().toLowerCase(), pw=$("liPass").value;
+  if(!em||!pw){toast('請輸入帳號與密碼');return;}
+  const btn=$("liBtn"); btn.disabled=true; btn.textContent='登入中…';
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
+    if(error)throw new Error('帳號或密碼錯誤');
+    const {data:me,error:e2}=await sb.from('staff').select('*').eq('id',data.user.id).maybeSingle();
+    if(e2)throw e2;
+    if(!me){await sb.auth.signOut();throw new Error('此帳號不在後台人員名單中');}
+    await enterShell(me);
+  }catch(e){toast(e.message||'登入失敗');}
+  finally{btn.disabled=false;btn.textContent='登入後台';}
+}
+$("logout").onclick=async()=>{
+  if(ONLINE&&sb)await sb.auth.signOut();
+  ME=null;$("shell").classList.remove('on');$("login").style.display='grid';$("liPass").value='';
+};
+/* 重新整理後自動恢復登入狀態 */
+(async()=>{
+  if(!ONLINE)return;
+  try{
+    const {data}=await sb.auth.getSession();
+    if(data&&data.session){
+      const {data:me}=await sb.from('staff').select('*').eq('id',data.session.user.id).maybeSingle();
+      if(me)await enterShell(me);
+    }
+  }catch(e){}
+})();
+function can(k){return ME&&ME.perms.includes(k);}
+function buildNav(){
+  $("navBox").innerHTML=NAV.filter(n=>can(n.k)).map(n=>
+    `<div class="nav-i" data-k="${n.k}"><span class="ic">${n.i}</span>${n.t}</div>`).join('');
+  document.querySelectorAll('.nav-i').forEach(e=>e.onclick=()=>go(e.dataset.k));
+}
+function go(k){
+  if(!can(k)){toast('你的身分無此權限');return;}
+  document.querySelectorAll('.nav-i').forEach(e=>e.classList.toggle('on',e.dataset.k===k));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  const pg=$("p-"+k); if(pg)pg.classList.add('on');
+  const n=NAV.find(x=>x.k===k); $("pgTitle").textContent=n.t; $("pgDesc").textContent=n.d;
+  ({dash:renderDash,events:renderEvents,venues:renderVenues,creators:renderCreators,products:renderProducts,orders:renderOrders,
+    members:renderMembers,checkin:renderCheckin,settings:renderSettings,seo:renderSeo,staff:renderStaff}[k]||(()=>{}))();
+}
+
+/* ================= Modal ================= */
+let saveFn=null;
+function openM(title,html,fn){$("mTitle").textContent=title;$("mBody").innerHTML=html;saveFn=fn;$("modal").classList.add('on');$("mask").classList.add('on');}
+function closeM(){$("modal").classList.remove('on','wide','full');$("mask").classList.remove('on');saveFn=null;}
+$("mFull").onclick=()=>$("modal").classList.toggle('full');
+$("mX").onclick=closeM;$("mCancel").onclick=closeM;$("mask").onclick=closeM;
+$("mSave").onclick=()=>{if(saveFn&&saveFn()!==false){save();closeM();}};
+const v=id=>{const e=$(id);return e?e.value.trim():'';};
+
+/* ================= 儀表板 ================= */
+function renderDash(){
+  const paid=DB.orders.filter(o=>o.status==='已付款');
+  const rev=paid.reduce((s,o)=>s+o.amt,0);
+  const sold=DB.events.reduce((s,e)=>s+e.sold,0), cap=DB.events.reduce((s,e)=>s+e.cap,0);
+  const st=[["總營收","NT$"+rev.toLocaleString(),"已付款訂單"],["訂單數",DB.orders.length,"含待付款"],
+    ["售出票券",sold.toLocaleString(),"共 "+cap.toLocaleString()+" 席"],["會員數",DB.members.length,"註冊會員"]];
+  $("statGrid").innerHTML=st.map(s=>`<div class="stat"><div class="l">${s[0]}</div><div class="v">${s[1]}</div><div class="c">${s[2]}</div></div>`).join('');
+  $("dashProg").innerHTML=`<table><thead><tr><th>節目</th><th>場地</th><th>日期</th><th>售出 / 總席</th><th style="width:180px">進度</th><th>狀態</th></tr></thead><tbody>`+
+    DB.events.map(e=>{const pc=Math.round(e.sold/e.cap*100);return `<tr><td><b>${esc(e.name)}</b></td><td style="color:var(--muted)">${esc(e.venue)}</td>
+      <td>${e.date}</td><td>${e.sold} / ${e.cap}</td><td><div class="bar"><i style="width:${pc}%"></i></div><small style="color:var(--muted)">${pc}%</small></td>
+      <td>${stTag(e.status)}</td></tr>`;}).join('')+`</tbody></table>`;
+  $("dashOrders").innerHTML=oTable(DB.orders.slice(-5).reverse(),false);
+}
+function stTag(s){const m={"售票中":"ok","即將售罄":"warn","已售罄":"err","未開賣":"info"};return `<span class="tag ${m[s]||''}">${s}</span>`;}
+function oStTag(s){const m={"已付款":"ok","待付款":"warn","已退款":"err"};return `<span class="tag ${m[s]||''}">${s}</span>`;}
+
+/* ================= 節目 ================= */
+function renderEvents(){
+  const q=v("evQ").toLowerCase();
+  const list=DB.events.filter(e=>!q||e.name.toLowerCase().includes(q));
+  $("evTable").innerHTML=list.length?`<table><thead><tr><th>節目名稱</th><th>類型</th><th>場地</th><th>日期時間</th><th>票種</th><th>售出</th><th>狀態</th><th></th></tr></thead><tbody>`+
+    list.map(e=>`<tr><td><b>${esc(e.name)}</b><br><small style="color:var(--muted)">售票 ${esc(e.sale)}</small></td>
+      <td><span class="tag b">${esc(e.cat)}</span></td><td style="color:var(--muted)">${esc(e.venue)}</td><td>${e.date}<br><small style="color:var(--muted)">${e.time}</small></td>
+      <td>${e.tickets.length} 種<br><small style="color:var(--muted)">NT$${Math.min(...e.tickets.map(t=>t.p)).toLocaleString()} 起</small></td>
+      <td>${e.sold}/${e.cap}</td><td>${stTag(e.status)}</td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editEvent(${e.id})">編輯</button>
+      <button class="btn btn-danger btn-sm" onclick="delEvent(${e.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
+    :`<div class="empty">沒有符合的節目</div>`;
+}
+$("evQ").oninput=renderEvents;
+$("evAdd").onclick=()=>editEvent(null);
+/* ================= 座位格子引擎（場地模型；框選互動） ================= */
+const ZONE_COLORS=["rgba(139,111,202,.6)","rgba(224,143,192,.55)","rgba(122,168,255,.55)","rgba(95,230,192,.5)","rgba(240,192,106,.55)","rgba(255,140,120,.55)","rgba(180,120,255,.55)","rgba(120,220,255,.5)"];
+const venueById=id=>(DB.venues||[]).find(v=>v.id===id);
+const cellR=id=>+id.split('-')[0], cellC=id=>+id.split('-')[1];
+function venueSeatCount(v){return v.rows*v.cols-(v.off||[]).length;}
+function boxOf(v,id){return (v.boxes||[]).find(b=>b.seats.includes(id));}
+/* 舞台物件：{x,y,w,h,shape,label}，單位=格（原點=座位 A1 左上角）；相容舊字串 top/bottom/left/right */
+function normStage(v){
+  let s=v.stage;
+  if(!s||typeof s==='string'){const side=s||'top',R=v.rows,C=v.cols;
+    s= side==='bottom'?{x:C*0.2,y:R+1.2,w:C*0.6,h:1.8}
+     : side==='left'?{x:-3.2,y:R*0.2,w:1.8,h:R*0.6}
+     : side==='right'?{x:C+1.4,y:R*0.2,w:1.8,h:R*0.6}
+     : {x:C*0.2,y:-3,w:C*0.6,h:1.8};
+    s.shape='round';s.label='STAGE · 舞台';}
+  s.shape=s.shape||'round';s.label=s.label||'STAGE · 舞台';return s;
+}
+const U=22, MARGIN=4;                      // 後台格子單位(18+4)、畫布四周留白格數
+const ORIG=()=>({x:MARGIN*U+24,y:MARGIN*U+22});   // 座位 A1 在畫布內的像素原點（含列/欄標籤）
+function stagePx(st){const o=ORIG();return {left:o.x+st.x*U,top:o.y+st.y*U,width:Math.max(U,st.w*U),height:Math.max(U,st.h*U)};}
+/* 畫格子。opts: {zoneOf:fn(id)->{i,col}|null, sold:Set, showUnassigned:bool, stageEdit:bool} */
+function gridHTML(v,opts){
+  const off=new Set(v.off||[]);
+  let cells=`<div class="sgrid" style="left:${MARGIN*U}px;top:${MARGIN*U}px;grid-template-columns:20px repeat(${v.cols},18px)">`;
+  cells+=`<div></div>`+[...Array(v.cols).keys()].map(c=>`<div class="cl">${c+1}</div>`).join('');
+  for(let r=0;r<v.rows;r++){cells+=`<div class="rl2">${RL(r)}</div>`;
+    for(let c=0;c<v.cols;c++){const id=sid(r,c);const isOff=off.has(id);
+      const z=opts.zoneOf?opts.zoneOf(id):null;const bx=boxOf(v,id);
+      let cls='cell';let style='';let title=`${RL(r)}${c+1}`;
+      if(isOff)cls+=' off';
+      else{ if(z){style=`--zc:${z.col}`;title+=' · '+z.name;} else if(opts.showUnassigned!==false)cls+=' unassigned';
+            if(bx){cls+=' box';title+=' · '+bx.name;}
+            if(opts.sold&&opts.sold.has(id))cls+=' sold'; }
+      cells+=`<div class="${cls}" data-id="${id}" data-r="${r}" data-c="${c}" style="${style}" title="${title}"></div>`;}
+  }
+  cells+='</div>';
+  const st=normStage(v);const px=stagePx(st);
+  const W=(v.cols+2*MARGIN)*U+24, H=(v.rows+2*MARGIN)*U+22;
+  const stage=`<div class="stage-el shape-${st.shape} ${opts.stageEdit?'editable':''}" id="stageEl" style="left:${px.left}px;top:${px.top}px;width:${px.width}px;height:${px.height}px">
+      <div class="stage-shape">${esc(st.label)}</div>${opts.stageEdit?'<div class="rh" title="拖曳縮放"></div>':''}</div>`;
+  return `<div class="grid-wrap"><div class="map-area" style="width:${W}px;height:${H}px">${cells}${stage}</div></div>`;
+}
+/* 舞台拖曳 / 縮放（僅場地編輯器） */
+function bindStageDrag(container,v,onChange){
+  const el=container.querySelector('#stageEl');if(!el)return;
+  const st=normStage(v);let mode=null,sx=0,sy=0,ox=0,oy=0,ow=0,oh=0;
+  const apply=()=>{const px=stagePx(st);el.style.left=px.left+'px';el.style.top=px.top+'px';el.style.width=px.width+'px';el.style.height=px.height+'px';};
+  el.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();
+    mode=e.target.classList.contains('rh')?'resize':'move';sx=e.clientX;sy=e.clientY;ox=st.x;oy=st.y;ow=st.w;oh=st.h;});
+  const mv=e=>{if(!mode)return;const dx=(e.clientX-sx)/U,dy=(e.clientY-sy)/U;const q=n=>Math.round(n*4)/4;
+    if(mode==='move'){st.x=q(Math.min(Math.max(ox+dx,-MARGIN),v.cols+MARGIN-st.w));st.y=q(Math.min(Math.max(oy+dy,-MARGIN),v.rows+MARGIN-st.h));}
+    else{st.w=q(Math.max(1,Math.min(ow+dx,v.cols+MARGIN-st.x)));st.h=q(Math.max(1,Math.min(oh+dy,v.rows+MARGIN-st.y)));}
+    apply();};
+  const up=()=>{if(!mode)return;mode=null;v.stage=st;onChange&&onChange(st);};
+  if(container.__stMv){document.removeEventListener('mousemove',container.__stMv);document.removeEventListener('mouseup',container.__stUp);}
+  container.__stMv=mv;container.__stUp=up;document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+}
+/* 框選：點一格=起點 → 移動即時顯示 → 再點一格=確定（也支援按住拖曳放開）。確定後範圍保持高亮，直到套用動作或重新框選。
+   onPick(ids) 於確定時呼叫；onLive(count) 於預覽時呼叫 */
+function makeSelectable(container,onPick,onLive){
+  let start=null,cur=null,downCell=null,dragged=false;
+  const cells=()=>container.querySelectorAll('.cell');
+  const inRect=el=>{if(!start||!cur)return false;const r=+el.dataset.r,c=+el.dataset.c;
+    return r>=Math.min(start.r,cur.r)&&r<=Math.max(start.r,cur.r)&&c>=Math.min(start.c,cur.c)&&c<=Math.max(start.c,cur.c);};
+  const paint=()=>{let n=0;cells().forEach(el=>{const on=inRect(el);el.classList.toggle('pick',on);if(on)n++;});onLive&&onLive(n,!!start);};
+  const finish=()=>{const ids=[...cells()].filter(el=>inRect(el)).map(el=>el.dataset.id);start=null;cur=null;downCell=null;onPick(ids);};
+  container.addEventListener('mousedown',e=>{const el=e.target.closest('.cell');if(!el||e.target.closest('.stage-el'))return;e.preventDefault();
+    const p={r:+el.dataset.r,c:+el.dataset.c};
+    if(!start){cells().forEach(x=>x.classList.remove('pick'));start=p;cur=p;downCell=p;dragged=false;paint();}
+    else{cur=p;paint();finish();}});
+  container.addEventListener('mousemove',e=>{if(!start)return;const el=e.target.closest('.cell');if(!el)return;
+    const p={r:+el.dataset.r,c:+el.dataset.c};if(p.r!==cur.r||p.c!==cur.c){cur=p;dragged=true;paint();}});
+  container.addEventListener('mouseup',e=>{if(!start||!downCell)return;const el=e.target.closest('.cell');if(!el)return;
+    const p={r:+el.dataset.r,c:+el.dataset.c};
+    if(dragged&&(p.r!==downCell.r||p.c!==downCell.c)){cur=p;paint();finish();}   // 拖曳模式：放開即確定
+    downCell=null;});
+  const esc_=e=>{if(e.key==='Escape'&&start){start=null;cur=null;cells().forEach(x=>x.classList.remove('pick'));onLive&&onLive(0,false);}};
+  if(container.__selEsc)document.removeEventListener('keydown',container.__selEsc);
+  container.__selEsc=esc_;document.addEventListener('keydown',esc_);
+}
+
+/* ================= 場地管理 ================= */
+function renderVenues(){
+  const l=DB.venues||[];
+  $("vnTable").innerHTML=l.length?`<table><thead><tr><th>場地名稱</th><th>格局</th><th>座位數</th><th>包廂</th><th>舞台形狀</th><th>使用中節目</th><th></th></tr></thead><tbody>`+
+    l.map(v=>`<tr><td><b>${esc(v.name)}</b></td><td>${v.rows} 排 × ${v.cols} 席</td><td style="color:var(--brand3);font-weight:700">${venueSeatCount(v)}</td>
+      <td>${(v.boxes||[]).length?(v.boxes||[]).map(b=>`<span class="tag warn">${esc(b.name)} · ${b.seats.length}席</span>`).join(' '):'—'}</td>
+      <td>${({rect:'矩形',round:'圓角',ellipse:'橢圓',arc:'弧形',trap:'梯形'})[(normStage(v).shape)]||'圓角'}</td>
+      <td style="color:var(--muted)">${DB.events.filter(e=>e.venueId===v.id).length} 檔</td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editVenue(${v.id})">編輯</button>
+      <button class="btn btn-ghost btn-sm" onclick="dupVenue(${v.id})">複製</button>
+      <button class="btn btn-danger btn-sm" onclick="delVenue(${v.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
+    :`<div class="empty">尚無場地，請先新增</div>`;
+}
+$("vnAdd").onclick=()=>editVenue(null);
+let VE=null, VSEL=[];
+window.editVenue=id=>{
+  const src=id?venueById(id):{name:'',rows:12,cols:20,stage:null,off:[],boxes:[]};
+  VE=JSON.parse(JSON.stringify(src));VSEL=[];
+  openM(id?'編輯場地':'新增場地',`<div class="fgrid">
+    <div class="fld"><label>場地名稱</label><input id="v_name" value="${esc(VE.name)}" placeholder="南港場域 A 廳"></div>
+    <div class="fld"><label>舞台形狀（位置與大小請直接在圖上拖曳）</label><select id="v_shape">${[['round','圓角矩形'],['rect','矩形'],['ellipse','橢圓 / 圓形'],['arc','弧形（前緣圓弧）'],['trap','梯形']].map(s=>`<option value="${s[0]}" ${(VE.stage&&VE.stage.shape)===s[0]?'selected':''}>${s[1]}</option>`).join('')}</select></div>
+    <div class="fld"><label>舞台顯示文字</label><input id="v_slabel" value="${esc((VE.stage&&VE.stage.label)||'STAGE · 舞台')}"></div>
+    <div class="fld"><label>排數</label><input id="v_rows" type="number" min="1" max="60" value="${VE.rows}"></div>
+    <div class="fld"><label>每排席數</label><input id="v_cols" type="number" min="1" max="60" value="${VE.cols}"></div>
+    <div class="fld full">
+      <label>座位圖 — <b>點一格</b>當起點、移動滑鼠即時顯示範圍、<b>再點一下</b>確定；舞台可<b>拖曳移動</b>、拉右下角<b>縮放</b></label>
+      <div class="ed-tools">
+        <span class="lbl">框選後：</span>
+        <button class="btn btn-ghost btn-sm" onclick="vAct('off')">移除座位（走道 / 空位）</button>
+        <button class="btn btn-ghost btn-sm" onclick="vAct('on')">恢復座位</button>
+        <button class="btn btn-ghost btn-sm" onclick="vAct('box')">設為包廂</button>
+        <button class="btn btn-ghost btn-sm" onclick="vAct('unbox')">取消包廂</button>
+        <span class="sel-info" id="vSelInfo">尚未框選</span>
+      </div>
+      <div id="vGrid"></div>
+      <div class="legend"><span><i style="background:rgba(255,255,255,.14)"></i>座位</span><span><i style="background:transparent;border-style:dashed"></i>走道 / 無座位</span>
+        <span><i style="box-shadow:inset 0 0 0 2px rgba(240,192,106,.75)"></i>包廂</span></div>
+      <div class="box-list" id="vBoxes"></div>
+    </div>
+    <div class="fld full"><div class="spec"><b>💡 使用方式</b>先設排數與每排席數 → 框選中間一整欄按「移除座位」做走道 → 框選角落幾席按「設為包廂」並命名 → 儲存。之後在節目管理「套用場地」即可直接用這張圖賣票。</div></div>
+  </div>`,()=>{
+    VE.name=v("v_name");if(!VE.name){toast('請填寫場地名稱');return false;}
+    VE.stage=normStage(VE);VE.stage.shape=v("v_shape");VE.stage.label=v("v_slabel")||'STAGE · 舞台';
+    if(id)Object.assign(venueById(id),VE); else{VE.id=Date.now();(DB.venues=DB.venues||[]).push(VE);}
+    renderVenues();toast(id?'場地已更新':'場地已新增');
+  });
+  const regen=()=>{VE.rows=Math.max(1,+v("v_rows")||1);VE.cols=Math.max(1,+v("v_cols")||1);
+    VE.stage=normStage(VE);VE.stage.shape=v("v_shape");VE.stage.label=v("v_slabel")||'STAGE · 舞台';
+    VE.off=(VE.off||[]).filter(x=>cellR(x)<VE.rows&&cellC(x)<VE.cols);
+    VE.boxes=(VE.boxes||[]).map(b=>({name:b.name,seats:b.seats.filter(x=>cellR(x)<VE.rows&&cellC(x)<VE.cols)})).filter(b=>b.seats.length);
+    drawVenue();};
+  ['v_rows','v_cols','v_shape','v_slabel'].forEach(i=>$(i).addEventListener('change',regen));
+  drawVenue();
+};
+function drawVenue(){
+  const g=$("vGrid");g.innerHTML=gridHTML(VE,{showUnassigned:false,stageEdit:true});
+  bindStageDrag(g,VE);
+  makeSelectable(g,ids=>{VSEL=ids;$("vSelInfo").textContent='已框選 '+ids.length+' 格，請按上方動作套用';},
+    (n,active)=>{if(active)$("vSelInfo").textContent='選取中… '+n+' 格（再點一下確定，Esc 取消）';});
+  $("vBoxes").innerHTML=(VE.boxes||[]).map((b,i)=>`<span class="box-chip">▣ ${esc(b.name)} · ${b.seats.length} 席
+    <button onclick="vBoxRename(${i})">改名</button><button onclick="vBoxDel(${i})">✕</button></span>`).join('');
+}
+window.vAct=act=>{
+  if(!VSEL.length){toast('請先在座位圖上拖曳框選範圍');return;}
+  const off=new Set(VE.off||[]);
+  if(act==='off'){VSEL.forEach(x=>off.add(x));VE.boxes=(VE.boxes||[]).map(b=>({name:b.name,seats:b.seats.filter(x=>!off.has(x))})).filter(b=>b.seats.length);}
+  if(act==='on'){VSEL.forEach(x=>off.delete(x));}
+  if(act==='box'){const seats=VSEL.filter(x=>!off.has(x));if(!seats.length){toast('框選範圍內沒有座位');return;}
+    const name=prompt('包廂名稱','包廂 '+((VE.boxes||[]).length+1));if(name===null)return;
+    VE.boxes=(VE.boxes||[]).map(b=>({name:b.name,seats:b.seats.filter(x=>!seats.includes(x))})).filter(b=>b.seats.length);
+    VE.boxes.push({name:name||'包廂',seats});}
+  if(act==='unbox'){VE.boxes=(VE.boxes||[]).map(b=>({name:b.name,seats:b.seats.filter(x=>!VSEL.includes(x))})).filter(b=>b.seats.length);}
+  VE.off=[...off];VSEL=[];drawVenue();$("vSelInfo").textContent='已套用，可繼續框選';
+};
+window.vBoxRename=i=>{const n=prompt('包廂名稱',VE.boxes[i].name);if(n)VE.boxes[i].name=n;drawVenue();};
+window.vBoxDel=i=>{VE.boxes.splice(i,1);drawVenue();};
+window.dupVenue=id=>{const s=venueById(id);const c=JSON.parse(JSON.stringify(s));c.id=Date.now();c.name=s.name+'（複製）';DB.venues.push(c);save();renderVenues();toast('已複製場地');};
+window.delVenue=id=>{const used=DB.events.filter(e=>e.venueId===id).length;
+  if(used){toast('此場地仍有 '+used+' 檔節目使用，無法刪除');return;}
+  if(confirm('確定刪除此場地？')){DB.venues=DB.venues.filter(x=>x.id!==id);save();renderVenues();toast('已刪除場地');}};
+
+/* ================= 節目：套用場地 + 框選票種 ================= */
+function evCap(e){return (e.tickets||[]).reduce((s,t)=>s+(t.seats||[]).length,0);}
+function evZoneOf(e){const m={};(e.tickets||[]).forEach((t,i)=>(t.seats||[]).forEach(id=>m[id]={i,name:t.n,col:ZONE_COLORS[i%ZONE_COLORS.length]}));return id=>m[id]||null;}
+// 已售：明確清單，否則依 sold 數量由各票種前段推算
+function soldSet(e){
+  if(Array.isArray(e.soldSeats))return new Set(e.soldSeats);
+  const s=new Set();let n=+e.sold||0;
+  (e.tickets||[]).forEach(t=>(t.seats||[]).forEach(id=>{if(n>0){s.add(id);n--;}}));return s;
+}
+let EV=null, ESEL=[], EMODE='assign', ETK=0;
+function tkRow(t,i){return `<div class="tk-row ${i===ETK?'on':''}" data-i="${i}">
+  <div class="sw" style="background:${ZONE_COLORS[i%ZONE_COLORS.length]}" onclick="ETK=${i};drawEvent()" title="設為目前框選對象"></div>
+  <input placeholder="票種名稱" value="${esc(t.n)}" data-tn oninput="EV.tickets[${i}].n=this.value">
+  <input type="number" placeholder="票價" value="${t.p}" data-tp oninput="EV.tickets[${i}].p=+this.value||0">
+  <select onchange="EV.tickets[${i}].unit=this.value"><option value="seat" ${t.unit!=='box'?'selected':''}>每席販售</option><option value="box" ${t.unit==='box'?'selected':''}>包廂整間販售</option></select>
+  <span class="cnt">${(t.seats||[]).length} 席</span>
+  <button class="xbtn" onclick="EV.tickets.splice(${i},1);ETK=0;drawEvent()">✕</button></div>`;}
+window.editEvent=id=>{
+  const src=id?DB.events.find(x=>x.id===id):{name:'',cat:'沉浸場域',venue:'',venueId:(DB.venues[0]||{}).id||null,date:'',time:'19:30',sale:'',sold:0,cap:0,status:'未開賣',
+    tickets:[{n:'一般席',p:1280,unit:'seat',seats:[]}],intro:'',yt:'',img:''};
+  EV=JSON.parse(JSON.stringify(src));EV.soldSeats=[...soldSet(EV)];ESEL=[];EMODE='assign';ETK=0;
+  openM(id?'編輯節目':'新增節目',`
+    <div class="fgrid">
+      <div class="fld full"><label>節目名稱</label><input id="f_name" value="${esc(EV.name)}"></div>
+      <div class="fld"><label>類型</label><select id="f_cat">${["沉浸場域","3D 場域","見面會","工作坊","特展"].map(c=>`<option ${c===EV.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="fld"><label>狀態</label><select id="f_status">${["未開賣","售票中","即將售罄","已售罄"].map(c=>`<option ${c===EV.status?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="fld"><label>套用場地</label><select id="f_venue">${(DB.venues||[]).map(x=>`<option value="${x.id}" ${x.id===EV.venueId?'selected':''}>${esc(x.name)}（${venueSeatCount(x)} 席）</option>`).join('')}</select></div>
+      <div class="fld"><label>場地顯示名稱（前台）</label><input id="f_venue_t" value="${esc(EV.venue)}" placeholder="台北 · 南港場域 A 廳"></div>
+      <div class="fld"><label>演出日期</label><input id="f_date" type="date" value="${EV.date}"></div>
+      <div class="fld"><label>開演時間</label><input id="f_time" type="time" value="${EV.time}"></div>
+      <div class="fld full"><label>售票期間</label><input id="f_sale" value="${esc(EV.sale)}" placeholder="2026-08-01 ~ 2026-09-12"></div>
+      <div class="fld tall full"><label>活動簡介</label><textarea id="f_intro">${esc(EV.intro)}</textarea></div>
+      <div class="fld"><label>YouTube 影片 ID（選填）</label><input id="f_yt" value="${esc(EV.yt)}" placeholder="LXb3EKWsInQ"></div>
+      <div class="fld"><label>主視覺圖片網址（選填）</label><input id="f_img" value="${esc(EV.img)}" placeholder="/images/event.jpg"></div>
+      <div class="fld full"><div class="spec"><b>📐 主視覺建議規格</b>尺寸：<code>1200 × 675 px</code>（16:9）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB</div></div>
+
+      <div class="fld full"><label>票種（點左側色塊設為「目前框選對象」）</label>
+        <div id="tkBox"></div>
+        <button class="btn btn-ghost btn-sm" onclick="EV.tickets.push({n:'',p:0,unit:'seat',seats:[]});ETK=EV.tickets.length-1;drawEvent()">＋ 新增票種</button></div>
+
+      <div class="fld full">
+        <label>座位圖 — 點一格起點、移動預覽、再點一下確定，依下方模式套用</label>
+        <div class="ed-tools">
+          <span class="lbl">框選後：</span>
+          <div class="seg">
+            <button class="on" data-m="assign" onclick="setMode('assign')">指定給目前票種</button>
+            <button data-m="clear" onclick="setMode('clear')">清除票種</button>
+            <button data-m="sold" onclick="setMode('sold')">標記已售</button>
+            <button data-m="unsold" onclick="setMode('unsold')">取消已售</button>
+          </div>
+          <span class="sel-info" id="eStat"></span>
+        </div>
+        <div id="eGrid"></div>
+        <div class="legend"><span><i style="background:rgba(255,255,255,.08)"></i>未指定（不販售）</span><span><i style="background:#2a2438;opacity:.6"></i>已售</span>
+          <span><i style="box-shadow:inset 0 0 0 2px rgba(240,192,106,.75)"></i>包廂</span><span style="margin-left:auto">框選時可用 <b>Shift</b> 追加、<b>Alt</b> 扣除（進階）</span></div>
+      </div>
+    </div>`,()=>{
+    EV.name=v("f_name");if(!EV.name){toast('請填寫節目名稱');return false;}
+    EV.cat=v("f_cat");EV.status=v("f_status");EV.venueId=+v("f_venue")||EV.venueId;EV.venue=v("f_venue_t");
+    EV.date=v("f_date");EV.time=v("f_time");EV.sale=v("f_sale");EV.intro=v("f_intro");EV.yt=v("f_yt");EV.img=v("f_img");
+    EV.tickets=EV.tickets.filter(t=>t.n);
+    if(!EV.tickets.length){toast('至少需要一種票種');return false;}
+    if(!evCap(EV)){toast('請在座位圖上框選並指定票種範圍');return false;}
+    const valid=new Set();EV.tickets.forEach(t=>t.seats.forEach(x=>valid.add(x)));
+    EV.soldSeats=EV.soldSeats.filter(x=>valid.has(x));EV.sold=EV.soldSeats.length;EV.cap=evCap(EV);
+    if(id)Object.assign(DB.events.find(x=>x.id===id),EV); else{EV.id=Date.now();DB.events.push(EV);}
+    renderEvents();toast(id?'節目已更新':'節目已新增');
+  });
+  $("modal").classList.add('wide');
+  $("f_venue").addEventListener('change',()=>{EV.venueId=+v("f_venue");const vn=venueById(EV.venueId);
+    if(vn&&!v("f_venue_t"))$("f_venue_t").value=vn.name;
+    // 換場地：清掉不存在於新場地的座位
+    const ok=new Set();for(let r=0;r<vn.rows;r++)for(let c=0;c<vn.cols;c++)if(!(vn.off||[]).includes(sid(r,c)))ok.add(sid(r,c));
+    EV.tickets.forEach(t=>t.seats=(t.seats||[]).filter(x=>ok.has(x)));EV.soldSeats=EV.soldSeats.filter(x=>ok.has(x));drawEvent();});
+  drawEvent();
+};
+window.setMode=m=>{EMODE=m;document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));};
+function drawEvent(){
+  const vn=venueById(EV.venueId);
+  $("tkBox").innerHTML=EV.tickets.map(tkRow).join('');
+  if(!vn){$("eGrid").innerHTML='<div class="empty">請先到「場地管理」建立場地，再回來套用</div>';return;}
+  const sold=new Set(EV.soldSeats||[]);
+  $("eGrid").innerHTML=gridHTML(vn,{zoneOf:evZoneOf(EV),sold});
+  const statTxt=`總席次 ${evCap(EV)} · 已售 ${sold.size} · 場地座位 ${venueSeatCount(vn)}`;$("eStat").textContent=statTxt;
+  makeSelectable($("eGrid"),(ids,e)=>{
+    const off=new Set(vn.off||[]);ids=ids.filter(x=>!off.has(x));if(!ids.length)return;
+    if(EMODE==='assign'){const t=EV.tickets[ETK];if(!t){toast('請先新增票種');return;}
+      // 包廂整間販售：框到包廂任一席即整間納入
+      let set=new Set(ids);ids.forEach(x=>{const b=boxOf(vn,x);if(b)b.seats.forEach(y=>set.add(y));});
+      const all=[...set].filter(x=>!off.has(x));
+      EV.tickets.forEach(tt=>tt.seats=(tt.seats||[]).filter(x=>!set.has(x)));
+      t.seats=[...new Set((t.seats||[]).concat(all))];}
+    if(EMODE==='clear'){EV.tickets.forEach(tt=>tt.seats=(tt.seats||[]).filter(x=>!ids.includes(x)));EV.soldSeats=EV.soldSeats.filter(x=>!ids.includes(x));}
+    if(EMODE==='sold'){const assigned=new Set();EV.tickets.forEach(tt=>tt.seats.forEach(x=>assigned.add(x)));
+      let set=new Set(ids.filter(x=>assigned.has(x)));ids.forEach(x=>{const b=boxOf(vn,x);if(b&&assigned.has(x))b.seats.forEach(y=>set.add(y));});
+      EV.soldSeats=[...new Set(EV.soldSeats.concat([...set]))];}
+    if(EMODE==='unsold'){let set=new Set(ids);ids.forEach(x=>{const b=boxOf(vn,x);if(b)b.seats.forEach(y=>set.add(y));});EV.soldSeats=EV.soldSeats.filter(x=>!set.has(x));}
+    drawEvent();
+  },(n,active)=>{$("eStat").textContent=active?`選取中… ${n} 格（再點一下確定）`:statTxt;});
+}
+window.__ttRow=()=>'';
+
+window.delEvent=id=>{if(confirm('確定刪除此節目？'))
+  {DB.events=DB.events.filter(x=>x.id!==id);save();renderEvents();toast('已刪除節目');}};
+
+/* ================= 創作者 ================= */
+function renderCreators(){
+  const q=v("crQ").toLowerCase();
+  const l=DB.creators.filter(c=>!q||c.name.toLowerCase().includes(q)||c.slug.includes(q));
+  $("crTable").innerHTML=l.length?`<table><thead><tr><th>創作者</th><th>路徑</th><th>類型</th><th>標籤</th><th>粉絲</th><th>人氣</th><th>狀態</th><th></th></tr></thead><tbody>`+
+    l.map(c=>{const im=DB.images[c.slug]||'';return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="thumb-sm" style="${im?`background-image:url('${im}')`:''}"></div>
+      <div><b>${esc(c.name)}</b><br><small style="color:var(--muted)">${esc(c.desc)}</small></div></div></td>
+      <td><code style="color:var(--brand3);font-size:12px">/character/${esc(c.slug)}</code></td>
+      <td><span class="tag b">${esc(c.type)}</span></td><td><span class="tag ${c.tier==='精選'?'warn':'info'}">${esc(c.tier)}</span></td>
+      <td>${esc(c.fans)}</td><td>${esc(c.hot)}</td>
+      <td><span class="tag ${c.online?'ok':''}">${c.online?'在線':'離線'}</span></td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editCr(${c.id})">編輯</button>
+      <button class="btn btn-danger btn-sm" onclick="delCr(${c.id})">刪除</button></div></td></tr>`;}).join('')+`</tbody></table>`
+    :`<div class="empty">沒有符合的創作者</div>`;
+}
+$("crQ").oninput=renderCreators;
+$("crAdd").onclick=()=>editCr(null);
+window.editCr=id=>{
+  const c=id?DB.creators.find(x=>x.id===id):{name:'',slug:'',type:'治癒系',online:true,fans:'0',hot:'0',tier:'NEW',desc:''};
+  openM(id?'編輯創作者':'新增創作者',`<div class="fgrid">
+    <div class="fld"><label>名稱</label><input id="c_name" value="${esc(c.name)}"></div>
+    <div class="fld"><label>路徑代稱 slug</label><input id="c_slug" value="${esc(c.slug)}" placeholder="sora"></div>
+    <div class="fld"><label>類型</label><select id="c_type">${["治癒系","御姐系","時尚系","清純系","偶像系","女友系"].map(t=>`<option ${t===c.type?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="fld"><label>標籤</label><select id="c_tier">${["精選","NEW"].map(t=>`<option ${t===c.tier?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="fld"><label>粉絲數</label><input id="c_fans" value="${esc(c.fans)}" placeholder="128K"></div>
+    <div class="fld"><label>人氣指數</label><input id="c_hot" value="${esc(c.hot)}" placeholder="9.8萬"></div>
+    <div class="fld"><label>上線狀態</label><select id="c_on"><option value="1" ${c.online?'selected':''}>在線</option><option value="0" ${!c.online?'selected':''}>離線</option></select></div>
+    <div class="fld full"><label>簡介</label><textarea id="c_desc">${esc(c.desc)}</textarea></div>
+    <div class="fld full"><div class="spec"><b>📐 角色照建議規格</b>尺寸：<code>900 × 1200 px</code>（比例 3:4）· 格式：<code>JPG / WebP</code> · 建議 &lt; 350 KB<br>人物置中、預留頭部空間，避免臉部被卡片裁切</div></div>
+  </div>`,()=>{
+    if(!v("c_name")||!v("c_slug")){toast('名稱與 slug 為必填');return false;}
+    const o={name:v("c_name"),slug:v("c_slug"),type:v("c_type"),tier:v("c_tier"),fans:v("c_fans"),hot:v("c_hot"),online:v("c_on")==='1',desc:v("c_desc")};
+    if(id)Object.assign(DB.creators.find(x=>x.id===id),o); else DB.creators.push(Object.assign({id:Date.now()},o));
+    renderCreators();toast(id?'創作者已更新':'創作者已新增');
+  });
+};
+window.delCr=id=>{if(confirm('確定刪除此創作者？')){DB.creators=DB.creators.filter(x=>x.id!==id);save();renderCreators();toast('已刪除');}};
+
+/* ================= 商品 ================= */
+function renderProducts(){
+  const q=v("pdQ").toLowerCase();
+  const l=DB.products.filter(p=>!q||p.name.toLowerCase().includes(q));
+  $("pdTable").innerHTML=l.length?`<table><thead><tr><th>商品</th><th>售價</th><th>原價</th><th>庫存</th><th>標籤</th><th>上架</th><th></th></tr></thead><tbody>`+
+    l.map(p=>{const im=DB.images[p.key]||'';return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="thumb-sm" style="height:44px;${im?`background-image:url('${im}')`:''}"></div><b>${esc(p.name)}</b></div></td>
+      <td style="color:var(--brand3);font-weight:700">NT$${p.price.toLocaleString()}</td>
+      <td style="color:var(--muted)">${p.old?'NT$'+p.old.toLocaleString():'—'}</td>
+      <td>${p.stock}${p.stock<50?' <span class="tag warn">低庫存</span>':''}</td>
+      <td>${p.badge?`<span class="tag b">${esc(p.badge)}</span>`:'—'}</td>
+      <td><span class="tag ${p.on?'ok':'err'}">${p.on?'上架':'下架'}</span></td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editPd(${p.id})">編輯</button>
+      <button class="btn btn-danger btn-sm" onclick="delPd(${p.id})">刪除</button></div></td></tr>`;}).join('')+`</tbody></table>`
+    :`<div class="empty">沒有符合的商品</div>`;
+}
+$("pdQ").oninput=renderProducts;
+$("pdAdd").onclick=()=>editPd(null);
+window.editPd=id=>{
+  const p=id?DB.products.find(x=>x.id===id):{key:'p'+DB.products.length,name:'',price:0,old:0,stock:0,badge:'',on:true};
+  openM(id?'編輯商品':'新增商品',`<div class="fgrid">
+    <div class="fld full"><label>商品名稱</label><input id="d_name" value="${esc(p.name)}"></div>
+    <div class="fld"><label>圖片代碼 key</label><input id="d_key" value="${esc(p.key)}" placeholder="p0"></div>
+    <div class="fld"><label>標籤</label><input id="d_badge" value="${esc(p.badge)}" placeholder="熱賣 / 新品"></div>
+    <div class="fld"><label>售價 NT$</label><input id="d_price" type="number" value="${p.price}"></div>
+    <div class="fld"><label>原價 NT$（0 表不顯示）</label><input id="d_old" type="number" value="${p.old}"></div>
+    <div class="fld"><label>庫存</label><input id="d_stock" type="number" value="${p.stock}"></div>
+    <div class="fld"><label>上架狀態</label><select id="d_on"><option value="1" ${p.on?'selected':''}>上架</option><option value="0" ${!p.on?'selected':''}>下架</option></select></div>
+    <div class="fld full"><div class="spec"><b>📐 商品圖建議規格</b>尺寸：<code>1000 × 1000 px</code>（正方形 1:1）· 格式：<code>JPG / PNG（去背用 PNG）</code> · 建議 &lt; 300 KB<br>商品置中、深色或純色背景最能融入前台暗色版面</div></div>
+  </div>`,()=>{
+    if(!v("d_name")){toast('請填寫商品名稱');return false;}
+    const o={key:v("d_key"),name:v("d_name"),badge:v("d_badge"),price:+v("d_price")||0,old:+v("d_old")||0,stock:+v("d_stock")||0,on:v("d_on")==='1'};
+    if(id)Object.assign(DB.products.find(x=>x.id===id),o); else DB.products.push(Object.assign({id:Date.now()},o));
+    renderProducts();toast(id?'商品已更新':'商品已新增');
+  });
+};
+window.delPd=id=>{if(confirm('確定刪除此商品？')){DB.products=DB.products.filter(x=>x.id!==id);save();renderProducts();toast('已刪除');}};
+
+/* ================= 訂單 ================= */
+function oTable(list,act){
+  if(!list.length)return `<div class="empty">沒有符合的訂單</div>`;
+  return `<table><thead><tr><th>訂單編號</th><th>購票人</th><th>聯絡方式</th><th>品項</th><th>金額</th><th>付款</th><th>狀態</th><th>日期</th>${act?'<th></th>':''}</tr></thead><tbody>`+
+    list.map(o=>`<tr><td><code style="color:var(--brand3)">${esc(o.id)}</code>${o.used?' <span class="tag info">已入場</span>':''}</td>
+      <td><b>${esc(o.name)}</b></td><td style="color:var(--muted);font-size:12px">${esc(o.phone)}<br>${esc(o.email)}</td>
+      <td>${esc(o.item)}</td><td style="color:var(--brand3);font-weight:700">NT$${o.amt.toLocaleString()}</td>
+      <td style="color:var(--muted)">${esc(o.pay)}</td><td>${oStTag(o.status)}</td><td style="color:var(--muted)">${o.date}</td>
+      ${act?`<td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="viewOrder('${o.id}')">明細</button></div></td>`:''}</tr>`).join('')+`</tbody></table>`;
+}
+function renderOrders(){
+  const q=v("odQ").toLowerCase(),s=v("odS");
+  const l=DB.orders.filter(o=>(!q||o.id.toLowerCase().includes(q)||o.name.includes(q)||o.phone.includes(q))&&(!s||o.status===s));
+  $("odTable").innerHTML=oTable(l,true);
+}
+$("odQ").oninput=renderOrders;$("odS").onchange=renderOrders;
+window.viewOrder=id=>{
+  const o=DB.orders.find(x=>x.id===id);
+  openM('訂單明細 '+o.id,`
+    <div class="kv"><span>訂單編號</span><b>${esc(o.id)}</b></div>
+    <div class="kv"><span>購票人</span><b>${esc(o.name)}</b></div>
+    <div class="kv"><span>電話</span><b>${esc(o.phone)}</b></div>
+    <div class="kv"><span>Email</span><b>${esc(o.email)}</b></div>
+    <div class="kv"><span>品項</span><b>${esc(o.item)}</b></div>
+    <div class="kv"><span>金額</span><b style="color:var(--brand3)">NT$${o.amt.toLocaleString()}</b></div>
+    <div class="kv"><span>付款方式</span><b>${esc(o.pay)}</b></div>
+    <div class="kv"><span>訂單狀態</span><b>${o.status}</b></div>
+    <div class="kv"><span>入場狀態</span><b>${o.used?'已入場':'尚未入場'}</b></div>
+    <div class="fld" style="margin-top:16px"><label>變更訂單狀態</label>
+      <select id="o_st">${["已付款","待付款","已退款"].map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div>`,
+    ()=>{o.status=v("o_st");renderOrders();toast('訂單狀態已更新');});
+};
+
+/* ================= 會員 ================= */
+function renderMembers(){
+  const q=v("mbQ").toLowerCase();
+  const l=DB.members.filter(m=>!q||m.name.includes(q)||m.email.toLowerCase().includes(q)||m.phone.includes(q));
+  $("mbTable").innerHTML=l.length?`<table><thead><tr><th>會員</th><th>聯絡方式</th><th>會員等級</th><th>錢包餘額</th><th>訂單數</th><th>加入日期</th><th></th></tr></thead><tbody>`+
+    l.map(m=>`<tr><td><b>${esc(m.name)}</b></td><td style="color:var(--muted);font-size:12px">${esc(m.phone)}<br>${esc(m.email)}</td>
+      <td><span class="tag b">${esc(m.vip)}</span></td><td style="color:var(--brand3);font-weight:700">${m.wallet.toLocaleString()} 幣</td>
+      <td>${m.orders}</td><td style="color:var(--muted)">${m.join}</td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editMb(${m.id})">編輯</button></div></td></tr>`).join('')+`</tbody></table>`
+    :`<div class="empty">沒有符合的會員</div>`;
+}
+$("mbQ").oninput=renderMembers;
+window.editMb=id=>{
+  const m=DB.members.find(x=>x.id===id);
+  openM('編輯會員 · '+m.name,`<div class="fgrid">
+    <div class="fld"><label>姓名</label><input id="m_name" value="${esc(m.name)}"></div>
+    <div class="fld"><label>電話</label><input id="m_phone" value="${esc(m.phone)}"></div>
+    <div class="fld full"><label>Email</label><input id="m_email" value="${esc(m.email)}"></div>
+    <div class="fld"><label>會員等級</label><select id="m_vip">${["星紫卡","沉浸卡","紫鑽卡"].map(x=>`<option ${x===m.vip?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="fld"><label>錢包餘額</label><input id="m_wallet" type="number" value="${m.wallet}"></div>
+  </div>`,()=>{Object.assign(m,{name:v("m_name"),phone:v("m_phone"),email:v("m_email"),vip:v("m_vip"),wallet:+v("m_wallet")||0});
+    renderMembers();toast('會員資料已更新');});
+};
+
+/* ================= 驗票 ================= */
+let ciMode='QR';
+document.querySelectorAll('.mode').forEach(m=>m.onclick=()=>{
+  document.querySelectorAll('.mode').forEach(x=>x.classList.remove('on'));m.classList.add('on');ciMode=m.dataset.m;});
+function renderCheckin(){
+  const used=DB.orders.filter(o=>o.used).length, paid=DB.orders.filter(o=>o.status==='已付款').length;
+  $("ciStat").innerHTML=`<div class="kv"><span>已付款票券</span><b>${paid}</b></div>
+    <div class="kv"><span>已入場</span><b style="color:var(--ok)">${used}</b></div>
+    <div class="kv"><span>尚未入場</span><b style="color:var(--warn)">${paid-used}</b></div>
+    <div class="kv"><span>入場率</span><b>${paid?Math.round(used/paid*100):0}%</b></div>`;
+}
+$("ciGo").onclick=()=>verify(v("ciCode"));
+$("ciCode").addEventListener('keydown',e=>{if(e.key==='Enter')verify(v("ciCode"));});
+$("ciDemo").onclick=()=>{const c=DB.orders.filter(o=>o.status==='已付款'&&!o.used);
+  const pick=c.length?c[Math.floor(Math.random()*c.length)].id:'LR-2026-9999';$("ciCode").value=pick;verify(pick);};
+function verify(code){
+  const R=$("ciRes");
+  if(!code){R.className='res';R.innerHTML='<div style="color:var(--muted);font-size:13px">請輸入票券編號</div>';return;}
+  const o=DB.orders.find(x=>x.id.toLowerCase()===code.toLowerCase());
+  if(!o){R.className='res err';R.innerHTML=`<div class="big" style="color:var(--err)">✕ 查無此票券</div><div style="font-size:13px;color:var(--muted)">編號 ${esc(code)} 不存在，請確認後重試</div>`;return;}
+  if(o.status!=='已付款'){R.className='res err';R.innerHTML=`<div class="big" style="color:var(--err)">✕ 票券無效</div>
+    <div class="kv"><span>訂單</span><b>${esc(o.id)}</b></div><div class="kv"><span>狀態</span><b>${o.status}</b></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">僅「已付款」票券可入場</div>`;return;}
+  if(o.used){R.className='res err';R.innerHTML=`<div class="big" style="color:var(--warn)">⚠ 已重複入場</div>
+    <div class="kv"><span>訂單</span><b>${esc(o.id)}</b></div><div class="kv"><span>持票人</span><b>${esc(o.name)}</b></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">此票券先前已完成驗票</div>`;return;}
+  o.used=true;save();renderCheckin();
+  R.className='res ok';R.innerHTML=`<div class="big" style="color:var(--ok)">✓ 驗票成功 · 准予入場</div>
+    <div class="kv"><span>訂單編號</span><b>${esc(o.id)}</b></div><div class="kv"><span>持票人</span><b>${esc(o.name)}</b></div>
+    <div class="kv"><span>品項</span><b>${esc(o.item)}</b></div><div class="kv"><span>驗票方式</span><b>${ciMode}</b></div>
+    <div class="kv"><span>入場時間</span><b>${new Date().toLocaleString('zh-TW')}</b></div>`;
+  toast('驗票成功：<b>'+esc(o.name)+'</b>');
+}
+
+/* ================= 場域設定 ================= */
+const IMG_SLOTS=[
+  {k:"hero",t:"首頁主視覺 Hero",s:"1920 × 820 px（21:9）· JPG / WebP · < 500 KB"},
+  {k:"tingting",t:"創作者 · 婷婷",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"anna",t:"創作者 · Anna",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"vivi",t:"創作者 · Vivi",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"xiaorou",t:"創作者 · 小柔",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"hana",t:"創作者 · Hana",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"sora",t:"創作者 · Sora",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"coco",t:"創作者 · Coco",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"mia",t:"創作者 · Mia",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
+  {k:"p0",t:"商品 · 手機膜星幕版",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p1",t:"商品 · 抗藍光螢幕膜",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p2",t:"商品 · 3D 眼鏡金屬框",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p3",t:"商品 · 平板膜大屏版",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p4",t:"商品 · 手機膜極光版",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p5",t:"商品 · 沉浸觀影禮盒",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p6",t:"商品 · 清潔套組",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"p7",t:"商品 · 3D 眼鏡玳瑁款",s:"1000 × 1000 px（1:1）· JPG / PNG · < 300 KB"},
+  {k:"prog0",t:"節目 · 星夜沉浸劇場",s:"1200 × 675 px（16:9）· JPG / WebP · < 400 KB"},
+  {k:"prog1",t:"節目 · 星海漫遊",s:"1200 × 675 px（16:9）· JPG / WebP · < 400 KB"},
+  {k:"prog2",t:"節目 · 月光交響",s:"1200 × 675 px（16:9）· JPG / WebP · < 400 KB"},
+  {k:"prog3",t:"節目 · 東方幻境",s:"1200 × 675 px（16:9）· JPG / WebP · < 400 KB"},
+  {k:"prog4",t:"節目 · 花之祭",s:"1200 × 675 px（16:9）· JPG / WebP · < 400 KB"},
+  {k:"prog5",t:"節目 · 未來競技",s:"1200 × 675 px（16:9）· JPG / WebP · < 400 KB"}
+];
+function renderSettings(){
+  $("stMarquee").value=DB.marquee||'';
+  $("anTable").innerHTML=DB.announcements.length?`<table><thead><tr><th>標題</th><th>分類</th><th>日期</th><th>內容</th><th></th></tr></thead><tbody>`+
+    DB.announcements.map(a=>`<tr><td><b>${esc(a.title)}</b></td><td><span class="tag b">${esc(a.tag)}</span></td>
+      <td style="color:var(--muted)">${a.date}</td><td style="color:var(--muted);font-size:12px">${esc(a.body)}</td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editAn(${a.id})">編輯</button>
+      <button class="btn btn-danger btn-sm" onclick="delAn(${a.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
+    :`<div class="empty">尚無公告</div>`;
+  $("bnTable").innerHTML=DB.banners.length?`<table><thead><tr><th>版位</th><th>標題</th><th>副標</th><th>連結</th><th>啟用</th><th></th></tr></thead><tbody>`+
+    DB.banners.map(b=>`<tr><td><span class="tag b">${esc(b.pos)}</span></td><td><b>${esc(b.title)}</b></td>
+      <td style="color:var(--muted)">${esc(b.sub)}</td><td style="color:var(--muted);font-size:12px">${esc(b.link)}</td>
+      <td><span class="tag ${b.on?'ok':'err'}">${b.on?'啟用':'停用'}</span></td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editBn(${b.id})">編輯</button>
+      <button class="btn btn-danger btn-sm" onclick="delBn(${b.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
+    :`<div class="empty">尚無 Banner</div>`;
+  $("imgSlots").innerHTML=IMG_SLOTS.map(s=>{const u=DB.images[s.k]||'';
+    return `<div class="img-slot"><div class="thumb-sm" style="${u?`background-image:url('${u}')`:''}"></div>
+      <div class="i"><b>${s.t}</b><small>${s.k} · ${s.s}</small></div>
+      <div class="row-act"><label class="btn btn-ghost btn-sm" style="cursor:pointer">更換<input type="file" accept="image/*" hidden data-img="${s.k}"></label>
+      <button class="btn btn-danger btn-sm" onclick="rmImg('${s.k}')">清除</button></div></div>`;}).join('');
+  document.querySelectorAll('[data-img]').forEach(inp=>inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{
+      let w=im.width,h=im.height,M=1000;if(Math.max(w,h)>M){const s=M/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);
+      DB.images[inp.dataset.img]=cv.toDataURL('image/jpeg',0.9);save();renderSettings();toast('圖片已更新');};
+      im.onerror=()=>{DB.images[inp.dataset.img]=rd.result;save();renderSettings();};im.src=rd.result;};
+    rd.readAsDataURL(f);e.target.value='';});
+}
+window.rmImg=k=>{delete DB.images[k];save();renderSettings();toast('已清除圖片');};
+$("seedBtn").onclick=seedToCloud;
+$("imgExport").onclick=()=>{const b=new Blob([JSON.stringify(DB.images)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='lireal-images.json';a.click();toast('已匯出圖片設定');};
+$("imgImport").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{Object.assign(DB.images,JSON.parse(rd.result));save();renderSettings();toast('已匯入設定');}catch(x){toast('匯入失敗：格式錯誤');}};
+  rd.readAsText(f);e.target.value='';};
+$("imgReset").onclick=()=>{if(confirm('確定清除所有自訂圖片？')){DB.images={};save();renderSettings();toast('已全部重設');}};
+window.editAn=id=>{
+  const a=id?DB.announcements.find(x=>x.id===id):{title:'',tag:'系統公告',date:new Date().toISOString().slice(0,10),body:''};
+  openM(id?'編輯公告':'新增公告',`<div class="fgrid">
+    <div class="fld full"><label>標題</label><input id="a_t" value="${esc(a.title)}"></div>
+    <div class="fld"><label>分類</label><select id="a_tag">${["系統公告","入場須知","新功能","活動快訊"].map(t=>`<option ${t===a.tag?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="fld"><label>日期</label><input id="a_d" type="date" value="${a.date}"></div>
+    <div class="fld full"><label>內容</label><textarea id="a_b">${esc(a.body)}</textarea></div></div>`,()=>{
+    if(!v("a_t")){toast('請填寫標題');return false;}
+    const o={title:v("a_t"),tag:v("a_tag"),date:v("a_d"),body:v("a_b")};
+    if(id)Object.assign(DB.announcements.find(x=>x.id===id),o); else DB.announcements.unshift(Object.assign({id:Date.now()},o));
+    renderSettings();toast(id?'公告已更新':'公告已新增');});
+};
+window.delAn=id=>{if(confirm('確定刪除此公告？')){DB.announcements=DB.announcements.filter(x=>x.id!==id);save();renderSettings();toast('已刪除');}};
+$("anAdd").onclick=()=>editAn(null);
+window.editBn=id=>{
+  const b=id?DB.banners.find(x=>x.id===id):{pos:'頂部',title:'',sub:'',link:'',on:true};
+  openM(id?'編輯 Banner':'新增 Banner',`<div class="fgrid">
+    <div class="fld"><label>版位</label><select id="b_pos">${["頂部","底部","節目頁"].map(p=>`<option ${p===b.pos?'selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="fld"><label>啟用狀態</label><select id="b_on"><option value="1" ${b.on?'selected':''}>啟用</option><option value="0" ${!b.on?'selected':''}>停用</option></select></div>
+    <div class="fld full"><label>主標題</label><input id="b_t" value="${esc(b.title)}"></div>
+    <div class="fld full"><label>副標題</label><input id="b_s" value="${esc(b.sub)}"></div>
+    <div class="fld full"><label>點擊連結</label><input id="b_l" value="${esc(b.link)}" placeholder="#shop 或完整網址"></div>
+    <div class="fld full"><div class="spec"><b>📐 Banner 建議素材規格</b>頂部／底部：<code>1600 × 500 px</code>（16:5）· 節目頁：<code>1200 × 420 px</code><br>格式：<code>JPG / WebP</code> · 建議 &lt; 500 KB · 文字避開左右各 10% 安全區</div></div>
+  </div>`,()=>{
+    if(!v("b_t")){toast('請填寫主標題');return false;}
+    const o={pos:v("b_pos"),title:v("b_t"),sub:v("b_s"),link:v("b_l"),on:v("b_on")==='1'};
+    if(id)Object.assign(DB.banners.find(x=>x.id===id),o); else DB.banners.push(Object.assign({id:Date.now()},o));
+    renderSettings();toast(id?'Banner 已更新':'Banner 已新增');});
+};
+window.delBn=id=>{if(confirm('確定刪除此 Banner？')){DB.banners=DB.banners.filter(x=>x.id!==id);save();renderSettings();toast('已刪除');}};
+$("bnAdd").onclick=()=>editBn(null);
+document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{
+  const t=b.dataset.save;
+  if(t==='marquee'){DB.marquee=v("stMarquee");save();toast('跑馬燈已儲存');}
+  if(t==='seo'){DB.seo={t:v("seoT"),d:v("seoD"),k:v("seoK"),u:v("seoU"),ga:v("seoGA"),sc:v("seoSC"),og:v("seoOG")};save();toast('SEO 設定已儲存');}
+});
+
+/* ================= SEO ================= */
+function renderSeo(){
+  const s=DB.seo;
+  $("seoT").value=s.t;$("seoD").value=s.d;$("seoK").value=s.k;$("seoU").value=s.u;$("seoGA").value=s.ga;$("seoSC").value=s.sc;$("seoOG").value=s.og;
+  seoPrev();
+}
+function seoPrev(){
+  const t=v("seoT")||'（未設定標題）',d=v("seoD")||'（未設定描述）',u=v("seoU")||'https://lireal.com',og=v("seoOG");
+  $("pvT").textContent=t;$("pvD").textContent=d;$("pvU").textContent=u;
+  $("pvT2").textContent=t;$("pvD2").textContent=d;$("pvH").textContent=u.replace(/^https?:\/\//,'');
+  $("pvI").style.backgroundImage=og?`url('${og}')`:'';
+}
+["seoT","seoD","seoU","seoOG"].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',seoPrev);});
+
+/* ================= 人員權限 ================= */
+function renderStaff(){
+  $("stTable").innerHTML=`<table><thead><tr><th>姓名</th><th>帳號</th><th>身分</th><th>可用功能</th><th></th></tr></thead><tbody>`+
+    DB.staff.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td style="color:var(--muted)">${esc(s.email)}</td>
+      <td><span class="tag ${s.role==='admin'?'warn':s.role==='editor'?'info':'b'}">${ROLE[s.role]}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${s.perms.map(p=>(NAV.find(n=>n.k===p)||{}).t).filter(Boolean).join('、')}</td>
+      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editSt('${s.id}')">編輯</button>
+      ${s.email===ME.email?'':`<button class="btn btn-danger btn-sm" onclick="delSt('${s.id}')">刪除</button>`}</div></td></tr>`).join('')+`</tbody></table>`;
+}
+window.editSt=id=>{
+  const s=id?DB.staff.find(x=>String(x.id)===String(id)):{name:'',email:'',role:'staff',perms:['checkin','orders']};
+  openM(id?'編輯人員':'新增人員',`<div class="fgrid">
+    <div class="fld"><label>姓名</label><input id="s_n" value="${esc(s.name)}"></div>
+    <div class="fld"><label>帳號 Email</label><input id="s_e" value="${esc(s.email)}" ${id?'readonly style="opacity:.7"':''}></div>
+    ${id?'':'<div class="fld full"><div class="spec"><b>💡 新增人員步驟</b>1) 先到 Supabase → Authentication → Users → Add user 建立帳號（勾 Auto Confirm）<br>2) 回到這裡填入<b>相同的 Email</b>與權限後儲存</div></div>'}
+    <div class="fld full"><label>身分</label><select id="s_r">${Object.keys(ROLE).map(r=>`<option value="${r}" ${r===s.role?'selected':''}>${ROLE[r]}</option>`).join('')}</select></div>
+    <div class="fld full"><label>可用功能（個別授權）</label>
+      <div class="perm">${NAV.map(n=>`<label><input type="checkbox" value="${n.k}" ${s.perms.includes(n.k)?'checked':''}>${n.t}</label>`).join('')}</div></div>
+  </div>`,()=>{
+    if(!v("s_n")||!v("s_e")){toast('姓名與帳號為必填');return false;}
+    const ps=[...document.querySelectorAll('.perm input:checked')].map(c=>c.value);
+    if(!ps.length){toast('請至少勾選一項功能');return false;}
+    const o={name:v("s_n"),email:v("s_e"),role:v("s_r"),perms:ps};
+    if(id){
+      Object.assign(DB.staff.find(x=>String(x.id)===String(id)),o);
+      if(String(ME.id)===String(id)){ME=DB.staff.find(x=>String(x.id)===String(id));buildNav();$("whoRole").textContent=ROLE[ME.role]+' · '+ME.email;}
+      renderStaff();toast('人員已更新');
+    }else{
+      // 新增：需先在 Supabase Auth 建立帳號，這裡用 Email 找出對應的 uuid
+      (async()=>{
+        try{
+          const {data,error}=await sb.rpc('add_staff',{p_email:o.email,p_name:o.name,p_role:o.role,p_perms:ps});
+          if(error)throw error;
+          await syncPull();renderStaff();toast('人員已新增 ✓');
+        }catch(e){toast('新增失敗：'+(e.message||e)+'（請確認已在 Supabase 建立此 Email 的帳號）');}
+      })();
+    }
+  });
+};
+window.delSt=id=>{if(confirm('確定刪除此人員？（不會刪除 Supabase 登入帳號）')){DB.staff=DB.staff.filter(x=>String(x.id)!==String(id));save();renderStaff();toast('已刪除');}};
+$("stAdd").onclick=()=>editSt(null);
+</script>
+</body>
+</html>
