@@ -274,6 +274,28 @@
   .mobnav.open{display:flex}
   .mobnav a{padding:15px 24px;border-bottom:1px solid var(--line2);font-size:15px;color:var(--muted)}
   .mobnav a.on{color:var(--brand3);background:var(--brand-soft)}
+  /* 收藏（愛心） */
+  .favtop{background:transparent;border:1px solid var(--line2);color:var(--text);border-radius:999px;
+    padding:8px 13px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit}
+  .favtop:hover{border-color:var(--rose);color:var(--rose)}
+  .favtop .fc{font-size:12px;color:var(--muted);min-width:14px}
+  .favtop.has{border-color:var(--rose);color:var(--rose)}
+  .favtop.has .fc{color:var(--rose)}
+  .fav{position:absolute;top:10px;right:10px;z-index:4;width:32px;height:32px;border-radius:50%;
+    background:rgba(8,5,16,.6);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:15px;
+    cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(6px);transition:.18s;padding:0;line-height:1}
+  .fav:hover{background:rgba(224,143,192,.35);border-color:var(--rose);transform:scale(1.12)}
+  .fav.on{background:linear-gradient(135deg,var(--rose),var(--brand));border-color:#fff;color:#fff}
+  .prod-thumb .fav{top:10px;right:10px}
+  .fav-row{display:flex;gap:12px;align-items:center}
+  .fav-row .ic{width:46px;height:58px;border-radius:9px;background:#0c0a14 center/cover no-repeat;flex:none;border:1px solid var(--line2)}
+  .fav-row .t{flex:1;min-width:0}
+  .fav-row .t b{font-size:13px;display:block}
+  .fav-row .t span{color:var(--muted);font-size:12px}
+  .fav-row .x{cursor:pointer;color:var(--muted);font-size:16px}
+  .add.buy-now{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+  .add.buy-now:hover{filter:brightness(1.12)}
+  .prog-body .row .add{padding:9px 10px;font-size:13px}
   /* 首頁預覽區 */
   section.hsec{padding:44px 0;border-top:1px solid var(--line2)}
   .hg{display:grid;gap:20px;perspective:1100px}
@@ -424,6 +446,7 @@
     .nav{height:62px;gap:10px}
     .logo-img{height:28px}
     .nav .vip{display:none}
+    .favtop{padding:7px 10px}
     .wallet{padding:7px 11px;font-size:12px}
     .avatar{width:34px;height:34px;font-size:14px}
     section{padding:34px 0}
@@ -483,6 +506,7 @@
       <a href="/vip" data-route="vip">會員儲值</a>
     </nav>
     <div class="spacer"></div>
+    <button class="favtop" id="favTop" title="我的收藏">♡<span class="fc" id="favCount">0</span></button>
     <a class="wallet" href="/vip" data-route="vip">💎 <b id="walletBal">2,480</b> 幣</a>
     <span class="vip">VIP·紫鑽</span>
     <div class="avatar">A</div>
@@ -519,8 +543,9 @@
     </div>
   </div>
   <div class="stage-cta">
-    <button class="btn btn-brand" onclick="scrollTo({top:document.getElementById('programs').offsetTop-70,behavior:'smooth'})">觀看沉浸節目</button>
-    <button class="btn btn-ghost" onclick="scrollTo({top:document.getElementById('shop').offsetTop-70,behavior:'smooth'})">配備 3D 觀看裝備</button>
+    <a class="btn btn-brand" href="/ticket" data-route="ticket">🎟️ 馬上購票</a>
+    <a class="btn btn-ghost" href="/programs" data-route="programs">觀看沉浸節目</a>
+    <a class="btn btn-ghost" href="/shop" data-route="shop">配備 3D 觀看裝備</a>
   </div>
   <div class="stage-stat">
     <div><b>24</b>檔沉浸場域節目</div>
@@ -669,10 +694,18 @@
 </div></footer>
 
 <button class="cart-fab" onclick="toggleCart(true)">🛒<span class="count" id="cartCount">0</span></button>
-<div class="backdrop" id="backdrop" onclick="toggleCart(false)"></div>
+<div class="backdrop" id="backdrop" onclick="toggleCart(false);toggleFavDrawer(false);"></div>
+<div class="cart-drawer" id="favDrawer">
+  <div class="cart-head"><h3 class="serif">我的收藏</h3><span class="x" onclick="toggleFavDrawer(false)">✕</span></div>
+  <div class="cart-items" id="favItems"></div>
+  <div class="cart-foot">
+    <div class="tot" style="justify-content:center;font-size:13px;color:var(--muted);margin-bottom:12px">收藏只存在這台裝置</div>
+    <button class="cart-btn" onclick="clearFav()">清空收藏</button>
+  </div>
+</div>
 <div class="cart-drawer" id="cart">
-  <div class="cart-head"><h3 class="serif">我的收藏袋</h3><span class="x" onclick="toggleCart(false)">✕</span></div>
-  <div class="cart-items" id="cartItems"><div class="cart-empty">收藏袋還是空的，去逛逛吧 ✨</div></div>
+  <div class="cart-head"><h3 class="serif">購物車</h3><span class="x" onclick="toggleCart(false)">✕</span></div>
+  <div class="cart-items" id="cartItems"><div class="cart-empty">購物車還是空的，去逛逛吧 ✨</div></div>
   <div class="cart-foot">
     <div class="tot"><span>合計</span><b id="cartTotal">NT$0</b></div>
     <button class="cart-btn" id="checkoutBtn" onclick="checkout()">前往結帳（示範）</button>
@@ -688,7 +721,7 @@
   <div class="sm-body" id="smBody"></div>
   <div class="sm-foot">
     <div><div class="picked" id="smPicked">尚未選擇座位（最多 4 席）</div><div class="tot" id="smTot">NT$0</div></div>
-    <div style="display:flex;gap:10px"><button class="btn btn-ghost" id="smCancel">取消</button><button class="btn btn-brand" id="smAdd">加入收藏袋</button></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-ghost" id="smCancel">取消</button><button class="btn btn-brand" id="smAdd">加入購物車</button></div>
   </div>
 </div>
 
@@ -989,19 +1022,22 @@ function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=(lim?programs.slic
       <div class="imm">✦ ${p.imm}</div>
       <div class="mini-play">▶</div>
       <div class="pv">👁 ${p.v}</div>
+      ${favBtn('prog:'+i)}
     </div>
     <div class="prog-body">
       <h4>${p.name}</h4><div class="tags">${p.tags}</div>
-      <div class="row"><span class="chip">沉浸觀看</span>
-        <button class="add" onclick="toast('進入 <b>${p.name}</b>（示範）')">立即觀看 →</button></div>
+      <div class="row" style="gap:8px">
+        <button class="add" style="flex:1" onclick="toast('進入 <b>${p.name}</b>（示範）')">立即觀看</button>
+        <a class="add buy-now" style="flex:1;text-align:center" href="/ticket" data-route="ticket">馬上購票</a></div>
     </div>
   </div>`).join("");}
 
-function renderLives(el,lim){(el||$("liveGrid")).innerHTML=(lim?lives.slice(0,lim):lives).map(l=>`
+function renderLives(el,lim){(el||$("liveGrid")).innerHTML=(lim?lives.slice(0,lim):lives).map((l,i)=>`
   <div class="card">
     <div class="prog-thumb" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
       <div class="pv">👁 ${l.v}</div>
+      ${favBtn('live:'+i)}
     </div>
     <div class="prog-body">
       <h4>${l.name}</h4><div class="tags">${l.tags}</div>
@@ -1020,11 +1056,11 @@ function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slic
 
 function renderShop(el,lim){(el||$("shopGrid")).innerHTML=(lim?products.slice(0,lim):products).map((p,i)=>`
   <div class="card">
-    <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}</div>
+    <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
     <div class="prod-body">
       <h4>${p.name}</h4><div class="sub">${p.sub}</div><div class="stars">${p.stars}</div>
       <div class="buy"><div class="price">${p.old?`<s>NT$${p.old}</s>`:""}NT$${p.price}</div>
-        <button class="add" onclick="addCart('product',${i})">加入</button></div>
+        <button class="add" onclick="addCart('product',${i})">加入購物車</button></div>
     </div>
   </div>`).join("");}
 
@@ -1062,6 +1098,7 @@ function renderAll(){
   renderPrograms();renderLives();renderTickets();renderShop();renderPlans();renderOM();
   renderHome();
   bindTilt();
+  updateFavUI();
 }
 function omURL(slug){return OM_BASE+"/character/"+slug;}
 function goOM(slug){window.location.href=omURL(slug);}   // 點卡片直接進入 OnlyMate 角色頁
@@ -1074,6 +1111,8 @@ function renderOM(el,lim){(el||$("omGrid")).innerHTML=(lim?creators.slice(0,lim)
         <span class="om-tag type">${c.type}</span>
       </div>
       <div class="om-status ${c.on?'on':'off'}"><span class="d"></span>${c.on?'在線':'離線'}</div>
+      <button class="fav ${isFav('cr:'+c.slug)?'on':''}" data-fav="cr:${c.slug}" title="收藏"
+        style="top:auto;bottom:10px;right:10px" onclick="toggleFav('cr:${c.slug}',event)">${isFav('cr:'+c.slug)?'♥':'♡'}</button>
     </div>
     <div class="om-body">
       <h4>${c.name}</h4>
@@ -1093,7 +1132,7 @@ function addCart(type,i){
 }
 function renderCart(){
   $("cartCount").textContent=cart.length;
-  if(!cart.length){$("cartItems").innerHTML='<div class="cart-empty">收藏袋還是空的，去逛逛吧 ✨</div>';$("cartTotal").textContent="NT$0";return;}
+  if(!cart.length){$("cartItems").innerHTML='<div class="cart-empty">購物車還是空的，去逛逛吧 ✨</div>';$("cartTotal").textContent="NT$0";return;}
   $("cartItems").innerHTML=cart.map((c,i)=>`
     <div class="ci"><div class="ic">${c.emoji}</div>
       <div class="t">${c.name}<span>${c.sub}</span></div>
@@ -1103,6 +1142,53 @@ function renderCart(){
 }
 function rm(i){cart.splice(i,1);renderCart();}
 function toggleCart(o){$("cart").classList.toggle('open',o);$("backdrop").classList.toggle('show',o);}
+
+/* ================= 收藏（愛心，存本機） ================= */
+let FAV=[];try{FAV=JSON.parse(localStorage.getItem('LIREAL_FAV')||'[]')||[];}catch(e){FAV=[];}
+function saveFav(){try{localStorage.setItem('LIREAL_FAV',JSON.stringify(FAV));}catch(e){}}
+function isFav(k){return FAV.indexOf(k)>=0;}
+function favBtn(k){return `<button class="fav ${isFav(k)?'on':''}" data-fav="${k}" title="收藏" onclick="toggleFav('${k}',event)">${isFav(k)?'♥':'♡'}</button>`;}
+function toggleFav(k,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  const i=FAV.indexOf(k);
+  if(i>=0){FAV.splice(i,1);toast('已移除收藏');}
+  else{FAV.push(k);toast('已加入收藏 ♥');}
+  saveFav();updateFavUI();
+}
+function favInfo(k){
+  const p=String(k).split(':'),t=p[0],v=p.slice(1).join(':');
+  if(t==='prog'){const x=programs[+v];return x&&{name:x.name,sub:x.tags,img:thumb('prog'+v,''),go:'programs'};}
+  if(t==='live'){const x=lives[+v];return x&&{name:x.name,sub:x.tags,img:thumb(x.img,''),go:'live'};}
+  if(t==='cr'){const x=creators.find(c=>c.slug===v);return x&&{name:x.name,sub:x.type,img:thumb(x.slug,''),go:'ai'};}
+  if(t==='pd'){const x=products[+v];return x&&{name:x.name,sub:'NT$'+(x.price||0).toLocaleString(),img:thumb('p'+v,''),go:'shop'};}
+  return null;
+}
+function updateFavUI(){
+  const n=FAV.length;
+  $("favCount").textContent=n;
+  $("favTop").classList.toggle('has',n>0);
+  document.querySelectorAll('[data-fav]').forEach(b=>{
+    const on=isFav(b.dataset.fav);
+    b.classList.toggle('on',on);b.textContent=on?'♥':'♡';
+  });
+  renderFavList();
+}
+function renderFavList(){
+  const box=$("favItems");if(!box)return;
+  if(!FAV.length){box.innerHTML='<div class="cart-empty">還沒有收藏，點卡片上的 ♡ 加入</div>';return;}
+  box.innerHTML=FAV.map(k=>{
+    const f=favInfo(k);
+    if(!f)return '';
+    return `<div class="fav-row">
+      <div class="ic" style="${f.img?`background-image:url('${f.img}')`:''}"></div>
+      <div class="t"><b>${escH(f.name)}</b><span>${escH(f.sub||'')}</span></div>
+      <a class="add" href="/${f.go}" data-route="${f.go}" onclick="toggleFavDrawer(false)">前往</a>
+      <span class="x" onclick="toggleFav('${k}',event)">✕</span></div>`;
+  }).join('');
+}
+function toggleFavDrawer(o){$("favDrawer").classList.toggle('open',o);$("backdrop").classList.toggle('show',o);}
+function clearFav(){ if(!FAV.length){toast('收藏是空的');return;} if(confirm('確定清空所有收藏？')){FAV=[];saveFav();updateFavUI();toast('已清空收藏');} }
+$("favTop").onclick=()=>toggleFavDrawer(true);
 
 /* ===== 選位購票（場地格子模型，與後台一致） ===== */
 const ZONE_COLORS=["rgba(139,111,202,.6)","rgba(224,143,192,.55)","rgba(122,168,255,.55)","rgba(95,230,192,.5)","rgba(240,192,106,.55)","rgba(255,140,120,.55)","rgba(180,120,255,.55)","rgba(120,220,255,.5)"];
@@ -1206,7 +1292,7 @@ $("smAdd").onclick=()=>{
 /* ===== 購票資料表單 ===== */
 function openBuyForm(){
   const seatItems=cart.filter(c=>c.seatIds);
-  if(!seatItems.length){toast('目前收藏袋沒有票券商品');return;}
+  if(!seatItems.length){toast('購物車裡沒有票券');return;}
   const total=seatItems.reduce((s,c)=>s+c.price,0);
   const evName=(seatItems[0].name||'').split(' · ')[0];
   $("bSub").textContent=evName+' · 共 '+seatItems.length+' 個座位單位';
@@ -1333,7 +1419,7 @@ $("tPrint").onclick=()=>window.print();
 
 /* 結帳：把售出座位與訂單回寫到後台資料庫（示範，無真實金流） */
 function checkout(){
-  if(!cart.length){toast('收藏袋是空的喔');return;}
+  if(!cart.length){toast('購物車是空的喔');return;}
   if(ONLINE&&cart.some(c=>c.seatIds)){openBuyForm();return;}
   const seatItems=cart.filter(c=>c.seatIds);const total=cart.reduce((s,c)=>s+c.price,0);let wrote=false;
   if(Array.isArray(ADB.events)&&seatItems.length){
