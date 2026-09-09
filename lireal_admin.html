@@ -1176,9 +1176,18 @@ window.viewOrder=id=>{
     <div class="kv"><span>付款方式</span><b>${esc(o.pay)}</b></div>
     <div class="kv"><span>訂單狀態</span><b>${o.status}</b></div>
     <div class="kv"><span>入場狀態</span><b>${o.used?'已入場':'尚未入場'}</b></div>
+    <div id="ordPasses" style="margin-top:14px;font-size:13px;color:var(--muted)">載入票券中…</div>
     <div class="fld" style="margin-top:16px"><label>變更訂單狀態</label>
       <select id="o_st">${["已付款","待付款","已退款"].map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></div>`,
     ()=>{o.status=v("o_st");renderOrders();toast('訂單狀態已更新');});
+  if(ONLINE)(async()=>{
+    const {data,error}=await sb.from('passes').select('*').eq('order_id',id).order('code');
+    const box=document.getElementById('ordPasses');if(!box)return;
+    if(error||!data||!data.length){box.textContent='此訂單沒有電子票券（可能為商品訂單）';return;}
+    box.innerHTML='<div style="margin-bottom:7px;color:var(--brand3)">電子票券 '+data.length+' 張</div>'+
+      data.map(p=>`<div class="kv"><span style="font-family:ui-monospace,monospace;font-size:12px">${esc(p.code)}</span>
+        <b>${esc(p.ticket_name||'')} ${esc(p.seat_label||'')} ${p.used?'<span class="tag info">已入場</span>':'<span class="tag ok">未使用</span>'}</b></div>`).join('');
+  })();
 };
 
 /* ================= 會員 ================= */
@@ -1209,34 +1218,57 @@ window.editMb=id=>{
 let ciMode='QR';
 document.querySelectorAll('.mode').forEach(m=>m.onclick=()=>{
   document.querySelectorAll('.mode').forEach(x=>x.classList.remove('on'));m.classList.add('on');ciMode=m.dataset.m;});
-function renderCheckin(){
-  const used=DB.orders.filter(o=>o.used).length, paid=DB.orders.filter(o=>o.status==='已付款').length;
-  $("ciStat").innerHTML=`<div class="kv"><span>已付款票券</span><b>${paid}</b></div>
+let PASSES=[];
+async function renderCheckin(){
+  if(ONLINE){
+    const {data,error}=await sb.from('passes').select('*').order('created_at',{ascending:false});
+    if(!error)PASSES=data||[];
+  }
+  const total=PASSES.length, used=PASSES.filter(p=>p.used).length;
+  $("ciStat").innerHTML=`<div class="kv"><span>已售出票券</span><b>${total}</b></div>
     <div class="kv"><span>已入場</span><b style="color:var(--ok)">${used}</b></div>
-    <div class="kv"><span>尚未入場</span><b style="color:var(--warn)">${paid-used}</b></div>
-    <div class="kv"><span>入場率</span><b>${paid?Math.round(used/paid*100):0}%</b></div>`;
+    <div class="kv"><span>尚未入場</span><b style="color:var(--warn)">${total-used}</b></div>
+    <div class="kv"><span>入場率</span><b>${total?Math.round(used/total*100):0}%</b></div>`;
 }
 $("ciGo").onclick=()=>verify(v("ciCode"));
 $("ciCode").addEventListener('keydown',e=>{if(e.key==='Enter')verify(v("ciCode"));});
-$("ciDemo").onclick=()=>{const c=DB.orders.filter(o=>o.status==='已付款'&&!o.used);
-  const pick=c.length?c[Math.floor(Math.random()*c.length)].id:'LR-2026-9999';$("ciCode").value=pick;verify(pick);};
-function verify(code){
+$("ciDemo").onclick=()=>{
+  const c=PASSES.filter(p=>!p.used);
+  if(!c.length){toast('目前沒有未使用的票券可模擬');return;}
+  const pick=c[Math.floor(Math.random()*c.length)].code;$("ciCode").value=pick;verify(pick);};
+
+async function verify(code){
   const R=$("ciRes");
   if(!code){R.className='res';R.innerHTML='<div style="color:var(--muted);font-size:13px">請輸入票券編號</div>';return;}
-  const o=DB.orders.find(x=>x.id.toLowerCase()===code.toLowerCase());
-  if(!o){R.className='res err';R.innerHTML=`<div class="big" style="color:var(--err)">✕ 查無此票券</div><div style="font-size:13px;color:var(--muted)">編號 ${esc(code)} 不存在，請確認後重試</div>`;return;}
-  if(o.status!=='已付款'){R.className='res err';R.innerHTML=`<div class="big" style="color:var(--err)">✕ 票券無效</div>
-    <div class="kv"><span>訂單</span><b>${esc(o.id)}</b></div><div class="kv"><span>狀態</span><b>${o.status}</b></div>
-    <div style="font-size:12px;color:var(--muted);margin-top:8px">僅「已付款」票券可入場</div>`;return;}
-  if(o.used){R.className='res err';R.innerHTML=`<div class="big" style="color:var(--warn)">⚠ 已重複入場</div>
-    <div class="kv"><span>訂單</span><b>${esc(o.id)}</b></div><div class="kv"><span>持票人</span><b>${esc(o.name)}</b></div>
-    <div style="font-size:12px;color:var(--muted);margin-top:8px">此票券先前已完成驗票</div>`;return;}
-  o.used=true;save();renderCheckin();
-  R.className='res ok';R.innerHTML=`<div class="big" style="color:var(--ok)">✓ 驗票成功 · 准予入場</div>
-    <div class="kv"><span>訂單編號</span><b>${esc(o.id)}</b></div><div class="kv"><span>持票人</span><b>${esc(o.name)}</b></div>
-    <div class="kv"><span>品項</span><b>${esc(o.item)}</b></div><div class="kv"><span>驗票方式</span><b>${ciMode}</b></div>
-    <div class="kv"><span>入場時間</span><b>${new Date().toLocaleString('zh-TW')}</b></div>`;
-  toast('驗票成功：<b>'+esc(o.name)+'</b>');
+  if(!ONLINE){R.className='res err';R.innerHTML='<div class="big" style="color:var(--err)">未連線資料庫</div>';return;}
+  R.className='res';R.innerHTML='<div style="color:var(--muted);font-size:13px">驗證中…</div>';
+  try{
+    const {data,error}=await sb.rpc('check_in',{p_code:code});
+    if(error)throw error;
+    const p=data.pass||{};
+    const rows=`<div class="kv"><span>票券編號</span><b>${esc(p.code||code)}</b></div>
+      <div class="kv"><span>節目</span><b>${esc(p.event_name||'')}</b></div>
+      <div class="kv"><span>票種 / 座位</span><b>${esc(p.ticket_name||'')} ${esc(p.seat_label||'')}</b></div>
+      <div class="kv"><span>持票人</span><b>${esc(data.buyer||'')}</b></div>
+      <div class="kv"><span>訂單</span><b>${esc(p.order_id||'')}</b></div>`;
+    if(data.ok){
+      R.className='res ok';
+      R.innerHTML=`<div class="big" style="color:var(--ok)">✓ 驗票成功 · 准予入場</div>${rows}
+        <div class="kv"><span>驗票方式</span><b>${ciMode}</b></div>
+        <div class="kv"><span>入場時間</span><b>${new Date().toLocaleString('zh-TW')}</b></div>`;
+      toast('驗票成功：<b>'+esc(p.seat_label||'')+'</b>');
+      $("ciCode").value='';
+    }else{
+      const warn=data.state==='used';
+      R.className='res err';
+      R.innerHTML=`<div class="big" style="color:var(--${warn?'warn':'err'})">${warn?'⚠':'✕'} ${esc(data.msg||'無法入場')}</div>
+        ${data.state==='notfound'?`<div style="font-size:13px;color:var(--muted)">編號 ${esc(code)} 不存在</div>`:rows}`;
+    }
+    renderCheckin();
+  }catch(e){
+    R.className='res err';
+    R.innerHTML=`<div class="big" style="color:var(--err)">✕ 驗票失敗</div><div style="font-size:13px;color:var(--muted)">${esc((e&&e.message)||e)}</div>`;
+  }
 }
 
 /* ================= 場域設定 ================= */
