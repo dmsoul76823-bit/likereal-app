@@ -141,26 +141,30 @@
   .quick span{font-size:12px;border:1px solid var(--line2);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--muted)}
   .quick span:hover{color:var(--brand3);border-color:var(--line)}
 
-  .ticket{display:grid;grid-template-columns:150px 1fr auto;gap:18px;align-items:center;padding:14px;
-    background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:16px;transition:.25s}
-  .ticket:hover{border-color:var(--line);box-shadow:var(--shadow)}
-  /* 場次主視覺 */
-  .tpic{position:relative;aspect-ratio:16/10;border-radius:12px;background:#151020 center/cover no-repeat;
-    border:1px solid var(--line2);overflow:hidden;flex:none}
-  .tdate-badge{position:absolute;left:9px;top:9px;background:rgba(8,5,16,.72);backdrop-filter:blur(6px);
-    border:1px solid var(--line);border-radius:10px;padding:5px 10px;text-align:center;line-height:1.15}
-  .tdate-badge b{display:block;font-size:20px;font-weight:800;color:var(--brand3)}
-  .tdate-badge span{display:block;font-size:10px;color:var(--muted);letter-spacing:1px}
-  .tpic .fav{width:28px;height:28px;font-size:13px;top:8px;right:8px}
-  .tdate{text-align:center;border-right:1px dashed var(--line);padding-right:14px}
-  .tdate .d{font-size:30px;font-weight:800;line-height:1;color:var(--brand3)}
-  .tdate .m{font-size:12px;color:var(--muted);letter-spacing:1px}
-  .tinfo h4{font-size:17px}
-  .tinfo .meta{color:var(--muted);font-size:13px;margin-top:4px}
-  .tinfo .venue{color:var(--brand3);font-size:12px;margin-top:6px}
-  .tprice{text-align:right}
-  .tprice .p{font-size:18px;font-weight:700;color:var(--brand3)}
-  .tprice .left{font-size:11px;color:var(--muted);margin:4px 0 8px}
+  /* 售票卡：直式海報（主視覺置頂滿版，文字在下方全寬） */
+  .ticket{display:flex;flex-direction:column;padding:14px;transition:.25s;
+    background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:18px}
+  .ticket:hover{border-color:var(--line);box-shadow:var(--shadow);transform:translateY(-4px)}
+  .tpic{position:relative;aspect-ratio:16/10;border-radius:13px;background:#151020 center/cover no-repeat;
+    border:1px solid var(--line2);overflow:hidden;width:100%}
+  .tdate-badge{position:absolute;left:11px;top:11px;background:rgba(8,5,16,.72);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:12px;padding:7px 12px;text-align:center;line-height:1.1}
+  .tdate-badge b{display:block;font-size:24px;font-weight:800;color:var(--brand3)}
+  .tdate-badge span{display:block;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:2px}
+  .tpic .fav{width:32px;height:32px;font-size:15px;top:10px;right:10px}
+  .tbody{display:flex;flex-direction:column;flex:1;gap:12px;padding:14px 4px 2px;min-width:0}
+  .tinfo{flex:1}
+  .tinfo h4{font-size:18px;font-weight:800;line-height:1.35;letter-spacing:.3px}
+  .tinfo .meta{color:var(--muted);font-size:13px;margin-top:7px}
+  .tinfo .venue{color:var(--brand3);font-size:13px;margin-top:7px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tbuy{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    border-top:1px solid var(--line2);padding-top:13px}
+  .tbuy .tp{min-width:0}
+  .tbuy .p{font-size:22px;font-weight:800;color:var(--brand3);line-height:1.1}
+  .tbuy .p small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+  .tbuy .left{font-size:12px;color:var(--muted);margin-top:5px}
+  .tbuy .add{padding:11px 18px;font-size:14px;flex:none}
 
   .prod-thumb{aspect-ratio:1;display:grid;place-items:center;font-size:66px;background:radial-gradient(circle at 50% 35%,rgba(139,111,202,.18),transparent 65%),linear-gradient(160deg,#1e1732,#141020);position:relative}
   .prod-thumb .badge{position:absolute;top:10px;left:10px;background:var(--brand-soft);border:1px solid var(--line);color:var(--brand3);font-size:10px;padding:3px 9px;border-radius:6px}
@@ -318,6 +322,10 @@
     .hg-2{grid-template-columns:1fr}
     section.hsec{padding:32px 0}
   }
+  /* 售票卡文字較多，窄螢幕改單欄避免擠壓 */
+  @media(max-width:620px){
+    #hTicket,#ticketGrid{grid-template-columns:1fr!important}
+  }
   /* 購票表單 */
   .bform{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .bf.full{grid-column:1/-1}
@@ -472,13 +480,14 @@
     .stage-stat{gap:18px;margin-top:20px}.stage-stat b{font-size:17px}
     .g4{grid-template-columns:1fr}
     .om-grid{grid-template-columns:1fr}
-    /* 票券卡改為直式：主視覺置頂 */
-    .ticket{grid-template-columns:1fr;gap:12px;padding:12px}
-    .tpic{aspect-ratio:16/9;width:100%}
-    .tdate-badge b{font-size:22px}
-    .tprice{text-align:left;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .tprice .left{margin:0}
-    .tprice .add{margin-left:auto}
+    .ticket{padding:12px;border-radius:16px}
+    .tdate-badge{left:10px;top:10px;padding:6px 10px}
+    .tdate-badge b{font-size:21px}
+    .tbody{padding:12px 2px 2px;gap:11px}
+    .tinfo h4{font-size:17px}
+    .tbuy{padding-top:11px}
+    .tbuy .p{font-size:20px}
+    .tbuy .add{padding:10px 16px;font-size:13px}
     /* 購物車 / 彈窗改為全螢幕 */
     .cart-drawer{width:100%;max-width:100%}
     .smodal{width:100%!important;max-width:100%;height:100%;max-height:100%;border-radius:0;top:0;left:0;transform:none}
@@ -580,7 +589,7 @@
     <div><span class="tag">VENUE · 場域售票</span><h2 class="serif">現場沉浸門票</h2></div>
     <a class="more" href="/ticket" data-route="ticket">觀看更多 →</a>
   </div>
-  <div class="hg hg-2" id="hTicket"></div>
+  <div class="hg hg-3" id="hTicket"></div>
 </div></section>
 
 <section class="hsec" data-page="home"><div class="wrap">
@@ -674,7 +683,7 @@
     <div><span class="tag">VENUE · 場域售票</span><h2 class="serif">現場沉浸門票</h2></div>
     <a class="more" href="#">全部場次 →</a>
   </div>
-  <div class="grid g2" id="ticketGrid"></div>
+  <div class="grid g3" id="ticketGrid"></div>
 </div></section>
 
 <section id="shop" data-page="shop"><div class="wrap">
@@ -1065,9 +1074,17 @@ function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slic
       <div class="tdate-badge"><b>${t.d}</b><span>${t.m}</span></div>
       ${favBtn('tk:'+i)}
     </div>
-    <div class="tinfo"><h4>${t.name}</h4><div class="meta">${t.meta}</div><div class="venue">📍 ${t.venue}</div></div>
-    <div class="tprice"><div class="p">${t.price}</div><div class="left">${t.left}</div>
-      <button class="add buy-now" onclick="openSeats(${i})">選位購票</button></div>
+    <div class="tbody">
+      <div class="tinfo">
+        <h4>${t.name}</h4>
+        <div class="meta">${t.meta}</div>
+        <div class="venue">📍 ${t.venue}</div>
+      </div>
+      <div class="tbuy">
+        <div class="tp"><div class="p">${t.price}<small>起</small></div><div class="left">${t.left}</div></div>
+        <button class="add buy-now" onclick="openSeats(${i})">選位購票</button>
+      </div>
+    </div>
   </div>`).join("");}
 
 function renderShop(el,lim){(el||$("shopGrid")).innerHTML=(lim?products.slice(0,lim):products).map((p,i)=>`
