@@ -316,15 +316,15 @@
   .hg-3{grid-template-columns:repeat(3,1fr)}
   .hg-4{grid-template-columns:repeat(4,1fr)}
   @media(max-width:1000px){ .hg-4{grid-template-columns:repeat(3,1fr)} }
-  @media(max-width:760px){
+  @media(max-width:900px){
     .hg{gap:14px}
     .hg-3,.hg-4{grid-template-columns:repeat(2,1fr)}
     .hg-2{grid-template-columns:1fr}
     section.hsec{padding:32px 0}
   }
-  /* 售票卡文字較多，窄螢幕改單欄避免擠壓 */
-  @media(max-width:620px){
-    #hTicket,#ticketGrid{grid-template-columns:1fr!important}
+  /* 手機版：全部一排一個 */
+  @media(max-width:640px){
+    .hg-2,.hg-3,.hg-4{grid-template-columns:1fr!important}
   }
   /* 購票表單 */
   .bform{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -478,8 +478,10 @@
     .player .caption h1{font-size:19px}.player .caption p{font-size:12px}
     .play-btn{width:64px;height:64px;font-size:22px}
     .stage-stat{gap:18px;margin-top:20px}.stage-stat b{font-size:17px}
-    .g4{grid-template-columns:1fr}
-    .om-grid{grid-template-columns:1fr}
+    /* 手機版：各分區頁面也一律一排一個 */
+    .g2,.g3,.g4{grid-template-columns:1fr!important}
+    .om-grid{grid-template-columns:1fr!important}
+    .plans{grid-template-columns:1fr}
     .ticket{padding:12px;border-radius:16px}
     .tdate-badge{left:10px;top:10px;padding:6px 10px}
     .tdate-badge b{font-size:21px}
@@ -1120,7 +1122,7 @@ let creators=[
 ];
 applyADBCreators();   // 套用後台創作者資料
 function renderHome(){
-  renderPrograms($("hProg"),6);
+  renderPrograms($("hProg"),3);
   renderTickets($("hTicket"),6);
   renderLives($("hLive"),6);
   renderOM($("hOM"),6);
