@@ -141,8 +141,17 @@
   .quick span{font-size:12px;border:1px solid var(--line2);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--muted)}
   .quick span:hover{color:var(--brand3);border-color:var(--line)}
 
-  .ticket{display:grid;grid-template-columns:92px 1fr auto;gap:18px;align-items:center;padding:18px;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:16px}
-  .ticket:hover{border-color:var(--line)}
+  .ticket{display:grid;grid-template-columns:150px 1fr auto;gap:18px;align-items:center;padding:14px;
+    background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:16px;transition:.25s}
+  .ticket:hover{border-color:var(--line);box-shadow:var(--shadow)}
+  /* 場次主視覺 */
+  .tpic{position:relative;aspect-ratio:16/10;border-radius:12px;background:#151020 center/cover no-repeat;
+    border:1px solid var(--line2);overflow:hidden;flex:none}
+  .tdate-badge{position:absolute;left:9px;top:9px;background:rgba(8,5,16,.72);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:10px;padding:5px 10px;text-align:center;line-height:1.15}
+  .tdate-badge b{display:block;font-size:20px;font-weight:800;color:var(--brand3)}
+  .tdate-badge span{display:block;font-size:10px;color:var(--muted);letter-spacing:1px}
+  .tpic .fav{width:28px;height:28px;font-size:13px;top:8px;right:8px}
   .tdate{text-align:center;border-right:1px dashed var(--line);padding-right:14px}
   .tdate .d{font-size:30px;font-weight:800;line-height:1;color:var(--brand3)}
   .tdate .m{font-size:12px;color:var(--muted);letter-spacing:1px}
@@ -463,9 +472,11 @@
     .stage-stat{gap:18px;margin-top:20px}.stage-stat b{font-size:17px}
     .g4{grid-template-columns:1fr}
     .om-grid{grid-template-columns:1fr}
-    /* 票券列改為直式，避免擠壓 */
-    .ticket{grid-template-columns:64px 1fr;gap:12px;row-gap:10px;padding:15px}
-    .tprice{grid-column:1/-1;text-align:left;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    /* 票券卡改為直式：主視覺置頂 */
+    .ticket{grid-template-columns:1fr;gap:12px;padding:12px}
+    .tpic{aspect-ratio:16/9;width:100%}
+    .tdate-badge b{font-size:22px}
+    .tprice{text-align:left;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     .tprice .left{margin:0}
     .tprice .add{margin-left:auto}
     /* 購物車 / 彈窗改為全螢幕 */
@@ -914,7 +925,7 @@ function applyADB(){
       const left=e.status==='已售罄'?'售罄候補':'剩 '+Math.max(0,(e.cap||0)-(e.sold||0))+' 席';
       return {d:d[2]||'--',m:MON[(+d[1]||1)-1]||'',name:e.name,
         meta:(e.time||'')+' 開演 · '+(e.cat||''),venue:e.venue||'',
-        price:'NT$'+(lo||0).toLocaleString(),left:left,ev:e};
+        price:'NT$'+(lo||0).toLocaleString(),left:left,img:e.img||'',ev:e};
     });
   }
   // 商品 ← 後台「商品管理」（只顯示上架）
@@ -1046,12 +1057,17 @@ function renderLives(el,lim){(el||$("liveGrid")).innerHTML=(lim?lives.slice(0,li
     </div>
   </div>`).join("");}
 
+const TICKET_PALS=[["#3a2a6a","#120c22","#c6a6ff"],["#1c2a6a","#0a0f26","#7aa0ff"],["#5a2a3a","#200f16","#ff9fb0"],
+  ["#2a5a5a","#0a1e1e","#6ff0e0"],["#7a2a5a","#260f20","#ff9fd6"],["#2a3a5a","#0e1422","#9fc0ff"]];
 function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slice(0,lim):tickets).map((t,i)=>`
   <div class="ticket">
-    <div class="tdate"><div class="d">${t.d}</div><div class="m">${t.m}</div></div>
+    <div class="tpic" style="background-image:url('${t.img||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
+      <div class="tdate-badge"><b>${t.d}</b><span>${t.m}</span></div>
+      ${favBtn('tk:'+i)}
+    </div>
     <div class="tinfo"><h4>${t.name}</h4><div class="meta">${t.meta}</div><div class="venue">📍 ${t.venue}</div></div>
     <div class="tprice"><div class="p">${t.price}</div><div class="left">${t.left}</div>
-      <button class="add" onclick="openSeats(${i})">選位購票</button></div>
+      <button class="add buy-now" onclick="openSeats(${i})">選位購票</button></div>
   </div>`).join("");}
 
 function renderShop(el,lim){(el||$("shopGrid")).innerHTML=(lim?products.slice(0,lim):products).map((p,i)=>`
@@ -1161,6 +1177,7 @@ function favInfo(k){
   if(t==='live'){const x=lives[+v];return x&&{name:x.name,sub:x.tags,img:thumb(x.img,''),go:'live'};}
   if(t==='cr'){const x=creators.find(c=>c.slug===v);return x&&{name:x.name,sub:x.type,img:thumb(x.slug,''),go:'ai'};}
   if(t==='pd'){const x=products[+v];return x&&{name:x.name,sub:'NT$'+(x.price||0).toLocaleString(),img:thumb('p'+v,''),go:'shop'};}
+  if(t==='tk'){const x=tickets[+v];return x&&{name:x.name,sub:x.d+' '+x.m+' · '+x.price,img:x.img||'',go:'ticket'};}
   return null;
 }
 function updateFavUI(){

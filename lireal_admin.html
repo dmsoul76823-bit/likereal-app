@@ -126,6 +126,15 @@
   .tt input:focus{border-color:var(--brand)}
   .xbtn{background:rgba(255,80,110,.12);border:1px solid rgba(255,80,110,.3);color:#ff9db0;border-radius:9px;width:34px;height:34px;cursor:pointer;flex:none}
 
+  /* 場次主視覺設定 */
+  .evimg{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start}
+  .evimg-pre{aspect-ratio:16/10;border-radius:12px;border:1px solid var(--line2);background:#120f1e center/cover no-repeat;
+    display:grid;place-items:center;color:var(--muted);font-size:12px}
+  .evimg-act{display:flex;flex-direction:column;gap:9px}
+  .evimg-act input{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;
+    padding:11px 13px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+  .evimg-act input:focus{border-color:var(--brand)}
+  @media(max-width:640px){.evimg{grid-template-columns:1fr}}
   /* seat map */
   .tt{grid-template-columns:1.5fr .9fr .7fr .8fr .7fr auto}
   .tt .cnt{font-size:12px;color:var(--brand3);text-align:center;white-space:nowrap}
@@ -855,8 +864,11 @@ function oStTag(s){const m={"已付款":"ok","待付款":"warn","已退款":"err
 function renderEvents(){
   const q=v("evQ").toLowerCase();
   const list=DB.events.filter(e=>!q||e.name.toLowerCase().includes(q));
-  $("evTable").innerHTML=list.length?`<table><thead><tr><th>節目名稱</th><th>類型</th><th>場地</th><th>日期時間</th><th>票種</th><th>售出</th><th>狀態</th><th></th></tr></thead><tbody>`+
-    list.map(e=>`<tr><td><b>${esc(e.name)}</b><br><small style="color:var(--muted)">售票 ${esc(e.sale)}</small></td>
+  $("evTable").innerHTML=list.length?`<table><thead><tr><th>主視覺</th><th>節目名稱</th><th>類型</th><th>場地</th><th>日期時間</th><th>票種</th><th>售出</th><th>狀態</th><th></th></tr></thead><tbody>`+
+    list.map(e=>`<tr>
+      <td><div class="thumb-sm" style="width:64px;height:40px;border-radius:7px;${e.img?`background-image:url('${e.img}')`:''}"
+        title="${e.img?'已設定主視覺':'尚未設定主視覺'}">${e.img?'':'<span style="font-size:10px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div></td>
+      <td><b>${esc(e.name)}</b><br><small style="color:var(--muted)">售票 ${esc(e.sale)}</small></td>
       <td><span class="tag b">${esc(e.cat)}</span></td><td style="color:var(--muted)">${esc(e.venue)}</td><td>${e.date}<br><small style="color:var(--muted)">${e.time}</small></td>
       <td>${e.tickets.length} 種<br><small style="color:var(--muted)">NT$${Math.min(...e.tickets.map(t=>t.p)).toLocaleString()} 起</small></td>
       <td>${e.sold}/${e.cap}</td><td>${stTag(e.status)}</td>
@@ -1060,9 +1072,20 @@ window.editEvent=id=>{
       <div class="fld"><label>開演時間</label><input id="f_time" type="time" value="${EV.time}"></div>
       <div class="fld full"><label>售票期間</label><input id="f_sale" value="${esc(EV.sale)}" placeholder="2026-08-01 ~ 2026-09-12"></div>
       <div class="fld tall full"><label>活動簡介</label><textarea id="f_intro">${esc(EV.intro)}</textarea></div>
-      <div class="fld"><label>YouTube 影片 ID（選填）</label><input id="f_yt" value="${esc(EV.yt)}" placeholder="LXb3EKWsInQ"></div>
-      <div class="fld"><label>主視覺圖片網址（選填）</label><input id="f_img" value="${esc(EV.img)}" placeholder="/images/event.jpg"></div>
-      <div class="fld full"><div class="spec"><b>📐 主視覺建議規格</b>尺寸：<code>1200 × 675 px</code>（16:9）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB</div></div>
+      <div class="fld full"><label>YouTube 影片 ID（選填）</label><input id="f_yt" value="${esc(EV.yt)}" placeholder="LXb3EKWsInQ"></div>
+      <div class="fld full"><label>場次主視覺（前台售票卡會顯示這張圖）</label>
+        <div class="evimg">
+          <div class="evimg-pre" id="evImgPre" style="${EV.img?`background-image:url('${EV.img}')`:''}">${EV.img?'':'尚未設定'}</div>
+          <div class="evimg-act">
+            <input id="f_img" value="${esc(EV.img)}" placeholder="貼上圖片網址，或直接上傳">
+            <div style="display:flex;gap:8px">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;flex:1;text-align:center">上傳圖片<input type="file" id="f_imgFile" accept="image/*" hidden></label>
+              <button class="btn btn-danger btn-sm" id="f_imgClear">清除</button>
+            </div>
+          </div>
+        </div>
+        <div class="spec"><b>📐 主視覺建議規格</b>尺寸：<code>1200 × 750 px</code>（16:10）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB<br>重點內容置中，左上角會疊上日期標籤</div>
+      </div>
 
       <div class="fld full"><label>票種（點左側色塊設為「目前框選對象」）</label>
         <div id="tkBox"></div>
@@ -1097,6 +1120,28 @@ window.editEvent=id=>{
     renderEvents();toast(id?'節目已更新':'節目已新增');
   });
   $("modal").classList.add('wide');
+  /* 主視覺：上傳 / 貼網址 / 清除 */
+  (function(){
+    const pre=$("evImgPre"), inp=$("f_img"), file=$("f_imgFile"), clr=$("f_imgClear");
+    const setImg=u=>{ inp.value=u||''; EV.img=u||'';
+      pre.style.backgroundImage=u?`url('${u}')`:''; pre.textContent=u?'':'尚未設定'; };
+    inp.addEventListener('input',()=>setImg(inp.value.trim()));
+    clr.onclick=()=>setImg('');
+    file.onchange=e=>{
+      const f=e.target.files[0]; if(!f)return;
+      const rd=new FileReader();
+      rd.onload=()=>{ const im=new Image();
+        im.onload=()=>{ let w=im.width,h=im.height,M=1200;
+          if(w>M){h=Math.round(h*M/w);w=M;}
+          const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+          cv.getContext('2d').drawImage(im,0,0,w,h);
+          setImg(cv.toDataURL('image/jpeg',0.85)); toast('主視覺已更新，記得按儲存');
+        };
+        im.onerror=()=>{ setImg(rd.result); };
+        im.src=rd.result; };
+      rd.readAsDataURL(f); e.target.value='';
+    };
+  })();
   $("f_venue").addEventListener('change',()=>{EV.venueId=+v("f_venue");const vn=venueById(EV.venueId);
     if(vn&&!v("f_venue_t"))$("f_venue_t").value=vn.name;
     // 換場地：清掉不存在於新場地的座位
