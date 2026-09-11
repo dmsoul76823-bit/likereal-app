@@ -29,7 +29,7 @@ const server = http.createServer((req, res) => {
   if (p === '/')       p = '/index.html';
   if (p === '/admin')  p = '/lireal_admin.html';
   // 前台分頁路由：全部指向同一個檔案（由前端 router 決定顯示哪一頁）
-  if (['/app','/programs','/live','/ai','/ticket','/shop','/vip','/about','/dining'].indexOf(p) >= 0)
+  if (['/app','/programs','/live','/ai','/ticket','/shop','/vip','/about','/dining','/event'].indexOf(p) >= 0)
     p = '/lireal_platform.html';
   // 沒有副檔名時，自動補 .html（對應 Vercel 的 cleanUrls）
   if (!path.extname(p)) {

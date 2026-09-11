@@ -334,6 +334,70 @@
     .about-txt p{font-size:14.5px;line-height:1.85}
     .about-feats{grid-template-columns:1fr}
   }
+  /* 節目介紹頁 */
+  .backlink{display:inline-block;color:var(--muted);font-size:13px;margin:18px 0 14px}
+  .backlink:hover{color:var(--brand3)}
+  .ev-hero{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line);
+    aspect-ratio:21/9;min-height:260px;background:#151020 center/cover no-repeat;box-shadow:var(--shadow)}
+  .ev-hero .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,18,.25),rgba(10,6,18,.92))}
+  .ev-hero .cap{position:absolute;left:0;right:0;bottom:0;padding:28px 26px}
+  .ev-hero h1{font-size:32px;font-weight:800;line-height:1.25;margin-bottom:10px}
+  .ev-hero .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .ev-hero .chips span{background:rgba(8,5,16,.6);border:1px solid var(--line);color:var(--brand3);
+    border-radius:999px;padding:6px 14px;font-size:12px;backdrop-filter:blur(6px)}
+  .ev-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:28px;margin-top:26px;align-items:start}
+  .ev-box{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:18px;padding:22px;margin-bottom:18px}
+  .ev-box h3{font-size:17px;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+  .ev-box h3::before{content:'';width:4px;height:16px;border-radius:2px;background:linear-gradient(var(--brand),var(--brand2))}
+  .ev-box p{color:var(--muted);font-size:14px;line-height:1.9;margin-bottom:9px}
+  .ev-box ol{color:var(--muted);font-size:13.5px;line-height:1.9;padding-left:20px}
+  .ev-box ol li{margin-bottom:6px}
+  .ev-info{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font-size:14px}
+  .ev-info dt{color:var(--muted)}
+  .ev-info dd{color:var(--text)}
+  /* 場次列表 */
+  .sess-row{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
+    padding:14px 16px;border:1px solid var(--line2);border-radius:14px;margin-bottom:10px;transition:.2s;
+    background:linear-gradient(180deg,var(--card2),var(--card))}
+  .sess-row:hover{border-color:var(--line)}
+  .sess-row.full{opacity:.55}
+  .sess-d{text-align:center;min-width:62px}
+  .sess-d b{display:block;font-size:23px;font-weight:800;color:var(--brand3);line-height:1.1}
+  .sess-d span{font-size:11px;color:var(--muted);letter-spacing:1px}
+  .sess-m .t{font-size:15px;font-weight:700}
+  .sess-m .v{color:var(--muted);font-size:12.5px;margin-top:4px}
+  .sess-m .left{font-size:12px;margin-top:5px}
+  .sess-a{text-align:right}
+  .sess-a .p{font-size:17px;font-weight:800;color:var(--brand3);margin-bottom:7px}
+  .sess-a .p small{font-size:11px;color:var(--muted);font-weight:500}
+  .sess-more{width:100%;margin-top:6px}
+  /* 節目卡（售票列表） */
+  .pgcard{display:flex;flex-direction:column;padding:14px;cursor:pointer;
+    background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:18px;transition:.25s}
+  .pgcard:hover{border-color:var(--line);box-shadow:var(--shadow);transform:translateY(-4px)}
+  .pgcard .pic{position:relative;aspect-ratio:16/10;border-radius:13px;overflow:hidden;
+    background:#151020 center/cover no-repeat;border:1px solid var(--line2)}
+  .pgcard .badge-n{position:absolute;left:11px;top:11px;background:rgba(8,5,16,.72);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:11px;padding:6px 12px;font-size:12px;color:var(--brand3);font-weight:700}
+  .pgcard .pic .fav{width:32px;height:32px;font-size:15px;top:10px;right:10px}
+  .pgcard .body{display:flex;flex-direction:column;flex:1;gap:11px;padding:14px 4px 2px}
+  .pgcard h4{font-size:18px;font-weight:800;line-height:1.35;flex:1}
+  .pgcard .meta{color:var(--muted);font-size:13px}
+  .pgcard .foot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    border-top:1px solid var(--line2);padding-top:12px}
+  .pgcard .pr{font-size:20px;font-weight:800;color:var(--brand3)}
+  .pgcard .pr small{font-size:12px;color:var(--muted);font-weight:500;margin-left:3px}
+  @media(max-width:900px){
+    .ev-grid{grid-template-columns:1fr;gap:18px}
+    .ev-hero{aspect-ratio:16/9;min-height:200px}
+    .ev-hero h1{font-size:23px}.ev-hero .cap{padding:18px 16px}
+  }
+  @media(max-width:560px){
+    .sess-row{grid-template-columns:auto 1fr;gap:12px}
+    .sess-a{grid-column:1/-1;text-align:left;display:flex;align-items:center;gap:12px;justify-content:space-between}
+    .sess-a .p{margin:0}
+  }
   /* 品牌理念 */
   .philo{margin-top:58px;padding-top:44px;border-top:1px solid var(--line2)}
   .philo-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:38px;align-items:start}
@@ -840,6 +904,12 @@
   </div>
 </div></section>
 
+<!-- ===== 節目介紹頁 ===== -->
+<section id="event" data-page="event"><div class="wrap">
+  <a class="backlink" href="/ticket" data-route="ticket">← 回場域售票</a>
+  <div id="evDetail"></div>
+</div></section>
+
 <!-- ===== 沉浸餐飲 ===== -->
 <section id="dining" data-page="dining"><div class="wrap">
   <div class="dine-hero">
@@ -1296,6 +1366,162 @@ function renderLives(el,lim){(el||$("liveGrid")).innerHTML=(lim?lives.slice(0,li
 
 const TICKET_PALS=[["#3a2a6a","#120c22","#c6a6ff"],["#1c2a6a","#0a0f26","#7aa0ff"],["#5a2a3a","#200f16","#ff9fb0"],
   ["#2a5a5a","#0a1e1e","#6ff0e0"],["#7a2a5a","#260f20","#ff9fd6"],["#2a3a5a","#0e1422","#9fc0ff"]];
+const priceNum=s=>parseInt(String(s||'').replace(/[^0-9]/g,''))||0;
+
+/* 把場次依「節目名稱」收合成節目 */
+function groupTickets(){
+  const m=new Map();
+  tickets.forEach((t,i)=>{
+    if(!m.has(t.name))m.set(t.name,{name:t.name,items:[],idx:[]});
+    const g=m.get(t.name); g.items.push(t); g.idx.push(i);
+  });
+  return [...m.values()].map((g,gi)=>{
+    const ps=g.items.map(t=>priceNum(t.price)).filter(Boolean);
+    g.min=ps.length?Math.min(...ps):0;
+    g.ev=g.items[0].ev||{};
+    g.cat=g.ev.cat||'';
+    g.intro=g.ev.intro||'';
+    g.venues=[...new Set(g.items.map(t=>(t.venue||'').split(' ·')[0]))];
+    g.img=g.items[0].img||PROGRAM_ART[g.name]||posterSVG(TICKET_PALS[gi%TICKET_PALS.length]);
+    g.count=g.items.length;
+    g.first=g.items[0];
+    g.last=g.items[g.items.length-1];
+    return g;
+  });
+}
+
+/* 售票列表：以「節目」為單位 */
+function renderPrograms2(el,lim){
+  const gs=groupTickets();
+  const list=lim?gs.slice(0,lim):gs;
+  (el||$("ticketGrid")).innerHTML=list.length?list.map((g,i)=>`
+    <div class="pgcard" onclick="openProgram('${escAttr(g.name)}')">
+      <div class="pic" style="background-image:url('${g.img}')">
+        <div class="badge-n">${g.count} 個場次</div>
+        ${favBtn('tk:'+g.idx[0])}
+      </div>
+      <div class="body">
+        <h4>${escH(g.name)}</h4>
+        <div class="meta">📍 ${escH(g.venues.join('、'))}</div>
+        <div class="meta">🗓 ${g.first.d} ${g.first.m}${g.count>1?` ~ ${g.last.d} ${g.last.m}`:''}</div>
+        <div class="foot">
+          <div class="pr">NT$${g.min.toLocaleString()}<small>起</small></div>
+          <span class="add buy-now">查看場次 →</span>
+        </div>
+      </div>
+    </div>`).join(''):'<div class="empty" style="color:var(--muted);padding:30px">目前沒有可售票的場次</div>';
+}
+const escAttr=s=>String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
+/* 節目介紹頁 */
+let CUR_PROGRAM='';
+function openProgram(name){
+  CUR_PROGRAM=name;
+  history.pushState({page:'event',p:name},'','/event?p='+encodeURIComponent(name));
+  showPage('event',false);
+  renderProgramDetail();
+}
+function renderProgramDetail(){
+  const box=$("evDetail"); if(!box)return;
+  const g=groupTickets().find(x=>x.name===CUR_PROGRAM);
+  if(!g){box.innerHTML='<div class="ev-box"><p>找不到這個節目，可能場次已結束。</p><a class="btn btn-brand" href="/ticket" data-route="ticket">回場域售票</a></div>';return;}
+  const MON2={JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'};
+  box.innerHTML=`
+    <div class="ev-hero" style="background-image:url('${g.img}')">
+      <div class="ov"></div>
+      <div class="cap">
+        <h1 class="serif">${escH(g.name)}</h1>
+        <div class="chips">
+          ${g.cat?`<span>${escH(g.cat)}</span>`:''}
+          <span>${g.count} 個場次</span>
+          <span>📍 ${escH(g.venues.join('、'))}</span>
+          <span>NT$${g.min.toLocaleString()} 起</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ev-grid">
+      <div>
+        <div class="ev-box">
+          <h3>節目介紹</h3>
+          <p>${escH(g.intro||'LiReal 沉浸式場域演出，結合 LED 背景屏、巨型 Dome 投影與空間音訊，帶來身歷其境的觀賞體驗。')}</p>
+        </div>
+
+        <div class="ev-box">
+          <h3>選擇場次</h3>
+          <div id="sessRows"></div>
+        </div>
+
+        <div class="ev-box">
+          <h3>注意事項</h3>
+          <ol>
+            <li>請於開演前 30 分鐘抵達，並出示電子票券 QR Code 入場。</li>
+            <li>演出開始後恕不得中途入場，請準時到場。</li>
+            <li>場內全程禁止錄影、錄音與閃光燈拍攝。</li>
+            <li>每張票券僅限一人使用，掃描後即失效。</li>
+            <li>沉浸式演出含強光與環繞音效，光敏感體質或孕婦請斟酌入場。</li>
+            <li>主辦單位保留節目內容與演出人員異動之權利。</li>
+          </ol>
+        </div>
+
+        <div class="ev-box">
+          <h3>退票規則</h3>
+          <ol>
+            <li>演出日 10 日前申請退票，退還票面金額 90%。</li>
+            <li>演出日 10 日內恕不接受退票或換場次。</li>
+            <li>因不可抗力因素取消演出，將全額退款。</li>
+            <li>退票申請請來信客服信箱，並附訂單編號。</li>
+          </ol>
+        </div>
+      </div>
+
+      <div>
+        <div class="ev-box">
+          <h3>演出資訊</h3>
+          <dl class="ev-info">
+            <dt>節目</dt><dd>${escH(g.name)}</dd>
+            <dt>類型</dt><dd>${escH(g.cat||'—')}</dd>
+            <dt>場地</dt><dd>${escH(g.venues.join('、'))}</dd>
+            <dt>場次</dt><dd>${g.count} 場</dd>
+            <dt>期間</dt><dd>${g.first.d} ${g.first.m} ~ ${g.last.d} ${g.last.m}</dd>
+            <dt>票價</dt><dd>NT$${g.min.toLocaleString()} 起</dd>
+          </dl>
+        </div>
+        <div class="ev-box">
+          <h3>購票方式</h3>
+          <p>於下方場次列表點選「選位購票」，在座位圖上挑選座位後結帳，系統會立即產生電子票券 QR Code。</p>
+          <a class="btn btn-brand" style="width:100%;text-align:center;margin-top:6px" href="#" onclick="document.getElementById('sessRows').scrollIntoView({behavior:'smooth'});return false;">前往選擇場次</a>
+        </div>
+      </div>
+    </div>`;
+  // 場次列表
+  const rows=$("sessRows");
+  const MAXSHOW=8;
+  const draw=(showAll)=>{
+    const items=showAll?g.items:g.items.slice(0,MAXSHOW);
+    rows.innerHTML=items.map((t,k)=>{
+      const gi=g.idx[showAll?k:k];
+      const full=/售罄/.test(t.left);
+      return `<div class="sess-row ${full?'full':''}">
+        <div class="sess-d"><b>${t.d}</b><span>${t.m}</span></div>
+        <div class="sess-m">
+          <div class="t">${escH(t.meta)}</div>
+          <div class="v">📍 ${escH(t.venue)}</div>
+          <div class="left" style="color:${full?'var(--rose)':'var(--muted)'}">${escH(t.left)}</div>
+        </div>
+        <div class="sess-a">
+          <div class="p">${escH(t.price)}<small> 起</small></div>
+          <button class="add buy-now" ${full?'disabled style="opacity:.5;cursor:not-allowed"':''}
+            onclick="openSeats(${gi})">${full?'已售罄':'選位購票'}</button>
+        </div>
+      </div>`;}).join('')
+      + (!showAll&&g.items.length>MAXSHOW
+          ? `<button class="btn btn-ghost sess-more" onclick="window.__showAllSess()">顯示全部 ${g.items.length} 個場次 ↓</button>`:'');
+  };
+  window.__showAllSess=()=>draw(true);
+  draw(false);
+  updateFavUI();
+}
 function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slice(0,lim):tickets).map((t,i)=>`
   <div class="ticket">
     <div class="tpic" style="background-image:url('${t.img||PROGRAM_ART[t.name]||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
@@ -1349,15 +1575,16 @@ let creators=[
 applyADBCreators();   // 套用後台創作者資料
 function renderHome(){
   renderPrograms($("hProg"),3);
-  renderTickets($("hTicket"),6);
+  renderPrograms2($("hTicket"),6);
   renderLives($("hLive"),6);
   renderOM($("hOM"),6);
   renderShop($("hShop"),8);
   renderPlans($("hPlan"),2);
 }
 function renderAll(){
-  renderPrograms();renderLives();renderTickets();renderShop();renderPlans();renderOM();
+  renderPrograms();renderLives();renderPrograms2();renderShop();renderPlans();renderOM();
   renderHome();
+  if(CURRENT==='event')renderProgramDetail();
   bindTilt();
   updateFavUI();
 }
@@ -1829,12 +2056,18 @@ const ROUTES={
   shop:   {title:'裸視 3D 精選 · LiReal'},
   vip:    {title:'會員儲值 · LiReal'},
   about:  {title:'關於 LiReal · 沉浸式場域品牌'},
-  dining: {title:'沉浸餐飲 · LiReal'}
+  dining: {title:'沉浸餐飲 · LiReal'},
+  event:  {title:'節目介紹 · LiReal'}
 };
 function routeFromPath(p){
   const seg=(p||location.pathname).replace(/^\/+|\/+$/g,'').toLowerCase();
   if(!seg||seg==='app'||seg==='index.html'||seg==='lireal_platform'||seg==='lireal_platform.html')return 'home';
   return ROUTES[seg]?seg:'home';
+}
+// 進入 /event?p=節目名稱 時記住是哪一檔
+function syncProgramFromURL(){
+  const m=/[?&]p=([^&]+)/.exec(location.search);
+  if(m){try{CUR_PROGRAM=decodeURIComponent(m[1]);}catch(e){}}
 }
 let CURRENT='home';
 function showPage(name,push){
@@ -1846,12 +2079,13 @@ function showPage(name,push){
   document.querySelectorAll('[data-route]').forEach(a=>{
     a.classList.toggle('on', a.dataset.route===name);
   });
-  document.title=ROUTES[name].title;
+  document.title=name==='event'&&CUR_PROGRAM?CUR_PROGRAM+' · LiReal':ROUTES[name].title;
   $("mobnav").classList.remove('open');
   if(push){
     const url=name==='home'?'/':'/'+name;
     if(location.pathname!==url)history.pushState({page:name},'',url);
   }
+  if(name==='event')renderProgramDetail();
   window.scrollTo({top:0,behavior:'instant'in document.documentElement.style?'instant':'auto'});
 }
 // 攔截所有內部連結
@@ -1862,6 +2096,7 @@ document.addEventListener('click',e=>{
   showPage(a.dataset.route,true);
 });
 window.addEventListener('popstate',e=>{
+  syncProgramFromURL();
   showPage((e.state&&e.state.page)||routeFromPath(),false);
 });
 // Logo 點擊回首頁
@@ -1872,6 +2107,7 @@ window.addEventListener('popstate',e=>{
 // 手機選單
 $("burger").onclick=()=>$("mobnav").classList.toggle('open');
 // 初始頁
+syncProgramFromURL();
 showPage(routeFromPath(),false);
 
 /* 後台存檔後即時同步（同一台電腦、跨分頁） */
