@@ -353,7 +353,7 @@
     <section class="page" id="p-events">
       <div class="panel">
         <div class="panel-head">
-          <div><h3>節目 / 場次管理</h3><div class="hint" style="margin:0">沉浸式場域節目，含票種、場地、售票期間</div></div>
+          <div><h3>節目管理</h3><div class="hint" style="margin:0">一檔節目可開多個場次 — 點「場次」批次新增日期時間，點「編輯節目」修改會套用到全部場次</div></div>
           <div class="tools">
             <input id="evQ" placeholder="搜尋節目名稱…">
             <button class="btn btn-brand btn-sm" id="evAdd">＋ 新增節目</button>
@@ -364,7 +364,7 @@
 
       <div class="panel">
         <div class="panel-head">
-          <div><h3>節目主視覺</h3><div class="hint" style="margin:0">同名節目的所有場次共用一張圖，上傳一次即可套用到全部場次</div></div>
+          <div><h3>節目主視覺 — 快速上傳</h3><div class="hint" style="margin:0">與「編輯節目」裡的主視覺同一份，這裡可一次瀏覽所有節目快速補圖</div></div>
           <div class="tools"><input id="paQ" placeholder="搜尋節目名稱…"></div>
         </div>
         <div class="spec" style="margin-bottom:14px"><b>📐 建議素材規格</b>尺寸：<code>1200 × 750 px</code>（16:10）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB<br>重點內容置中，左上角會疊上日期標籤</div>
@@ -842,7 +842,7 @@ function go(k){
   $("side").classList.remove('open');   // 手機版點選後收合側欄
   const n=NAV.find(x=>x.k===k); $("pgTitle").textContent=n.t; $("pgDesc").textContent=n.d;
   const mb=$("mbTitle"); if(mb)mb.textContent=n.t;
-  if(k==='events')loadProgramArt();
+  if(k==='events')(async()=>{await loadProgramArt();await loadEvLite();renderEvents();})();
   ({dash:renderDash,events:renderEvents,venues:renderVenues,creators:renderCreators,products:renderProducts,orders:renderOrders,
     members:renderMembers,checkin:renderCheckin,settings:renderSettings,seo:renderSeo,staff:renderStaff}[k]||(()=>{}))();
 }
@@ -850,7 +850,7 @@ function go(k){
 /* ================= Modal ================= */
 let saveFn=null;
 function openM(title,html,fn){$("mTitle").textContent=title;$("mBody").innerHTML=html;saveFn=fn;$("modal").classList.add('on');$("mask").classList.add('on');}
-function closeM(){$("modal").classList.remove('on','wide','full');$("mask").classList.remove('on');saveFn=null;}
+function closeM(){$("modal").classList.remove('on','wide','full');$("mask").classList.remove('on');saveFn=null;$("mSave").style.display='';}
 $("mFull").onclick=()=>$("modal").classList.toggle('full');
 $("mX").onclick=closeM;$("mCancel").onclick=closeM;$("mask").onclick=closeM;
 $("mSave").onclick=()=>{if(saveFn&&saveFn()!==false){save();closeM();}};
@@ -873,23 +873,206 @@ function renderDash(){
 function stTag(s){const m={"售票中":"ok","即將售罄":"warn","已售罄":"err","未開賣":"info"};return `<span class="tag ${m[s]||''}">${s}</span>`;}
 function oStTag(s){const m={"已付款":"ok","待付款":"warn","已退款":"err"};return `<span class="tag ${m[s]||''}">${s}</span>`;}
 
-/* ================= 節目 ================= */
+/* ================= 節目（節目 → 場次 兩層） ================= */
+/* EVLITE：所有場次的精簡資料（不含座位陣列，量大時也很快） */
+let EVLITE=[];
+async function loadEvLite(){
+  if(!ONLINE){EVLITE=(DB.events||[]).map(e=>({id:e.id,name:e.name,cat:e.cat,venue:e.venue,venue_id:e.venueId,
+    show_date:e.date,show_time:e.time,sold:e.sold,cap:e.cap,status:e.status}));return;}
+  const {data,error}=await sb.from('events')
+    .select('id,name,cat,venue,venue_id,show_date,show_time,sold,cap,status')
+    .order('show_date').order('show_time');
+  if(error){toast('讀取場次失敗：'+error.message);return;}
+  EVLITE=data||[];
+}
+function groupPrograms(){
+  const m=new Map();
+  EVLITE.forEach(e=>{
+    const k=e.name;
+    if(!m.has(k))m.set(k,{name:k,cat:e.cat,count:0,sold:0,cap:0,dates:[],venues:new Set(),ids:[]});
+    const g=m.get(k);
+    g.count++;g.sold+=e.sold||0;g.cap+=e.cap||0;g.dates.push(e.show_date);
+    g.venues.add((e.venue||'').split(' ·')[0]);g.ids.push(e.id);
+  });
+  return [...m.values()].map(g=>{
+    g.dates.sort();g.first=g.dates[0];g.last=g.dates[g.dates.length-1];
+    g.art=(PART.find(p=>p.name===g.name)||{}).img||'';
+    return g;
+  }).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+}
 function renderEvents(){
   const q=v("evQ").toLowerCase();
-  const list=DB.events.filter(e=>!q||e.name.toLowerCase().includes(q));
-  $("evTable").innerHTML=list.length?`<table><thead><tr><th>主視覺</th><th>節目名稱</th><th>類型</th><th>場地</th><th>日期時間</th><th>票種</th><th>售出</th><th>狀態</th><th></th></tr></thead><tbody>`+
-    list.map(e=>`<tr>
-      <td><div class="thumb-sm" style="width:64px;height:40px;border-radius:7px;${e.img?`background-image:url('${e.img}')`:''}"
-        title="${e.img?'已設定主視覺':'尚未設定主視覺'}">${e.img?'':'<span style="font-size:10px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div></td>
-      <td><b>${esc(e.name)}</b><br><small style="color:var(--muted)">售票 ${esc(e.sale)}</small></td>
-      <td><span class="tag b">${esc(e.cat)}</span></td><td style="color:var(--muted)">${esc(e.venue)}</td><td>${e.date}<br><small style="color:var(--muted)">${e.time}</small></td>
-      <td>${e.tickets.length} 種<br><small style="color:var(--muted)">NT$${Math.min(...e.tickets.map(t=>t.p)).toLocaleString()} 起</small></td>
-      <td>${e.sold}/${e.cap}</td><td>${stTag(e.status)}</td>
-      <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editEvent(${e.id})">編輯</button>
-      <button class="btn btn-danger btn-sm" onclick="delEvent(${e.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
+  const list=groupPrograms().filter(g=>!q||g.name.toLowerCase().includes(q));
+  $("evTable").innerHTML=list.length?`<table><thead><tr>
+      <th>主視覺</th><th>節目名稱</th><th>類型</th><th>場地</th><th>場次數</th><th>期間</th><th>售出</th><th></th></tr></thead><tbody>`+
+    list.map(g=>{
+      const nm=esc(g.name).replace(/'/g,"\\'");
+      return `<tr>
+      <td><div class="thumb-sm" style="width:64px;height:40px;border-radius:7px;${g.art?`background-image:url('${g.art}')`:''}">${g.art?'':'<span style="font-size:10px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div></td>
+      <td><b>${esc(g.name)}</b></td>
+      <td><span class="tag b">${esc(g.cat||'')}</span></td>
+      <td style="color:var(--muted);font-size:12px">${[...g.venues].join('、')}</td>
+      <td><b style="color:var(--brand3)">${g.count}</b> 場</td>
+      <td style="color:var(--muted);font-size:12px">${g.first}<br>~ ${g.last}</td>
+      <td>${g.sold}/${g.cap}</td>
+      <td><div class="row-act">
+        <button class="btn btn-ghost btn-sm" onclick="editProgram('${nm}')">編輯節目</button>
+        <button class="btn btn-brand btn-sm" onclick="openSessions('${nm}')">場次 (${g.count})</button>
+      </div></td></tr>`;}).join('')+`</tbody></table>`
     :`<div class="empty">沒有符合的節目</div>`;
 }
 $("evQ").oninput=renderEvents;
+
+/* ---------- 編輯節目（套用到該節目所有場次） ---------- */
+window.editProgram=name=>{
+  const g=groupPrograms().find(x=>x.name===name); if(!g)return;
+  const art=(PART.find(p=>p.name===name)||{})||{};
+  const sample=(DB.events||[]).find(e=>e.name===name)||{};
+  openM('編輯節目 · '+name,`<div class="fgrid">
+    <div class="fld full"><label>節目名稱（修改後會套用到全部 ${g.count} 個場次）</label><input id="pg_name" value="${esc(name)}"></div>
+    <div class="fld"><label>類型</label><select id="pg_cat">${["沉浸場域","3D 場域","見面會","特展","派對","工作坊"].map(c=>`<option ${c===g.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="fld"><label>場次數</label><input value="${g.count} 場（${g.first} ~ ${g.last}）" readonly style="opacity:.7"></div>
+    <div class="fld tall full"><label>節目介紹</label><textarea id="pg_intro" placeholder="這段會套用到所有場次">${esc(art.intro||sample.intro||'')}</textarea></div>
+    <div class="fld full"><label>主視覺（此節目所有場次共用）</label>
+      <div class="evimg">
+        <div class="evimg-pre" id="pgImgPre" style="${art.img?`background-image:url('${art.img}')`:''}">${art.img?'':'尚未設定'}</div>
+        <div class="evimg-act">
+          <input id="pg_img" value="${esc(art.img||'')}" placeholder="貼上圖片網址，或直接上傳">
+          <div style="display:flex;gap:8px">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;flex:1;text-align:center">上傳圖片<input type="file" id="pg_imgFile" accept="image/*" hidden></label>
+            <button class="btn btn-danger btn-sm" id="pg_imgClear">清除</button>
+          </div>
+        </div>
+      </div>
+      <div class="spec"><b>📐 建議規格</b>尺寸：<code>1200 × 750 px</code>（16:10）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB</div>
+    </div>
+  </div>`,()=>{
+    const nn=v("pg_name").trim(); if(!nn){toast('請填寫節目名稱');return false;}
+    const payload={name:nn,cat:v("pg_cat"),intro:v("pg_intro"),img:v("pg_img")};
+    (async()=>{
+      setSync('saving');
+      try{
+        // 1) 套用到所有同名場次
+        const {error:e1}=await sb.from('events')
+          .update({name:payload.name,cat:payload.cat,intro:payload.intro})
+          .eq('name',name);
+        if(e1)throw e1;
+        // 2) 節目主視覺
+        const {error:e2}=await sb.from('program_art')
+          .upsert({name:payload.name,img:payload.img||null,intro:payload.intro,updated_at:new Date().toISOString()});
+        if(e2)throw e2;
+        if(nn!==name){ await sb.from('program_art').delete().eq('name',name); }
+        await loadProgramArt(); await loadEvLite(); await syncPull();
+        renderEvents(); setSync('ok'); toast(`已套用到 ${g.count} 個場次`);
+      }catch(err){ setSync('err'); toast('儲存失敗：'+(err.message||err)); }
+    })();
+  });
+  // 主視覺上傳
+  (function(){
+    const pre=$("pgImgPre"),inp=$("pg_img"),file=$("pg_imgFile"),clr=$("pg_imgClear");
+    const setImg=u=>{inp.value=u||'';pre.style.backgroundImage=u?`url('${u}')`:'';pre.textContent=u?'':'尚未設定';};
+    inp.addEventListener('input',()=>setImg(inp.value.trim()));
+    clr.onclick=()=>setImg('');
+    file.onchange=e=>{const f=e.target.files[0];if(!f)return;
+      const rd=new FileReader();
+      rd.onload=()=>{const im=new Image();
+        im.onload=()=>{let w=im.width,h=im.height,M=1200;if(w>M){h=Math.round(h*M/w);w=M;}
+          const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+          cv.getContext('2d').drawImage(im,0,0,w,h);setImg(cv.toDataURL('image/jpeg',0.85));};
+        im.onerror=()=>setImg(rd.result);im.src=rd.result;};
+      rd.readAsDataURL(f);e.target.value='';};
+  })();
+};
+
+/* ---------- 場次管理 ---------- */
+let SESS_NAME='';
+window.openSessions=name=>{
+  SESS_NAME=name;
+  const rows=EVLITE.filter(e=>e.name===name);
+  const venues=(DB.venues||[]);
+  const today=new Date().toISOString().slice(0,10);
+  openM('場次管理 · '+name,`
+    <div class="panel" style="margin:0 0 18px;padding:16px">
+      <h3 style="font-size:15px;margin-bottom:4px">批次新增場次</h3>
+      <div class="hint">選定日期區間與星期，一次開出多個場次；票種與座位圖會複製自下方選定的範本場次</div>
+      <div class="fgrid">
+        <div class="fld"><label>起始日期</label><input id="bs_from" type="date" value="${today}"></div>
+        <div class="fld"><label>結束日期</label><input id="bs_to" type="date" value="${today}"></div>
+        <div class="fld full"><label>星期（不勾選＝區間內每天）</label>
+          <div class="perm">${['日','一','二','三','四','五','六'].map((d,i)=>`<label><input type="checkbox" class="bs-dow" value="${i}">${d}</label>`).join('')}</div>
+        </div>
+        <div class="fld full"><label>時間（多場以逗號分隔，例：14:00, 19:00）</label><input id="bs_times" value="19:00"></div>
+        <div class="fld full"><label>票種與座位圖範本</label>
+          <select id="bs_tpl">${rows.length?rows.map(r=>`<option value="${r.id}">${r.show_date} ${r.show_time} · ${esc((r.venue||'').split(' ·')[0])}（${r.cap} 席）</option>`).join(''):'<option value="">（此節目尚無場次，請先用下方單場新增）</option>'}</select>
+        </div>
+        <div class="fld full"><button class="btn btn-brand btn-sm" id="bs_go" style="width:100%">產生場次</button></div>
+      </div>
+    </div>
+    <h3 style="font-size:15px;margin-bottom:10px">現有場次（${rows.length}）</h3>
+    <div id="sessList" style="max-height:42vh;overflow:auto"></div>
+  `,null);
+  $("mSave").style.display='none';
+  renderSessList();
+  $("bs_go").onclick=batchAddSessions;
+};
+function renderSessList(){
+  const box=$("sessList"); if(!box)return;
+  const rows=EVLITE.filter(e=>e.name===SESS_NAME);
+  if(!rows.length){box.innerHTML='<div class="empty">尚無場次</div>';return;}
+  box.innerHTML=`<table><thead><tr><th>日期</th><th>時間</th><th>場地</th><th>售出</th><th>狀態</th><th></th></tr></thead><tbody>`+
+    rows.map(r=>`<tr>
+      <td>${r.show_date}</td><td>${r.show_time}</td>
+      <td style="color:var(--muted)">${esc((r.venue||'').split(' ·')[0])}</td>
+      <td>${r.sold}/${r.cap}</td><td>${stTag(r.status)}</td>
+      <td><div class="row-act">
+        <button class="btn btn-ghost btn-sm" onclick="editEvent(${r.id})">座位/票種</button>
+        <button class="btn btn-danger btn-sm" onclick="delSession(${r.id})">刪除</button>
+      </div></td></tr>`).join('')+`</tbody></table>`;
+}
+window.delSession=async id=>{
+  const row=EVLITE.find(e=>e.id===id);
+  if(row&&row.sold>0){ if(!confirm('此場次已售出 '+row.sold+' 張票，確定仍要刪除？'))return; }
+  else if(!confirm('確定刪除此場次？'))return;
+  setSync('saving');
+  const {error}=await sb.from('events').delete().eq('id',id);
+  if(error){setSync('err');toast('刪除失敗：'+error.message);return;}
+  await loadEvLite(); renderSessList(); renderEvents(); setSync('ok'); toast('已刪除場次');
+};
+async function batchAddSessions(){
+  const from=v("bs_from"), to=v("bs_to"), tplId=v("bs_tpl");
+  if(!from||!to){toast('請選擇日期區間');return;}
+  if(from>to){toast('結束日期不能早於起始日期');return;}
+  if(!tplId){toast('請先建立一個場次作為票種範本');return;}
+  const times=v("bs_times").split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+  if(!times.length){toast('請填寫時間');return;}
+  const dows=[...document.querySelectorAll('.bs-dow:checked')].map(c=>+c.value);
+
+  setSync('saving');
+  try{
+    const {data:tpl,error:e0}=await sb.from('events').select('*').eq('id',tplId).single();
+    if(e0)throw e0;
+    const rows=[]; let base=Date.now();
+    for(let d=new Date(from); d<=new Date(to); d.setDate(d.getDate()+1)){
+      if(dows.length&&!dows.includes(d.getDay()))continue;
+      const ds=d.toISOString().slice(0,10);
+      times.forEach(tm=>{
+        if(EVLITE.some(e=>e.name===SESS_NAME&&e.show_date===ds&&e.show_time===tm&&e.venue_id===tpl.venue_id))return;
+        rows.push({id:base++,name:SESS_NAME,venue:tpl.venue,venue_id:tpl.venue_id,
+          show_date:ds,show_time:tm,cat:tpl.cat,status:'售票中',
+          sale:tpl.sale,sold:0,cap:tpl.cap,tickets:tpl.tickets,sold_seats:[],
+          intro:tpl.intro,yt:tpl.yt,img:tpl.img,created_at:new Date().toISOString()});
+      });
+    }
+    if(!rows.length){setSync('ok');toast('沒有可新增的場次（可能已存在）');return;}
+    if(!confirm(`將新增 ${rows.length} 個場次，確定嗎？`)){setSync('ok');return;}
+    for(let i=0;i<rows.length;i+=200){
+      const {error}=await sb.from('events').insert(rows.slice(i,i+200));
+      if(error)throw error;
+    }
+    await loadEvLite(); renderSessList(); renderEvents();
+    setSync('ok'); toast(`已新增 ${rows.length} 個場次`);
+  }catch(err){ setSync('err'); toast('新增失敗：'+(err.message||err)); }
+}
 
 /* ---------- 節目主視覺（同名場次共用） ---------- */
 let PART=[];
@@ -901,7 +1084,7 @@ async function loadProgramArt(){
   PART=data||[];
   renderProgramArt();
 }
-function eventCountOf(name){return (DB.events||[]).filter(e=>e.name===name).length;}
+function eventCountOf(name){return EVLITE.filter(e=>e.name===name).length;}
 function renderProgramArt(){
   const box=$("paList"); if(!box)return;
   const q=(v("paQ")||'').toLowerCase();
@@ -1186,7 +1369,8 @@ window.editEvent=id=>{
     const valid=new Set();EV.tickets.forEach(t=>t.seats.forEach(x=>valid.add(x)));
     EV.soldSeats=EV.soldSeats.filter(x=>valid.has(x));EV.sold=EV.soldSeats.length;EV.cap=evCap(EV);
     if(id)Object.assign(DB.events.find(x=>x.id===id),EV); else{EV.id=Date.now();DB.events.unshift(EV);}
-    renderEvents();toast(id?'節目已更新':'節目已新增');
+    (async()=>{await loadEvLite();await loadProgramArt();renderEvents();if($("sessList"))renderSessList();})();
+    toast(id?'場次已更新':'場次已新增');
   });
   $("modal").classList.add('wide');
   /* 主視覺：上傳 / 貼網址 / 清除 */
