@@ -1103,6 +1103,7 @@ try{
   }
 }catch(e){console.error('Supabase 初始化失敗',e);}
 
+let PROGRAM_ART={};   // 節目名稱 → 主視覺
 function fillCMSDefaults(){
   if(ADB.marquee==null)ADB.marquee=CMS_DEFAULT.marquee;
   if(!Array.isArray(ADB.announcements))ADB.announcements=CMS_DEFAULT.announcements;
@@ -1127,6 +1128,11 @@ async function loadCloud(){
       sb.from('creators').select('*'), sb.from('products').select('*'),
       sb.from('settings').select('*')
     ]);
+    // 節目主視覺：同名場次共用一張圖
+    try{
+      const pa=await sb.from('program_art').select('name,img');
+      if(!pa.error){PROGRAM_ART={};(pa.data||[]).forEach(r=>{if(r.img)PROGRAM_ART[r.name]=r.img;});}
+    }catch(e){}
     if(ve.error||ev.error||cr.error||pr.error){console.warn('讀取線上資料失敗');return false;}
     const venues=(ve.data||[]).map(r=>({id:r.id,name:r.name,rows:r.n_rows,cols:r.n_cols,
       stage:r.stage||{},off:r.off_seats||[],boxes:r.boxes||[]}));
@@ -1292,7 +1298,7 @@ const TICKET_PALS=[["#3a2a6a","#120c22","#c6a6ff"],["#1c2a6a","#0a0f26","#7aa0ff
   ["#2a5a5a","#0a1e1e","#6ff0e0"],["#7a2a5a","#260f20","#ff9fd6"],["#2a3a5a","#0e1422","#9fc0ff"]];
 function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slice(0,lim):tickets).map((t,i)=>`
   <div class="ticket">
-    <div class="tpic" style="background-image:url('${t.img||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
+    <div class="tpic" style="background-image:url('${t.img||PROGRAM_ART[t.name]||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
       <div class="tdate-badge"><b>${t.d}</b><span>${t.m}</span></div>
       ${favBtn('tk:'+i)}
     </div>
@@ -1416,7 +1422,7 @@ function favInfo(k){
   if(t==='live'){const x=lives[+v];return x&&{name:x.name,sub:x.tags,img:thumb(x.img,''),go:'live'};}
   if(t==='cr'){const x=creators.find(c=>c.slug===v);return x&&{name:x.name,sub:x.type,img:thumb(x.slug,''),go:'ai'};}
   if(t==='pd'){const x=products[+v];return x&&{name:x.name,sub:'NT$'+(x.price||0).toLocaleString(),img:thumb('p'+v,''),go:'shop'};}
-  if(t==='tk'){const x=tickets[+v];return x&&{name:x.name,sub:x.d+' '+x.m+' · '+x.price,img:x.img||'',go:'ticket'};}
+  if(t==='tk'){const x=tickets[+v];return x&&{name:x.name,sub:x.d+' '+x.m+' · '+x.price,img:x.img||PROGRAM_ART[x.name]||'',go:'ticket'};}
   return null;
 }
 function updateFavUI(){

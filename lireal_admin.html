@@ -361,6 +361,15 @@
         </div>
         <div id="evTable"></div>
       </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>節目主視覺</h3><div class="hint" style="margin:0">同名節目的所有場次共用一張圖，上傳一次即可套用到全部場次</div></div>
+          <div class="tools"><input id="paQ" placeholder="搜尋節目名稱…"></div>
+        </div>
+        <div class="spec" style="margin-bottom:14px"><b>📐 建議素材規格</b>尺寸：<code>1200 × 750 px</code>（16:10）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB<br>重點內容置中，左上角會疊上日期標籤</div>
+        <div id="paList"></div>
+      </div>
     </section>
 
     <!-- 場地 -->
@@ -833,6 +842,7 @@ function go(k){
   $("side").classList.remove('open');   // 手機版點選後收合側欄
   const n=NAV.find(x=>x.k===k); $("pgTitle").textContent=n.t; $("pgDesc").textContent=n.d;
   const mb=$("mbTitle"); if(mb)mb.textContent=n.t;
+  if(k==='events')loadProgramArt();
   ({dash:renderDash,events:renderEvents,venues:renderVenues,creators:renderCreators,products:renderProducts,orders:renderOrders,
     members:renderMembers,checkin:renderCheckin,settings:renderSettings,seo:renderSeo,staff:renderStaff}[k]||(()=>{}))();
 }
@@ -880,6 +890,62 @@ function renderEvents(){
     :`<div class="empty">沒有符合的節目</div>`;
 }
 $("evQ").oninput=renderEvents;
+
+/* ---------- 節目主視覺（同名場次共用） ---------- */
+let PART=[];
+async function loadProgramArt(){
+  if(!ONLINE)return;
+  const {data,error}=await sb.from('program_art').select('*').order('name');
+  if(error){ if(/does not exist/i.test(error.message)) toast('請先執行 07-program-art.sql');
+             else toast('讀取節目主視覺失敗：'+error.message); return; }
+  PART=data||[];
+  renderProgramArt();
+}
+function eventCountOf(name){return (DB.events||[]).filter(e=>e.name===name).length;}
+function renderProgramArt(){
+  const box=$("paList"); if(!box)return;
+  const q=(v("paQ")||'').toLowerCase();
+  const list=PART.filter(p=>!q||(p.name||'').toLowerCase().includes(q));
+  if(!list.length){box.innerHTML='<div class="empty">尚無節目，或請先執行 07-program-art.sql</div>';return;}
+  box.innerHTML=list.map(p=>`
+    <div class="img-slot">
+      <div class="thumb-sm" style="width:74px;height:46px;border-radius:8px;${p.img?`background-image:url('${p.img}')`:''}">${p.img?'':'<span style="font-size:10px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div>
+      <div class="i"><b>${esc(p.name)}</b><small>${eventCountOf(p.name)} 個場次共用</small></div>
+      <div class="row-act">
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">上傳<input type="file" accept="image/*" hidden data-pa="${esc(p.name)}"></label>
+        ${p.img?`<button class="btn btn-danger btn-sm" onclick="clearProgramArt('${esc(p.name).replace(/'/g,"\\'")}')">清除</button>`:''}
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('[data-pa]').forEach(inp=>inp.onchange=e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const rd=new FileReader();
+    rd.onload=()=>{ const im=new Image();
+      im.onload=()=>{ let w=im.width,h=im.height,M=1200;
+        if(w>M){h=Math.round(h*M/w);w=M;}
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(im,0,0,w,h);
+        saveProgramArt(inp.dataset.pa, cv.toDataURL('image/jpeg',0.85));
+      };
+      im.onerror=()=>saveProgramArt(inp.dataset.pa, rd.result);
+      im.src=rd.result; };
+    rd.readAsDataURL(f); e.target.value='';
+  });
+}
+async function saveProgramArt(name,img){
+  setSync('saving');
+  const {error}=await sb.from('program_art').upsert({name,img,updated_at:new Date().toISOString()});
+  if(error){setSync('err');toast('儲存失敗：'+error.message);return;}
+  const row=PART.find(p=>p.name===name); if(row)row.img=img; else PART.push({name,img});
+  renderProgramArt(); setSync('ok'); toast('已套用到「'+esc(name)+'」的所有場次');
+}
+window.clearProgramArt=async name=>{
+  if(!confirm('確定清除「'+name+'」的主視覺？'))return;
+  const {error}=await sb.from('program_art').update({img:null}).eq('name',name);
+  if(error){toast('清除失敗：'+error.message);return;}
+  const row=PART.find(p=>p.name===name); if(row)row.img=null;
+  renderProgramArt(); toast('已清除');
+};
+$("paQ").oninput=renderProgramArt;
 $("evAdd").onclick=()=>editEvent(null);
 /* ================= 座位格子引擎（場地模型；框選互動） ================= */
 const ZONE_COLORS=["rgba(139,111,202,.6)","rgba(224,143,192,.55)","rgba(122,168,255,.55)","rgba(95,230,192,.5)","rgba(240,192,106,.55)","rgba(255,140,120,.55)","rgba(180,120,255,.55)","rgba(120,220,255,.5)"];
