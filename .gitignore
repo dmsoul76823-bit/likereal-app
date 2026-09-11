@@ -1,5 +1,18 @@
-_*.png
+# 大型素材檔（GitHub 單檔上限 100MB）
+*.pdf
+*.pptx
+*.ppt
+*.docx
+*.zip
+*.mp4
+*.mov
+
+# 本機工具
 *.bat
+server.js
+
+# 其他
+_*.png
 luxe_platform.html
 .DS_Store
 Thumbs.db

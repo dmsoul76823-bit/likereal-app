@@ -309,6 +309,89 @@
   .add.buy-now{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
   .add.buy-now:hover{filter:brightness(1.12)}
   .prog-body .row .add{padding:9px 10px;font-size:13px}
+  /* 關於 LiReal */
+  .about-wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:46px;align-items:center;padding:20px 0 10px}
+  .about-chip{display:inline-block;border:1px solid var(--line);background:var(--brand-soft);color:var(--brand3);
+    border-radius:999px;padding:8px 20px;font-size:15px;font-weight:700;letter-spacing:2px;margin-bottom:22px}
+  .about-txt h2{font-size:38px;line-height:1.28;font-weight:800;letter-spacing:1px;margin-bottom:20px}
+  .about-txt p{color:var(--muted);font-size:15.5px;line-height:1.95;margin-bottom:14px;max-width:30em}
+  .about-feats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:26px}
+  .af{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:13px;padding:14px 16px}
+  .af b{display:block;font-size:14px;color:var(--brand3);margin-bottom:3px}
+  .af span{font-size:12px;color:var(--muted)}
+  .about-pic{aspect-ratio:16/11;border-radius:20px;border:1px solid var(--line);overflow:hidden;
+    background:#151020 center/cover no-repeat;box-shadow:var(--shadow);position:relative}
+  .about-pic::after{content:'';position:absolute;inset:0;
+    background:linear-gradient(120deg,rgba(139,111,202,.18),transparent 55%);pointer-events:none}
+  @media(max-width:900px){
+    .about-wrap{grid-template-columns:1fr;gap:28px}
+    .about-txt h2{font-size:29px}
+    .about-pic{order:-1;aspect-ratio:16/10}
+  }
+  @media(max-width:560px){
+    .about-txt h2{font-size:25px}
+    .about-txt p{font-size:14.5px;line-height:1.85}
+    .about-feats{grid-template-columns:1fr}
+  }
+  /* 品牌理念 */
+  .philo{margin-top:58px;padding-top:44px;border-top:1px solid var(--line2)}
+  .philo-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:38px;align-items:start}
+  .philo-txt p{color:var(--muted);font-size:15px;line-height:2;margin-bottom:12px}
+  .slogan{margin-top:26px;padding:20px 22px;border-radius:15px;
+    background:linear-gradient(120deg,var(--brand-soft),rgba(224,143,192,.10));border:1px solid var(--line)}
+  .slogan b{display:block;font-size:19px;color:var(--brand3);letter-spacing:.5px;margin-bottom:5px}
+  .slogan span{color:var(--muted);font-size:14px;letter-spacing:3px}
+  .philo-cards{display:flex;flex-direction:column;gap:14px}
+  .pc{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:17px;padding:20px 22px;transition:.25s;color:inherit;display:block}
+  .pc .pi{font-size:24px;margin-bottom:9px}
+  .pc h3{font-size:16px;margin-bottom:6px}
+  .pc p{color:var(--muted);font-size:13px;line-height:1.7}
+  .pc-link:hover{border-color:var(--line);transform:translateY(-3px)}
+  .pc-link p{color:var(--brand3)}
+  /* 沉浸餐飲 */
+  .dine-hero{text-align:center;padding:14px 0 8px;max-width:760px;margin:0 auto}
+  .dine-hero h2{font-size:34px;line-height:1.35;font-weight:800;margin-bottom:16px}
+  .dine-hero p{color:var(--muted);font-size:15px;line-height:1.9}
+  .dine-block{margin-top:52px}
+  .dine-split{display:grid;grid-template-columns:.9fr 1.1fr;gap:38px;align-items:center}
+  .dine-split.rev .dine-pic{order:2}
+  .dine-pic{aspect-ratio:4/3;border-radius:19px;border:1px solid var(--line);box-shadow:var(--shadow);
+    background:#151020 center/cover no-repeat}
+  .dine-txt p{color:var(--muted);font-size:14.5px;line-height:1.9;margin-bottom:10px}
+  .dine-txt .sec-head{margin-bottom:16px}
+  .drink-tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .drink-tags span{background:var(--brand-soft);border:1px solid var(--line);color:var(--brand3);
+    border-radius:999px;padding:9px 16px;font-size:13px}
+  .pair-list{display:flex;flex-direction:column;gap:10px}
+  .pair{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:center;
+    background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:14px;padding:15px 20px;transition:.2s}
+  .pair:hover{border-color:var(--line)}
+  .pair .pl{display:flex;align-items:center;gap:12px}
+  .pair .pic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;
+    background:var(--brand-soft);border:1px solid var(--line);color:var(--brand3);font-size:14px}
+  .pair .pl b{font-size:15px}
+  .pair .pr{color:var(--muted);font-size:14px;padding-left:18px;border-left:1px dashed var(--line)}
+  .dcard{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:18px;padding:18px;transition:.25s}
+  .dcard:hover{border-color:var(--line);transform:translateY(-4px)}
+  .dc-pic{aspect-ratio:1;border-radius:50%;background:#151020 center/cover no-repeat;
+    border:1px solid var(--line2);width:128px;margin:4px auto 16px}
+  .dcard h3{font-size:17px;text-align:center;margin-bottom:8px}
+  .dcard p{color:var(--muted);font-size:13px;line-height:1.75;text-align:center}
+  @media(max-width:900px){
+    .philo-wrap{grid-template-columns:1fr;gap:26px}
+    .dine-split,.dine-split.rev{grid-template-columns:1fr;gap:22px}
+    .dine-split.rev .dine-pic{order:-1}
+    .dine-hero h2{font-size:26px}
+  }
+  @media(max-width:560px){
+    .pair{grid-template-columns:1fr;gap:10px}
+    .pair .pr{padding-left:44px;border-left:none;border-top:1px dashed var(--line);padding-top:9px}
+    .dine-hero h2{font-size:23px}
+  }
   /* 首頁預覽區 */
   section.hsec{padding:44px 0;border-top:1px solid var(--line2)}
   .hg{display:grid;gap:20px;perspective:1100px}
@@ -526,6 +609,8 @@
       <a href="/ticket" data-route="ticket">場域售票</a>
       <a href="/shop" data-route="shop">3D 精選</a>
       <a href="/vip" data-route="vip">會員儲值</a>
+      <a href="/dining" data-route="dining">沉浸餐飲</a>
+      <a href="/about" data-route="about">關於</a>
     </nav>
     <div class="spacer"></div>
     <button class="favtop" id="favTop" title="我的收藏">♡<span class="fc" id="favCount">0</span></button>
@@ -542,6 +627,8 @@
     <a href="/ticket" data-route="ticket">場域售票</a>
     <a href="/shop" data-route="shop">3D 精選</a>
     <a href="/vip" data-route="vip">會員儲值</a>
+    <a href="/dining" data-route="dining">沉浸餐飲</a>
+    <a href="/about" data-route="about">關於 LiReal</a>
   </div>
 </header>
 
@@ -696,6 +783,135 @@
   <div class="grid g4" id="shopGrid"></div>
 </div></section>
 
+<!-- ===== 關於 LiReal ===== -->
+<section id="about" data-page="about"><div class="wrap">
+  <div class="about-wrap">
+    <div class="about-txt">
+      <span class="about-chip">關於 LiReal</span>
+      <h2 class="serif">沉浸式場域<br><span class="brand-text">虛實整合劇場</span></h2>
+      <p>LiReal 為台灣領先的沉浸式場域品牌，擁有 LED 背景屏、巨型 Dome 結合投影、空間音訊，打造 AI 娛樂展演新天地。</p>
+      <p>為演唱會、劇場與表演增添更多的創意元素，讓觀眾由觀賞走向身歷其境的體驗。</p>
+      <div class="about-feats">
+        <div class="af"><b>LED 背景屏</b><span>高解析沉浸視覺</span></div>
+        <div class="af"><b>巨型 Dome</b><span>穹頂投影包覆</span></div>
+        <div class="af"><b>空間音訊</b><span>360° 環繞聲場</span></div>
+        <div class="af"><b>AI 娛樂展演</b><span>虛實整合演出</span></div>
+      </div>
+      <div class="cta" style="margin-top:28px">
+        <a class="btn btn-brand" href="/ticket" data-route="ticket">🎟️ 馬上購票</a>
+        <a class="btn btn-ghost" href="/programs" data-route="programs">看沉浸節目</a>
+      </div>
+    </div>
+    <div class="about-pic" id="aboutPic" data-imgkey="about"></div>
+  </div>
+
+  <!-- 品牌理念 -->
+  <div class="philo">
+    <div class="sec-head"><div><span class="tag">BRAND PHILOSOPHY</span><h2 class="serif">品牌理念</h2></div></div>
+    <div class="philo-wrap">
+      <div class="philo-txt">
+        <p>在 LiReal，這裡不只是一場表演。</p>
+        <p>我們希望你可以放慢腳步，好好待在這裡。看一場演出、喝一杯酒、吃一頓飯，也和身邊的人分享此刻的感受。</p>
+        <p>真正讓人記住的，往往不只是眼前看到了什麼，而是這天，你和誰一起來、吃了什麼、聊了什麼。</p>
+        <p>因此，我們將餐飲結合於沉浸式體驗裡，讓每一次來到 LiReal 的你／妳，不只是「看完就離開」，而是經歷了一段值得回味的時光。</p>
+        <div class="slogan">
+          <b>Like Real Vision, Life Real Taste.</b>
+          <span>感官如真，美味入心。</span>
+        </div>
+      </div>
+      <div class="philo-cards">
+        <div class="pc">
+          <div class="pi">🎭</div>
+          <h3>沉浸式表演</h3>
+          <p>讓觀眾走進場景氛圍，感受表演帶來的震撼與臨場感。</p>
+        </div>
+        <div class="pc">
+          <div class="pi">🍽️</div>
+          <h3>味覺體驗</h3>
+          <p>餐飲成為表演情緒的延伸，讓演出活動成為值得細細品味的旅程。</p>
+        </div>
+        <a class="pc pc-link" href="/dining" data-route="dining">
+          <div class="pi">🥂</div>
+          <h3>沉浸餐飲</h3>
+          <p>依演出主題設計的限定餐點與調飲 — 看看我們準備了什麼 →</p>
+        </a>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===== 沉浸餐飲 ===== -->
+<section id="dining" data-page="dining"><div class="wrap">
+  <div class="dine-hero">
+    <span class="about-chip">沉浸餐飲</span>
+    <h2 class="serif">不是「去吃飯順便看展」<br><span class="brand-text">而是進入一個完整的世界</span></h2>
+    <p>餐飲是表演情緒的延伸。每一檔演出都有專屬的餐點與調飲，讓味覺成為記憶的一部分。</p>
+  </div>
+
+  <!-- 主題搭配 -->
+  <div class="dine-block">
+    <div class="sec-head"><div><span class="tag">PAIRING · 主題搭配</span><h2 class="serif">演出 × 餐飲</h2></div></div>
+    <div class="pair-list">
+      <div class="pair"><div class="pl"><span class="pic">✦</span><b>太空主題展演</b></div><div class="pr">星空雞尾酒 / 銀河甜點</div></div>
+      <div class="pair"><div class="pl"><span class="pic">♪</span><b>音樂祭</b></div><div class="pr">音樂主題調酒，例：藍色愛琴海</div></div>
+      <div class="pair"><div class="pl"><span class="pic">◲</span><b>音樂劇</b></div><div class="pr">搭配劇情設計限定套餐，例：《貓》</div></div>
+      <div class="pair"><div class="pl"><span class="pic">✧</span><b>動漫主題</b></div><div class="pr">IP 主題餐點，例：間諜家家酒</div></div>
+      <div class="pair"><div class="pl"><span class="pic">★</span><b>明星藝人</b></div><div class="pr">明星藝人最愛的食物，例：韓國藝人 &amp; 辣炒年糕</div></div>
+    </div>
+  </div>
+
+  <!-- 料理風格 -->
+  <div class="dine-block">
+    <div class="dine-split">
+      <div class="dine-pic" id="dinePicFood" data-imgkey="dine_food"></div>
+      <div class="dine-txt">
+        <div class="sec-head"><div><span class="tag">CUISINE · 料理風格</span><h2 class="serif">好吃、簡單、快速</h2></div></div>
+        <p>餐點以中央廚房集中製作，現場覆熱，出餐快速且穩定。</p>
+        <p>餐點口味延伸表演氛圍下的味覺記憶點。</p>
+        <div class="about-feats">
+          <div class="af"><b>中央廚房</b><span>集中製作、品質穩定</span></div>
+          <div class="af"><b>快速出餐</b><span>現場覆熱不誤場</span></div>
+          <div class="af"><b>點心櫃</b><span>陳列自由取用</span></div>
+          <div class="af"><b>主題限定</b><span>依演出設計菜單</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 飲品 -->
+  <div class="dine-block">
+    <div class="dine-split rev">
+      <div class="dine-pic" id="dinePicDrink" data-imgkey="dine_drink"></div>
+      <div class="dine-txt">
+        <div class="sec-head"><div><span class="tag">BAR · 飲品種類</span><h2 class="serif">咖啡、調酒、有機茶飲</h2></div></div>
+        <p>吧台除提供咖啡、酒精飲品之外，另備有機茶、氣泡飲等無酒精選項。</p>
+        <p>融入 Tea Bar 概念，兼顧多元客群的飲品需求。</p>
+        <div class="drink-tags">
+          <span>☕ 咖啡</span><span>🍸 酒精飲品</span><span>🍵 有機茶</span><span>🫧 氣泡飲</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 飲品特色 -->
+  <div class="dine-block">
+    <div class="sec-head"><div><span class="tag">SIGNATURE · 飲品特色</span><h2 class="serif">延伸表演情緒的味覺體驗</h2></div></div>
+    <div class="hg hg-3">
+      <div class="dcard"><div class="dc-pic" data-imgkey="dine_s1"></div>
+        <h3>茶 + 咖啡</h3><p>以茶為基底，融合咖啡豆香氣，創造層次豐富的日常飲品</p></div>
+      <div class="dcard"><div class="dc-pic" data-imgkey="dine_s2"></div>
+        <h3>茶 + Cocktail</h3><p>茶調飲結合調酒手法，打造具戲劇感的限定特調</p></div>
+      <div class="dcard"><div class="dc-pic" data-imgkey="dine_s3"></div>
+        <h3>異國飲品</h3><p>例：曼谷風格飲品，帶來跨文化的味覺驚喜</p></div>
+    </div>
+  </div>
+
+  <div class="cta" style="justify-content:center;margin-top:34px">
+    <a class="btn btn-brand" href="/ticket" data-route="ticket">🎟️ 看看有什麼演出</a>
+    <a class="btn btn-ghost" href="/about" data-route="about">關於 LiReal</a>
+  </div>
+</div></section>
+
 <section id="vip" data-page="vip"><div class="wrap">
   <div class="sec-head">
     <div><span class="tag">MEMBERSHIP · 會員儲值</span><h2 class="serif">儲值方案</h2></div>
@@ -710,7 +926,8 @@
     <a href="/" data-route="home">首頁</a><a href="/programs" data-route="programs">沉浸節目</a>
     <a href="/live" data-route="live">直播大廳</a><a href="/ai" data-route="ai">AI 夥伴</a>
     <a href="/ticket" data-route="ticket">場域售票</a><a href="/shop" data-route="shop">3D 精選</a>
-    <a href="/vip" data-route="vip">會員儲值</a>
+    <a href="/vip" data-route="vip">會員儲值</a><a href="/dining" data-route="dining">沉浸餐飲</a>
+    <a href="/about" data-route="about">關於 LiReal</a>
   </div>
   <div>© 2026 LiReal · 沉浸式場域娛樂平台</div>
 </div></footer>
@@ -902,8 +1119,11 @@ loadADB();
 async function loadCloud(){
   if(!ONLINE)return false;
   try{
+    // 場次數量可能上千筆，只取「今天以後」且限制筆數，避免一次拉太多資料
+    const today=new Date().toISOString().slice(0,10);
     const [ve,ev,cr,pr,st]=await Promise.all([
-      sb.from('venues').select('*'), sb.from('events').select('*'),
+      sb.from('venues').select('*'),
+      sb.from('events').select('*').gte('show_date',today).order('show_date',{ascending:true}).order('show_time',{ascending:true}).limit(48),
       sb.from('creators').select('*'), sb.from('products').select('*'),
       sb.from('settings').select('*')
     ]);
@@ -1573,9 +1793,23 @@ renderCMS();
 
 /* 套用首頁主視覺（雲端圖片是非同步載入的，載完要重新套一次） */
 function applyHero(){
-  const bg=document.getElementById('heroBg');if(!bg)return;
-  const hv=thumb('hero','');
-  if(hv){bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';}
+  const bg=document.getElementById('heroBg');
+  if(bg){const hv=thumb('hero','');if(hv){bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';}}
+  // 關於頁與餐飲頁的圖位（後台可更換；未設定時用插畫墊底）
+  const PICS=[
+    ['aboutPic','about',["#3a2a6a","#120c22","#c6a6ff"]],
+    ['dinePicFood','dine_food',["#5a2a3a","#200f16","#ff9fb0"]],
+    ['dinePicDrink','dine_drink',["#2a5a5a","#0a1e1e","#6ff0e0"]]
+  ];
+  PICS.forEach(([id,key,pal])=>{
+    const el=document.getElementById(id);
+    if(el)el.style.backgroundImage="url('"+thumb(key,posterSVG(pal))+"')";
+  });
+  const SPAL={dine_s1:["#5a4a2a","#201a0e","#f0d68a"],dine_s2:["#5b3aa6","#1c1140","#c6a6ff"],dine_s3:["#7a2a5a","#260f20","#ff9fd6"]};
+  document.querySelectorAll('.dc-pic[data-imgkey]').forEach(el=>{
+    const k=el.dataset.imgkey;
+    el.style.backgroundImage="url('"+thumb(k,productSVG('bottle',SPAL[k]||["#3a2a6a","#120c22","#c6a6ff"]))+"')";
+  });
 }
 function refreshAll(){ syncImages();applyADB();applyADBCreators();renderAll();renderCMS();applyHero(); }
 
@@ -1587,7 +1821,9 @@ const ROUTES={
   ai:     {title:'AI 女友 · LiReal'},
   ticket: {title:'場域售票 · LiReal'},
   shop:   {title:'裸視 3D 精選 · LiReal'},
-  vip:    {title:'會員儲值 · LiReal'}
+  vip:    {title:'會員儲值 · LiReal'},
+  about:  {title:'關於 LiReal · 沉浸式場域品牌'},
+  dining: {title:'沉浸餐飲 · LiReal'}
 };
 function routeFromPath(p){
   const seg=(p||location.pathname).replace(/^\/+|\/+$/g,'').toLowerCase();

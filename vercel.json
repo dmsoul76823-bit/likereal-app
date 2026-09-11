@@ -9,7 +9,9 @@
     { "source": "/ai", "destination": "/lireal_platform" },
     { "source": "/ticket", "destination": "/lireal_platform" },
     { "source": "/shop", "destination": "/lireal_platform" },
-    { "source": "/vip", "destination": "/lireal_platform" }
+    { "source": "/vip", "destination": "/lireal_platform" },
+    { "source": "/about", "destination": "/lireal_platform" },
+    { "source": "/dining", "destination": "/lireal_platform" }
   ],
   "headers": [
     {

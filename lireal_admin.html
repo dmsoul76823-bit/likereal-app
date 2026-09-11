@@ -674,9 +674,12 @@ async function syncPull(){
   try{
     const names=Object.keys(MAP);
     const ORDER={venues:'created_at',events:'created_at',creators:'created_at',products:'created_at',orders:'created_at'};
+    // 節目可能上千筆，限制載入量避免後台變慢（新增的永遠在最前面）
+    const LIMIT={events:400,orders:500};
     const res=await Promise.all(names.map(n=>{
       let q=sb.from(MAP[n].tbl).select('*');
       if(ORDER[n])q=q.order(ORDER[n],{ascending:false});   // 最新建立的排最前面
+      if(LIMIT[n])q=q.limit(LIMIT[n]);
       return q;
     }));
     const bad=res.find(r=>r.error);
@@ -1381,6 +1384,12 @@ async function verify(code){
 /* ================= 場域設定 ================= */
 const IMG_SLOTS=[
   {k:"hero",t:"首頁主視覺 Hero",s:"1920 × 820 px（21:9）· JPG / WebP · < 500 KB"},
+  {k:"about",t:"關於 LiReal 主圖",s:"1600 × 1100 px（16:11）· JPG / WebP · < 500 KB"},
+  {k:"dine_food",t:"餐飲 · 料理風格圖",s:"1200 × 900 px（4:3）· JPG / WebP · < 400 KB"},
+  {k:"dine_drink",t:"餐飲 · 飲品種類圖",s:"1200 × 900 px（4:3）· JPG / WebP · < 400 KB"},
+  {k:"dine_s1",t:"飲品特色 · 茶+咖啡",s:"600 × 600 px（1:1 圓形裁切）· JPG · < 200 KB"},
+  {k:"dine_s2",t:"飲品特色 · 茶+Cocktail",s:"600 × 600 px（1:1 圓形裁切）· JPG · < 200 KB"},
+  {k:"dine_s3",t:"飲品特色 · 異國飲品",s:"600 × 600 px（1:1 圓形裁切）· JPG · < 200 KB"},
   {k:"tingting",t:"創作者 · 婷婷",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
   {k:"anna",t:"創作者 · Anna",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
   {k:"vivi",t:"創作者 · Vivi",s:"900 × 1200 px（3:4）· JPG · < 350 KB"},
