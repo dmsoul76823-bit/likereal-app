@@ -1175,6 +1175,9 @@ try{
 
 let PROGRAM_ART={};   // 節目名稱 → 主視覺
 let CURRENT='home';   // 目前分頁（提前宣告：renderAll 會用到，避免 TDZ 錯誤）
+/* 共用的字串跳脫工具（函式宣告會被提升，任何渲染函式都能安全使用） */
+function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function fillCMSDefaults(){
   if(ADB.marquee==null)ADB.marquee=CMS_DEFAULT.marquee;
   if(!Array.isArray(ADB.announcements))ADB.announcements=CMS_DEFAULT.announcements;
@@ -1412,7 +1415,6 @@ function renderPrograms2(el,lim){
       </div>
     </div>`).join(''):'<div class="empty" style="color:var(--muted);padding:30px">目前沒有可售票的場次</div>';
 }
-const escAttr=s=>String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;');
 
 /* 節目介紹頁 */
 let CUR_PROGRAM='';
@@ -1959,7 +1961,7 @@ function bindTilt(){
     el.addEventListener('mouseleave',()=>{el.style.transform='';});
   });
 }
-renderAll();
+/* 初始渲染改到腳本最後（見檔尾 boot()），確保所有函式與變數都已定義 */
 // Hero 播放器景深視差
 (function(){
   const stage=document.querySelector('.player');if(!stage)return;
@@ -1975,7 +1977,7 @@ renderAll();
 })();
 
 /* ===== 跑馬燈 / 公告 / Banner（資料來自後台「場域設定」） ===== */
-const escH=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* escH / escAttr 改為函式宣告（會被提升），避免被較早的渲染函式引用時出現 TDZ 錯誤 */
 function renderMarquee(){
   const box=$("marquee"),tr=$("mqTrack");if(!box)return;
   const txt=(ADB.marquee||'').trim();
@@ -2106,9 +2108,14 @@ window.addEventListener('popstate',e=>{
 })();
 // 手機選單
 $("burger").onclick=()=>$("mobnav").classList.toggle('open');
-// 初始頁
-syncProgramFromURL();
-showPage(routeFromPath(),false);
+/* ===== 啟動（所有定義都已就緒才執行） ===== */
+function boot(){
+  try{ renderAll(); }catch(e){ console.error('初始渲染失敗',e); }
+  try{ renderCMS(); }catch(e){ console.error('CMS 渲染失敗',e); }
+  try{ applyHero(); }catch(e){}
+  syncProgramFromURL();
+  showPage(routeFromPath(),false);
+}
 
 /* 後台存檔後即時同步（同一台電腦、跨分頁） */
 window.addEventListener('storage',e=>{
@@ -2116,19 +2123,19 @@ window.addEventListener('storage',e=>{
   loadADB();refreshAll();toast('已同步後台最新資料');
 });
 
-/* 開站時載入線上內容；並訂閱資料庫變更即時更新 */
-(async()=>{
+/* 開站時載入線上內容；並訂閱資料庫變更即時更新（由檔尾 startCloud() 啟動） */
+async function startCloud(){
   if(!ONLINE)return;
-  const ok=await loadCloud();
-  if(!ok)return;
-  refreshAll();
   try{
+    const ok=await loadCloud();
+    if(!ok){console.warn('線上資料載入失敗，改用內建示範內容');return;}
+    refreshAll();
     sb.channel('lireal-live')
       .on('postgres_changes',{event:'*',schema:'public'},async()=>{
-        await loadCloud();refreshAll();
+        try{await loadCloud();refreshAll();}catch(e){console.error(e);}
       }).subscribe();
-  }catch(e){}
-})();
+  }catch(e){console.error('startCloud 失敗',e);}
+}
 
 /* ===== 圖片後台（可自行更換圖片，存於瀏覽器） ===== */
 const FB={hero:''};
@@ -2164,6 +2171,12 @@ $("adminBack").onclick=()=>openAdmin(false);
 $("adResetAll").onclick=()=>{if(confirm('確定清除所有自訂圖片、回到預設？')){Object.keys(OV).forEach(k=>updateKey(k,IMG[k]||FB[k]||''));OV={};saveOV();buildAdmin();toast('已全部重設');}};
 $("adExport").onclick=()=>{const blob=new Blob([JSON.stringify(OV)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lireal-images.json';a.click();toast('已匯出設定檔');};
 $("adImport").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);Object.assign(OV,o);saveOV();Object.keys(o).forEach(k=>updateKey(k,OV[k]));buildAdmin();toast('已匯入設定');}catch(err){toast('匯入失敗：格式錯誤');}};rd.readAsText(f);e.target.value='';};
+
+/* ============================================================
+   啟動：放在整份腳本最後，確保所有函式與變數都已定義完成
+   ============================================================ */
+boot();
+startCloud();
 </script>
 </body>
 </html>
