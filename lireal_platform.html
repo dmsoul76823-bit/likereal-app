@@ -1174,6 +1174,7 @@ try{
 }catch(e){console.error('Supabase 初始化失敗',e);}
 
 let PROGRAM_ART={};   // 節目名稱 → 主視覺
+let CURRENT='home';   // 目前分頁（提前宣告：renderAll 會用到，避免 TDZ 錯誤）
 function fillCMSDefaults(){
   if(ADB.marquee==null)ADB.marquee=CMS_DEFAULT.marquee;
   if(!Array.isArray(ADB.announcements))ADB.announcements=CMS_DEFAULT.announcements;
@@ -2069,7 +2070,6 @@ function syncProgramFromURL(){
   const m=/[?&]p=([^&]+)/.exec(location.search);
   if(m){try{CUR_PROGRAM=decodeURIComponent(m[1]);}catch(e){}}
 }
-let CURRENT='home';
 function showPage(name,push){
   if(!ROUTES[name])name='home';
   CURRENT=name;
