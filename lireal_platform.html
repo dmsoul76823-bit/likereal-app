@@ -1226,7 +1226,15 @@ try{
 
 let PROGRAM_ART={};   // 節目名稱 → 主視覺
 let PROGRAM_MEDIA={}; // 節目名稱 → {video, yt, live, isLive}
+let FEATURED=[];      // 首頁精選節目（後台「首頁編排」指定；空陣列＝自動）
+const HOME_DEFAULT={programs:3,tickets:6,lives:6,creators:6,products:8,plans:2};
+function homeCfg(){
+  const c=(ADB.home_layout&&typeof ADB.home_layout==='object')?ADB.home_layout:{};
+  return Object.assign({},HOME_DEFAULT,c);
+}
 let CURRENT='home';   // 目前分頁（提前宣告：renderAll 會用到，避免 TDZ 錯誤）
+/* 取前 N 筆；N 為 0 時回傳空陣列（未指定則全取） */
+function takeN(arr,n){return (typeof n==='number'&&n>=0)?arr.slice(0,n):arr;}
 /* 共用的字串跳脫工具（函式宣告會被提升，任何渲染函式都能安全使用） */
 function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function escAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
@@ -1258,12 +1266,14 @@ async function loadCloud(){
     try{
       const pa=await sb.from('program_art').select('*');
       if(!pa.error){
-        PROGRAM_ART={};PROGRAM_MEDIA={};
+        PROGRAM_ART={};PROGRAM_MEDIA={};FEATURED=[];
         (pa.data||[]).forEach(r=>{
           if(r.img)PROGRAM_ART[r.name]=r.img;
           if(r.video_url||r.yt_id||r.live_url||r.is_live)
             PROGRAM_MEDIA[r.name]={video:r.video_url||'',yt:r.yt_id||'',live:r.live_url||'',isLive:!!r.is_live};
+          if(r.featured)FEATURED.push({name:r.name,order:r.sort_order||0});
         });
+        FEATURED.sort((a,b)=>a.order-b.order);
       }
     }catch(e){}
     if(ve.error||ev.error||cr.error||pr.error){console.warn('讀取線上資料失敗');return false;}
@@ -1396,7 +1406,7 @@ else{m=`<g transform='translate(150 150)'>
 <rect x='-22' y='-30' width='44' height='60' rx='8' fill='${p[2]}' opacity='0.25'/></g>`;}
 return uri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'>${b}${m}</svg>`);}
 
-function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=(lim?programs.slice(0,lim):programs).map((p,i)=>`
+function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=takeN(programs,lim).map((p,i)=>`
   <div class="card">
     <div class="prog-thumb" data-imgkey="prog${i}" style="background-image:url('${thumb('prog'+i,posterSVG(p.pal))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
@@ -1413,7 +1423,7 @@ function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=(lim?programs.slic
     </div>
   </div>`).join("");}
 
-function renderLives(el,lim){(el||$("liveGrid")).innerHTML=(lim?lives.slice(0,lim):lives).map((l,i)=>`
+function renderLives(el,lim){(el||$("liveGrid")).innerHTML=takeN(lives,lim).map((l,i)=>`
   <div class="card">
     <div class="prog-thumb" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
@@ -1454,9 +1464,17 @@ function groupTickets(){
 }
 
 /* 售票列表：以「節目」為單位 */
-function renderPrograms2(el,lim){
+function renderPrograms2(el,lim,useFeatured){
   const gs=groupTickets();
-  const list=lim?gs.slice(0,lim):gs;
+  let src=gs;
+  // 首頁：若後台有指定精選節目，依指定順序顯示；不足或未指定時用最近場次遞補
+  if(useFeatured&&FEATURED.length){
+    const picked=[];
+    FEATURED.forEach(f=>{const g=gs.find(x=>x.name===f.name);if(g&&!picked.includes(g))picked.push(g);});
+    gs.forEach(g=>{if(!picked.includes(g))picked.push(g);});
+    src=picked;
+  }
+  const list=takeN(src,lim);
   (el||$("ticketGrid")).innerHTML=list.length?list.map((g,i)=>`
     <div class="pgcard" onclick="openProgram('${escAttr(g.name)}')">
       <div class="pic" style="background-image:url('${g.img}')">
@@ -1605,7 +1623,7 @@ function renderProgramDetail(){
   draw(false);
   updateFavUI();
 }
-function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slice(0,lim):tickets).map((t,i)=>`
+function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=takeN(tickets,lim).map((t,i)=>`
   <div class="ticket">
     <div class="tpic" style="background-image:url('${t.img||PROGRAM_ART[t.name]||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
       <div class="tdate-badge"><b>${t.d}</b><span>${t.m}</span></div>
@@ -1624,7 +1642,7 @@ function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=(lim?tickets.slic
     </div>
   </div>`).join("");}
 
-function renderShop(el,lim){(el||$("shopGrid")).innerHTML=(lim?products.slice(0,lim):products).map((p,i)=>`
+function renderShop(el,lim){(el||$("shopGrid")).innerHTML=takeN(products,lim).map((p,i)=>`
   <div class="card">
     <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
     <div class="prod-body">
@@ -1634,7 +1652,7 @@ function renderShop(el,lim){(el||$("shopGrid")).innerHTML=(lim?products.slice(0,
     </div>
   </div>`).join("");}
 
-function renderPlans(el,lim){(el||$("planGrid")).innerHTML=(lim?plans.slice(0,lim):plans).map(p=>`
+function renderPlans(el,lim){(el||$("planGrid")).innerHTML=takeN(plans,lim).map(p=>`
   <div class="plan ${p.feat?'feat':''}">
     <h3 class="serif">${p.n}</h3>
     <div class="amt">NT$${p.amt.toLocaleString()}<small>${p.unit}</small></div>
@@ -1657,12 +1675,21 @@ let creators=[
 ];
 applyADBCreators();   // 套用後台創作者資料
 function renderHome(){
-  renderPrograms2($("hProg"),3);     // 首頁沉浸節目預覽
-  renderTickets($("hTicket"),6);     // 首頁近期場次預覽
-  renderLives($("hLive"),6);
-  renderOM($("hOM"),6);
-  renderShop($("hShop"),8);
-  renderPlans($("hPlan"),2);
+  const c=homeCfg();
+  renderPrograms2($("hProg"),c.programs,true);   // 精選優先
+  renderTickets($("hTicket"),c.tickets);
+  renderLives($("hLive"),c.lives);
+  renderOM($("hOM"),c.creators);
+  renderShop($("hShop"),c.products);
+  renderPlans($("hPlan"),c.plans);
+  // 數量設為 0 的區塊整段隱藏
+  const secs=[['hProg',c.programs],['hTicket',c.tickets],['hLive',c.lives],
+              ['hOM',c.creators],['hShop',c.products],['hPlan',c.plans]];
+  secs.forEach(([id,n])=>{
+    const el=$(id); if(!el)return;
+    const sec=el.closest('section.hsec');
+    if(sec)sec.style.display=(n>0)?'':'none';
+  });
 }
 function renderAll(){
   renderPrograms2($("progGrid"));   // 沉浸節目＝資料庫節目總覽（後台「節目管理」維護）
@@ -1677,7 +1704,7 @@ function renderAll(){
 function omURL(slug){return OM_BASE+"/character/"+slug;}
 function goOM(slug){window.location.href=omURL(slug);}   // 點卡片直接進入 OnlyMate 角色頁
 function enterOM(){window.location.href=OM_BASE;}
-function renderOM(el,lim){(el||$("omGrid")).innerHTML=(lim?creators.slice(0,lim):creators).map(c=>`
+function renderOM(el,lim){(el||$("omGrid")).innerHTML=takeN(creators,lim).map(c=>`
   <div class="om-card" onclick="goOM('${c.slug}')" title="進入 ${c.name} 的 OnlyMate 角色頁">
     <div class="om-photo" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}')">
       <div class="tl">

@@ -403,6 +403,37 @@
       </div>
     </section>
 
+    <!-- 首頁編排 -->
+    <section class="page" id="p-home">
+      <div class="panel">
+        <h3>各區塊顯示數量</h3>
+        <div class="hint">設定前台首頁每個區塊要顯示幾個項目</div>
+        <div class="fgrid">
+          <div class="fld"><label>沉浸節目</label><input id="hl_programs" type="number" min="0" max="24" value="3"></div>
+          <div class="fld"><label>場域售票（場次）</label><input id="hl_tickets" type="number" min="0" max="24" value="6"></div>
+          <div class="fld"><label>直播大廳</label><input id="hl_lives" type="number" min="0" max="24" value="6"></div>
+          <div class="fld"><label>AI 女友創作者</label><input id="hl_creators" type="number" min="0" max="24" value="6"></div>
+          <div class="fld"><label>裸視 3D 商品</label><input id="hl_products" type="number" min="0" max="24" value="8"></div>
+          <div class="fld"><label>會員儲值方案</label><input id="hl_plans" type="number" min="0" max="24" value="2"></div>
+        </div>
+        <button class="btn btn-brand btn-sm" id="hlSave" style="margin-top:6px">儲存區塊數量</button>
+        <div class="spec" style="margin-top:12px"><b>💡 設為 0</b> 該區塊就不會出現在首頁。</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>首頁精選節目</h3><div class="hint" style="margin:0">勾選要出現在首頁的節目，用 ↑↓ 調整順序；<b>完全沒勾選時，首頁會自動顯示最近場次的節目</b></div></div>
+          <div class="tools">
+            <input id="hfQ" placeholder="搜尋節目…">
+            <button class="btn btn-ghost btn-sm" id="hfClear">全部取消</button>
+          </div>
+        </div>
+        <div id="hfPicked"></div>
+        <h3 style="font-size:15px;margin:22px 0 10px">所有節目</h3>
+        <div id="hfList" style="max-height:46vh;overflow:auto"></div>
+      </div>
+    </section>
+
     <!-- 創作者 -->
     <section class="page" id="p-creators">
       <div class="panel">
@@ -624,7 +655,7 @@ const SEED={
     {id:5,name:"張哲瑋",email:"zw@mail.com",phone:"0966-773-284",vip:"星紫卡",wallet:120,orders:1,join:"2026-07-21"}
   ],
   staff:[
-    {id:1,name:"Aden",email:"admin@lireal.com",role:"admin",perms:["dash","events","venues","creators","products","orders","members","checkin","settings","seo","staff"]},
+    {id:1,name:"Aden",email:"admin@lireal.com",role:"admin",perms:["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"]},
     {id:2,name:"內容編輯",email:"editor@lireal.com",role:"editor",perms:["dash","events","venues","creators","products","orders","settings","seo"]},
     {id:3,name:"現場驗票",email:"staff@lireal.com",role:"staff",perms:["checkin","orders"]}
   ],
@@ -686,10 +717,10 @@ const MAP={
     toRow:s=>({id:s.id,email:s.email,name:s.name||'',role:s.role||'staff',perms:s.perms||[]}),
     fromRow:r=>({id:r.id,email:r.email,name:r.name||'',role:r.role||'staff',perms:r.perms||[]})}
 };
-const SETTING_KEYS=['marquee','seo','announcements','banners','images'];
+const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout'];
 
 function normalizeDB(){
-  const ALL=["dash","events","venues","creators","products","orders","members","checkin","settings","seo","staff"];
+  const ALL=["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"];
   (DB.venues||[]).forEach(vv=>{vv.stage=normStage(vv);});
   (DB.events||[]).forEach(e=>{ if((e.tickets||[]).some(t=>Array.isArray(t.seats))){
     e.cap=e.tickets.reduce((s,t)=>s+(t.seats||[]).length,0);
@@ -785,6 +816,7 @@ const NAV=[
   {k:"dash",t:"儀表板",i:"◈",d:"整體營運概況"},
   {k:"events",t:"節目管理",i:"◐",d:"沉浸場域節目與票種"},
   {k:"venues",t:"場地管理",i:"▦",d:"座位圖範本：走道、包廂、舞台位置"},
+  {k:"home",t:"首頁編排",i:"⌂",d:"指定哪些節目出現在首頁與顯示數量"},
   {k:"creators",t:"創作者管理",i:"☺",d:"AI 女友 / 直播角色"},
   {k:"products",t:"商品管理",i:"▣",d:"裸視 3D 電商商品"},
   {k:"orders",t:"訂單查詢",i:"▤",d:"票券與商品訂單"},
@@ -863,7 +895,7 @@ function go(k){
   const n=NAV.find(x=>x.k===k); $("pgTitle").textContent=n.t; $("pgDesc").textContent=n.d;
   const mb=$("mbTitle"); if(mb)mb.textContent=n.t;
   if(k==='events')(async()=>{await loadProgramArt();await loadEvLite();renderEvents();})();
-  ({dash:renderDash,events:renderEvents,venues:renderVenues,creators:renderCreators,products:renderProducts,orders:renderOrders,
+  ({dash:renderDash,events:renderEvents,venues:renderVenues,home:renderHomeLayout,creators:renderCreators,products:renderProducts,orders:renderOrders,
     members:renderMembers,checkin:renderCheckin,settings:renderSettings,seo:renderSeo,staff:renderStaff}[k]||(()=>{}))();
 }
 
@@ -1175,6 +1207,87 @@ window.deleteProgram=async name=>{
     await loadProgramArt();await loadEvLite();await syncPull();
     renderEvents();setSync('ok');toast('已刪除節目「'+esc(name)+'」與其 '+rows.length+' 個場次');
   }catch(e){setSync('err');toast('刪除失敗：'+(e.message||e));}
+};
+
+/* ================= 首頁編排 ================= */
+const HL_KEYS=['programs','tickets','lives','creators','products','plans'];
+async function renderHomeLayout(){
+  await loadProgramArt();
+  await loadEvLite();
+  // 區塊數量
+  const cfg=(DB.home_layout&&typeof DB.home_layout==='object')?DB.home_layout
+            :{programs:3,tickets:6,lives:6,creators:6,products:8,plans:2};
+  HL_KEYS.forEach(k=>{const el=$("hl_"+k);if(el)el.value=cfg[k]!==undefined?cfg[k]:0;});
+  renderFeatured();
+}
+function renderFeatured(){
+  const q=(v("hfQ")||'').toLowerCase();
+  const picked=PART.filter(p=>p.featured).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const pbox=$("hfPicked");
+  pbox.innerHTML=picked.length?picked.map((p,i)=>`
+    <div class="img-slot">
+      <div class="thumb-sm" style="width:64px;height:40px;border-radius:7px;${p.img?`background-image:url('${p.img}')`:''}">${p.img?'':'<span style="font-size:10px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div>
+      <div class="i"><b>${i+1}. ${esc(p.name)}</b><small>${eventCountOf(p.name)} 個場次</small></div>
+      <div class="row-act">
+        <button class="btn btn-ghost btn-sm" ${i===0?'disabled style="opacity:.4"':''} onclick="moveFeat('${esc(p.name).replace(/'/g,"\\'")}',-1)">↑</button>
+        <button class="btn btn-ghost btn-sm" ${i===picked.length-1?'disabled style="opacity:.4"':''} onclick="moveFeat('${esc(p.name).replace(/'/g,"\\'")}',1)">↓</button>
+        <button class="btn btn-danger btn-sm" onclick="toggleFeat('${esc(p.name).replace(/'/g,"\\'")}',false)">移除</button>
+      </div>
+    </div>`).join('')
+    :`<div class="spec">目前沒有指定精選節目 — 前台首頁會<b>自動顯示最近場次的節目</b>。勾選下方任一節目即可改為手動指定。</div>`;
+
+  const list=PART.filter(p=>!q||(p.name||'').toLowerCase().includes(q));
+  $("hfList").innerHTML=list.length?list.map(p=>`
+    <div class="img-slot">
+      <div class="thumb-sm" style="width:56px;height:35px;border-radius:6px;${p.img?`background-image:url('${p.img}')`:''}"></div>
+      <div class="i"><b>${esc(p.name)}</b><small>${eventCountOf(p.name)} 個場次</small></div>
+      <div class="row-act">
+        <label class="perm" style="margin:0"><label style="margin:0"><input type="checkbox" ${p.featured?'checked':''}
+          onchange="toggleFeat('${esc(p.name).replace(/'/g,"\\'")}',this.checked)"> 上首頁</label></label>
+      </div>
+    </div>`).join(''):'<div class="empty">沒有符合的節目</div>';
+}
+window.toggleFeat=async(name,on)=>{
+  const row=PART.find(p=>p.name===name); if(!row)return;
+  const maxOrder=Math.max(0,...PART.filter(p=>p.featured).map(p=>p.sort_order||0));
+  row.featured=on; if(on)row.sort_order=maxOrder+1;
+  setSync('saving');
+  const {error}=await sb.from('program_art')
+    .upsert({name,featured:on,sort_order:row.sort_order||0,updated_at:new Date().toISOString()});
+  if(error){setSync('err');toast('儲存失敗：'+error.message);return;}
+  renderFeatured();setSync('ok');toast(on?'已加入首頁':'已從首頁移除');
+};
+window.moveFeat=async(name,dir)=>{
+  const picked=PART.filter(p=>p.featured).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const i=picked.findIndex(p=>p.name===name); const j=i+dir;
+  if(i<0||j<0||j>=picked.length)return;
+  [picked[i],picked[j]]=[picked[j],picked[i]];
+  picked.forEach((p,k)=>p.sort_order=k+1);
+  setSync('saving');
+  const {error}=await sb.from('program_art')
+    .upsert(picked.map(p=>({name:p.name,featured:true,sort_order:p.sort_order,updated_at:new Date().toISOString()})));
+  if(error){setSync('err');toast('排序失敗：'+error.message);return;}
+  renderFeatured();setSync('ok');
+};
+$("hfQ").oninput=renderFeatured;
+$("hfClear").onclick=async()=>{
+  const picked=PART.filter(p=>p.featured);
+  if(!picked.length){toast('目前沒有精選節目');return;}
+  if(!confirm('取消所有精選節目？首頁將改為自動顯示最近場次。'))return;
+  setSync('saving');
+  const {error}=await sb.from('program_art')
+    .upsert(picked.map(p=>({name:p.name,featured:false,updated_at:new Date().toISOString()})));
+  if(error){setSync('err');toast('失敗：'+error.message);return;}
+  picked.forEach(p=>p.featured=false);
+  renderFeatured();setSync('ok');toast('已全部取消');
+};
+$("hlSave").onclick=async()=>{
+  const cfg={}; HL_KEYS.forEach(k=>cfg[k]=Math.max(0,+v("hl_"+k)||0));
+  DB.home_layout=cfg;
+  setSync('saving');
+  const {error}=await sb.from('settings').upsert({key:'home_layout',value:{v:cfg}});
+  if(error){setSync('err');toast('儲存失敗：'+error.message);return;}
+  setSync('ok');toast('首頁區塊數量已更新');
 };
 
 /* ---------- 場次管理 ---------- */
