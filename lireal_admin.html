@@ -1134,11 +1134,19 @@ window.editProgram=name=>{
           .eq('name',name);
         if(e1)throw e1;
         // 2) 節目主視覺
-        const {error:e2}=await sb.from('program_art')
-          .upsert({name:payload.name,img:payload.img||null,intro:payload.intro,
+        const art={name:payload.name,img:payload.img||null,intro:payload.intro,
             video_url:payload.video_url||null,yt_id:payload.yt_id||null,
             live_url:payload.live_url||null,is_live:payload.is_live,autoplay:payload.autoplay,
-            updated_at:new Date().toISOString()});
+            updated_at:new Date().toISOString()};
+        let {error:e2}=await sb.from('program_art').upsert(art);
+        // 資料庫還沒跑到最新的欄位時，自動拿掉該欄位重試，避免整筆存不進去
+        while(e2&&/column/i.test(e2.message||'')){
+          const miss=(/'([a-z_]+)' column/i.exec(e2.message)||/column "?([a-z_]+)"?/i.exec(e2.message)||[])[1];
+          if(!miss||!(miss in art))break;
+          delete art[miss];
+          toast('資料庫缺少 '+miss+' 欄位，已略過（請執行最新的 SQL）');
+          ({error:e2}=await sb.from('program_art').upsert(art));
+        }
         if(e2)throw e2;
         if(nn!==name){ await sb.from('program_art').delete().eq('name',name); }
         await loadProgramArt(); await loadEvLite(); await syncPull();
