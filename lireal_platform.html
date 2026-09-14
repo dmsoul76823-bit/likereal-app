@@ -1718,7 +1718,7 @@ function renderShop(el,lim,sec){
   if(sec)P=orderPick(P,sec,o=>o.p.name);
   (el||$("shopGrid")).innerHTML=takeN(P,lim).map(({p,i})=>`
   <div class="card">
-    <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}');background-position:${posOf('p'+i)}">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
+    <div class="prod-thumb fitimg" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
     <div class="prod-body">
       <h4>${p.name}</h4><div class="sub">${p.sub}</div><div class="stars">${p.stars}</div>
       <div class="buy"><div class="price">${p.old?`<s>NT$${p.old}</s>`:""}NT$${p.price}</div>
