@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); }
   catch (e) { p = '/'; }
 
-  if (p === '/')       p = '/index.html';
+  if (p === '/')       p = '/lireal_platform.html';   // 首頁＝前台網站
   if (p === '/admin')  p = '/lireal_admin.html';
   // 前台分頁路由：全部指向同一個檔案（由前端 router 決定顯示哪一頁）
   if (['/app','/programs','/live','/ai','/ticket','/shop','/vip','/about','/dining','/event'].indexOf(p) >= 0)

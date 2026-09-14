@@ -1,21 +1,19 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "redirects": [
-    { "source": "/", "destination": "/app", "permanent": false }
-  ],
   "rewrites": [
-    { "source": "/admin", "destination": "/lireal_admin" },
+    { "source": "/", "destination": "/lireal_platform" },
     { "source": "/app", "destination": "/lireal_platform" },
     { "source": "/programs", "destination": "/lireal_platform" },
     { "source": "/live", "destination": "/lireal_platform" },
     { "source": "/ai", "destination": "/lireal_platform" },
     { "source": "/ticket", "destination": "/lireal_platform" },
+    { "source": "/event", "destination": "/lireal_platform" },
     { "source": "/shop", "destination": "/lireal_platform" },
     { "source": "/vip", "destination": "/lireal_platform" },
-    { "source": "/about", "destination": "/lireal_platform" },
     { "source": "/dining", "destination": "/lireal_platform" },
-    { "source": "/event", "destination": "/lireal_platform" }
+    { "source": "/about", "destination": "/lireal_platform" },
+    { "source": "/admin", "destination": "/lireal_admin" }
   ],
   "headers": [
     {

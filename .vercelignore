@@ -1,6 +1,9 @@
+index.html
 *.sql
 *.bat
+*.pdf
 server.js
 _*.png
 luxe_platform.html
 上線步驟.md
+部署上線.md
