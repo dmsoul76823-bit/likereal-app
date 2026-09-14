@@ -2104,12 +2104,14 @@ function renderSettings(){
       <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editAn(${a.id})">編輯</button>
       <button class="btn btn-danger btn-sm" onclick="delAn(${a.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
     :`<div class="empty">尚無公告</div>`;
-  $("bnTable").innerHTML=DB.banners.length?`<table><thead><tr><th>版位</th><th>標題</th><th>副標</th><th>連結</th><th>啟用</th><th></th></tr></thead><tbody>`+
-    DB.banners.map(b=>`<tr><td><span class="tag b">${esc(b.pos)}</span></td><td><b>${esc(b.title)}</b></td>
+  $("bnTable").innerHTML=DB.banners.length?`<table><thead><tr><th>圖片</th><th>版位</th><th>標題</th><th>副標</th><th>連結</th><th>啟用</th><th></th></tr></thead><tbody>`+
+    DB.banners.map(b=>{const bi=DB.images['banner_'+b.id]||'';return `<tr>
+      <td><div class="thumb-sm" style="width:78px;height:25px;border-radius:5px;background-size:cover;background-position:center;${bi?`background-image:url('${bi}')`:''}">${bi?'':'<span style="font-size:9px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div></td>
+      <td><span class="tag b">${esc(b.pos)}</span></td><td><b>${esc(b.title)}</b></td>
       <td style="color:var(--muted)">${esc(b.sub)}</td><td style="color:var(--muted);font-size:12px">${esc(b.link)}</td>
       <td><span class="tag ${b.on?'ok':'err'}">${b.on?'啟用':'停用'}</span></td>
       <td><div class="row-act"><button class="btn btn-ghost btn-sm" onclick="editBn(${b.id})">編輯</button>
-      <button class="btn btn-danger btn-sm" onclick="delBn(${b.id})">刪除</button></div></td></tr>`).join('')+`</tbody></table>`
+      <button class="btn btn-danger btn-sm" onclick="delBn(${b.id})">刪除</button></div></td></tr>`;}).join('')+`</tbody></table>`
     :`<div class="empty">尚無 Banner</div>`;
   $("imgSlots").innerHTML=IMG_SLOTS.map(s=>{const u=DB.images[s.k]||'';
     return `<div class="img-slot"><div class="thumb-sm" style="${u?`background-image:url('${u}')`:''}"></div>
@@ -2149,20 +2151,28 @@ window.delAn=id=>{if(confirm('確定刪除此公告？')){DB.announcements=DB.an
 $("anAdd").onclick=()=>editAn(null);
 window.editBn=id=>{
   const b=id?DB.banners.find(x=>x.id===id):{pos:'頂部',title:'',sub:'',link:'',on:true};
+  const bid=id||Date.now(), bImg=DB.images['banner_'+bid]||'';
   openM(id?'編輯 Banner':'新增 Banner',`<div class="fgrid">
     <div class="fld"><label>版位</label><select id="b_pos">${["頂部","底部","節目頁"].map(p=>`<option ${p===b.pos?'selected':''}>${p}</option>`).join('')}</select></div>
     <div class="fld"><label>啟用狀態</label><select id="b_on"><option value="1" ${b.on?'selected':''}>啟用</option><option value="0" ${!b.on?'selected':''}>停用</option></select></div>
     <div class="fld full"><label>主標題</label><input id="b_t" value="${esc(b.title)}"></div>
     <div class="fld full"><label>副標題</label><input id="b_s" value="${esc(b.sub)}"></div>
     <div class="fld full"><label>點擊連結</label><input id="b_l" value="${esc(b.link)}" placeholder="#shop 或完整網址"></div>
+    <div class="fld full">
+      <label>Banner 圖片</label>
+      ${cropUI('b',16/5,300,'左邊的框就是前台橫幅的實際比例；前台會在圖上壓一層暗色讓文字看得清楚')}
+    </div>
     <div class="fld full"><div class="spec"><b>📐 Banner 建議素材規格</b>頂部／底部：<code>1600 × 500 px</code>（16:5）· 節目頁：<code>1200 × 420 px</code><br>格式：<code>JPG / WebP</code> · 建議 &lt; 500 KB · 文字避開左右各 10% 安全區</div></div>
   </div>`,()=>{
     if(!v("b_t")){toast('請填寫主標題');return false;}
     const o={pos:v("b_pos"),title:v("b_t"),sub:v("b_s"),link:v("b_l"),on:v("b_on")==='1'};
-    if(id)Object.assign(DB.banners.find(x=>x.id===id),o); else DB.banners.push(Object.assign({id:Date.now()},o));
+    const img=CROP.b.value();
+    if(img)DB.images['banner_'+bid]=img; else delete DB.images['banner_'+bid];
+    if(id)Object.assign(DB.banners.find(x=>x.id===id),o); else DB.banners.push(Object.assign({id:bid},o));
     renderSettings();toast(id?'Banner 已更新':'Banner 已新增');});
+  mountCrop('b',16/5,1600,bImg);
 };
-window.delBn=id=>{if(confirm('確定刪除此 Banner？')){DB.banners=DB.banners.filter(x=>x.id!==id);save();renderSettings();toast('已刪除');}};
+window.delBn=id=>{if(confirm('確定刪除此 Banner？')){DB.banners=DB.banners.filter(x=>x.id!==id);delete DB.images['banner_'+id];save();renderSettings();toast('已刪除');}};
 $("bnAdd").onclick=()=>editBn(null);
 document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{
   const t=b.dataset.save;
