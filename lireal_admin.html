@@ -1069,6 +1069,13 @@ window.editProgram=name=>{
           <div><b>直播中</b><small>開啟後前台會顯示紅色 LIVE 標記，並優先播放直播畫面</small></div>
         </label>
       </div>
+      <div class="live-box ${art.autoplay!==false?'on':''}" id="autoBox" style="margin-top:8px">
+        <label class="live-sw">
+          <input type="checkbox" id="pg_auto" ${art.autoplay!==false?'checked':''}>
+          <span class="dot"></span>
+          <div><b>自動播放</b><small>開啟＝進入節目介紹頁自動播放（瀏覽器規定會先靜音，觀眾可點「開啟聲音」）；關閉＝顯示主視覺與 ▶ 播放鍵，由觀眾自行播放</small></div>
+        </label>
+      </div>
     </div>
     <div class="fld full"><label>直播連結（YouTube 直播 ID 或完整網址）</label>
       <input id="pg_liveurl" value="${esc(art.live_url||'')}" placeholder="例：jfKfPfyJRdk 或 https://www.youtube.com/watch?v=...">
@@ -1110,7 +1117,7 @@ window.editProgram=name=>{
     const ytId=s=>{const m=/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{6,})/.exec(s||'');return m?m[1]:(s||'').trim();};
     const payload={name:nn,cat:v("pg_cat"),intro:v("pg_intro"),img:v("pg_img"),
       video_url:v("pg_video"),yt_id:ytId(v("pg_yt")),live_url:ytId(v("pg_liveurl")),
-      is_live:$("pg_live").checked};
+      is_live:$("pg_live").checked,autoplay:$("pg_auto").checked};
     const tiers=PG_TIERS.filter(t=>(t.n||'').trim());
     if(!tiers.length){toast('至少需要一種票種');return false;}
     const cap=tiers.reduce((s,t)=>s+(t.seats||[]).length,0);
@@ -1130,7 +1137,7 @@ window.editProgram=name=>{
         const {error:e2}=await sb.from('program_art')
           .upsert({name:payload.name,img:payload.img||null,intro:payload.intro,
             video_url:payload.video_url||null,yt_id:payload.yt_id||null,
-            live_url:payload.live_url||null,is_live:payload.is_live,
+            live_url:payload.live_url||null,is_live:payload.is_live,autoplay:payload.autoplay,
             updated_at:new Date().toISOString()});
         if(e2)throw e2;
         if(nn!==name){ await sb.from('program_art').delete().eq('name',name); }
@@ -1168,6 +1175,7 @@ window.editProgram=name=>{
     };
     ['pg_liveurl','pg_yt','pg_video'].forEach(id=>$(id).addEventListener('input',draw));
     $("pg_live").addEventListener('change',draw);
+    $("pg_auto").addEventListener('change',()=>$("autoBox").classList.toggle('on',$("pg_auto").checked));
     draw();
   })();
   // 主視覺上傳
@@ -1760,6 +1768,7 @@ $("crQ").oninput=renderCreators;
 $("crAdd").onclick=()=>editCr(null);
 window.editCr=id=>{
   const c=id?DB.creators.find(x=>x.id===id):{name:'',slug:'',type:'治癒系',online:true,fans:'0',hot:'0',tier:'NEW',desc:''};
+  const cImg=(c.slug&&DB.images[c.slug])||'';
   openM(id?'編輯創作者':'新增創作者',`<div class="fgrid">
     <div class="fld"><label>名稱</label><input id="c_name" value="${esc(c.name)}"></div>
     <div class="fld"><label>路徑代稱 slug</label><input id="c_slug" value="${esc(c.slug)}" placeholder="sora"></div>
@@ -1769,13 +1778,45 @@ window.editCr=id=>{
     <div class="fld"><label>人氣指數</label><input id="c_hot" value="${esc(c.hot)}" placeholder="9.8萬"></div>
     <div class="fld"><label>上線狀態</label><select id="c_on"><option value="1" ${c.online?'selected':''}>在線</option><option value="0" ${!c.online?'selected':''}>離線</option></select></div>
     <div class="fld full"><label>簡介</label><textarea id="c_desc">${esc(c.desc)}</textarea></div>
+    <div class="fld full">
+      <label>角色照</label>
+      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+        <div id="c_imgPre" class="thumb-sm" style="width:132px;height:176px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;${cImg?`background-image:url('${cImg}')`:''}">${cImg?'':'尚未設定'}</div>
+        <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px">
+          <div class="row-act">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">上傳圖片<input type="file" accept="image/*" id="c_imgFile" hidden></label>
+            <button class="btn btn-danger btn-sm" id="c_imgClear">清除</button>
+          </div>
+          <input id="c_img" value="${esc(cImg)}" placeholder="或直接貼上圖片網址 https://...">
+        </div>
+      </div>
+    </div>
     <div class="fld full"><div class="spec"><b>📐 角色照建議規格</b>尺寸：<code>900 × 1200 px</code>（比例 3:4）· 格式：<code>JPG / WebP</code> · 建議 &lt; 350 KB<br>人物置中、預留頭部空間，避免臉部被卡片裁切</div></div>
   </div>`,()=>{
     if(!v("c_name")||!v("c_slug")){toast('名稱與 slug 為必填');return false;}
     const o={name:v("c_name"),slug:v("c_slug"),type:v("c_type"),tier:v("c_tier"),fans:v("c_fans"),hot:v("c_hot"),online:v("c_on")==='1',desc:v("c_desc")};
+    // 角色照存在 images 設定，key＝slug（改 slug 時一併搬移）
+    const img=$("c_img").value.trim();
+    if(c.slug&&c.slug!==o.slug)delete DB.images[c.slug];
+    if(img)DB.images[o.slug]=img; else delete DB.images[o.slug];
     if(id)Object.assign(DB.creators.find(x=>x.id===id),o); else DB.creators.unshift(Object.assign({id:Date.now()},o));
     renderCreators();toast(id?'創作者已更新':'創作者已新增');
   });
+  /* 角色照上傳／預覽 */
+  (function(){
+    const pre=$("c_imgPre"),inp=$("c_img"),file=$("c_imgFile"),clr=$("c_imgClear");
+    const setImg=u=>{inp.value=u||'';pre.style.backgroundImage=u?`url('${u}')`:'';pre.textContent=u?'':'尚未設定';};
+    inp.addEventListener('input',()=>setImg(inp.value.trim()));
+    clr.onclick=()=>setImg('');
+    file.onchange=e=>{const f=e.target.files[0];if(!f)return;
+      const rd=new FileReader();
+      rd.onload=()=>{const im=new Image();
+        im.onload=()=>{let w=im.width,h=im.height,M=900;if(w>M){h=Math.round(h*M/w);w=M;}
+          const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+          cv.getContext('2d').drawImage(im,0,0,w,h);setImg(cv.toDataURL('image/jpeg',0.88));};
+        im.onerror=()=>setImg(rd.result);im.src=rd.result;};
+      rd.readAsDataURL(f);e.target.value='';};
+  })();
 };
 window.delCr=id=>{if(confirm('確定刪除此創作者？')){DB.creators=DB.creators.filter(x=>x.id!==id);save();renderCreators();toast('已刪除');}};
 
@@ -1799,6 +1840,7 @@ $("pdQ").oninput=renderProducts;
 $("pdAdd").onclick=()=>editPd(null);
 window.editPd=id=>{
   const p=id?DB.products.find(x=>x.id===id):{key:'p'+DB.products.length,name:'',price:0,old:0,stock:0,badge:'',on:true};
+  const pImg=(p.key&&DB.images[p.key])||'';
   openM(id?'編輯商品':'新增商品',`<div class="fgrid">
     <div class="fld full"><label>商品名稱</label><input id="d_name" value="${esc(p.name)}"></div>
     <div class="fld"><label>圖片代碼 key</label><input id="d_key" value="${esc(p.key)}" placeholder="p0"></div>
@@ -1807,13 +1849,44 @@ window.editPd=id=>{
     <div class="fld"><label>原價 NT$（0 表不顯示）</label><input id="d_old" type="number" value="${p.old}"></div>
     <div class="fld"><label>庫存</label><input id="d_stock" type="number" value="${p.stock}"></div>
     <div class="fld"><label>上架狀態</label><select id="d_on"><option value="1" ${p.on?'selected':''}>上架</option><option value="0" ${!p.on?'selected':''}>下架</option></select></div>
+    <div class="fld full">
+      <label>商品圖</label>
+      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+        <div id="d_imgPre" class="thumb-sm" style="width:150px;height:150px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;${pImg?`background-image:url('${pImg}')`:''}">${pImg?'':'尚未設定'}</div>
+        <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px">
+          <div class="row-act">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">上傳圖片<input type="file" accept="image/*" id="d_imgFile" hidden></label>
+            <button class="btn btn-danger btn-sm" id="d_imgClear">清除</button>
+          </div>
+          <input id="d_img" value="${esc(pImg)}" placeholder="或直接貼上圖片網址 https://...">
+        </div>
+      </div>
+    </div>
     <div class="fld full"><div class="spec"><b>📐 商品圖建議規格</b>尺寸：<code>1000 × 1000 px</code>（正方形 1:1）· 格式：<code>JPG / PNG（去背用 PNG）</code> · 建議 &lt; 300 KB<br>商品置中、深色或純色背景最能融入前台暗色版面</div></div>
   </div>`,()=>{
     if(!v("d_name")){toast('請填寫商品名稱');return false;}
     const o={key:v("d_key"),name:v("d_name"),badge:v("d_badge"),price:+v("d_price")||0,old:+v("d_old")||0,stock:+v("d_stock")||0,on:v("d_on")==='1'};
+    const img=$("d_img").value.trim();
+    if(p.key&&p.key!==o.key)delete DB.images[p.key];
+    if(img)DB.images[o.key]=img; else delete DB.images[o.key];
     if(id)Object.assign(DB.products.find(x=>x.id===id),o); else DB.products.unshift(Object.assign({id:Date.now()},o));
     renderProducts();toast(id?'商品已更新':'商品已新增');
   });
+  /* 商品圖上傳／預覽 */
+  (function(){
+    const pre=$("d_imgPre"),inp=$("d_img"),file=$("d_imgFile"),clr=$("d_imgClear");
+    const setImg=u=>{inp.value=u||'';pre.style.backgroundImage=u?`url('${u}')`:'';pre.textContent=u?'':'尚未設定';};
+    inp.addEventListener('input',()=>setImg(inp.value.trim()));
+    clr.onclick=()=>setImg('');
+    file.onchange=e=>{const f=e.target.files[0];if(!f)return;
+      const rd=new FileReader();
+      rd.onload=()=>{const im=new Image();
+        im.onload=()=>{let w=im.width,h=im.height,M=1000;if(Math.max(w,h)>M){const s=M/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+          const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+          cv.getContext('2d').drawImage(im,0,0,w,h);setImg(cv.toDataURL('image/jpeg',0.88));};
+        im.onerror=()=>setImg(rd.result);im.src=rd.result;};
+      rd.readAsDataURL(f);e.target.value='';};
+  })();
 };
 window.delPd=id=>{if(confirm('確定刪除此商品？')){DB.products=DB.products.filter(x=>x.id!==id);save();renderProducts();toast('已刪除');}};
 

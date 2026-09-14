@@ -383,6 +383,11 @@
     background:rgba(12,10,20,.62);backdrop-filter:blur(8px);color:#fff;font-size:13px;font-weight:600;
     transition:.2s}
   .snd-btn:hover{background:rgba(124,77,255,.75);border-color:rgba(255,255,255,.45)}
+  .play-big{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;cursor:pointer;
+    width:78px;height:78px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+    background:rgba(12,10,20,.55);backdrop-filter:blur(8px);color:#fff;font-size:26px;line-height:1;
+    padding-left:5px;box-shadow:0 12px 40px rgba(0,0,0,.45);transition:.22s}
+  .play-big:hover{background:rgba(124,77,255,.85);transform:translate(-50%,-50%) scale(1.08)}
   @media(max-width:640px){.snd-btn{right:10px;bottom:10px;padding:6px 11px;font-size:12px}}
   .ev-title{margin-top:20px}
   .ev-title h1{font-size:30px;font-weight:800;line-height:1.25;margin-bottom:11px}
@@ -1276,7 +1281,7 @@ async function loadCloud(){
         (pa.data||[]).forEach(r=>{
           if(r.img)PROGRAM_ART[r.name]=r.img;
           if(r.video_url||r.yt_id||r.live_url||r.is_live)
-            PROGRAM_MEDIA[r.name]={video:r.video_url||'',yt:r.yt_id||'',live:r.live_url||'',isLive:!!r.is_live};
+            PROGRAM_MEDIA[r.name]={video:r.video_url||'',yt:r.yt_id||'',live:r.live_url||'',isLive:!!r.is_live,auto:r.autoplay!==false};
           if(r.featured)FEATURED.push({name:r.name,order:r.sort_order||0});
         });
         FEATURED.sort((a,b)=>a.order-b.order);
@@ -1505,13 +1510,15 @@ function renderPrograms2(el,lim,useFeatured){
 /* 節目介紹頁 */
 let CUR_PROGRAM='';
 function openProgram(name){
-  CUR_PROGRAM=name;
+  CUR_PROGRAM=name; HERO_FORCE=false;
   history.pushState({page:'event',p:name},'','/event?p='+encodeURIComponent(name));
   showPage('event',false);
   renderProgramDetail();
 }
 /* 開/關主視覺影片聲音（YouTube 用 postMessage，一般影片直接切 muted） */
 let HERO_MUTED=true;
+let HERO_FORCE=false;          // 使用者手動按下播放（此時可直接有聲音）
+function playHero(){ HERO_FORCE=true; renderProgramDetail(); }
 function toggleHeroSound(){
   const el=$("evEmbed"), btn=$("sndBtn"); if(!el)return;
   HERO_MUTED=!HERO_MUTED;
@@ -1530,14 +1537,22 @@ function renderProgramDetail(){
   const MON2={JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'};
   const md=PROGRAM_MEDIA[g.name]||{};
   const liveOn=md.isLive&&md.live;
-  /* 自動播放：瀏覽器只允許「靜音」自動播放，因此一律先靜音，再給使用者開聲音的按鈕 */
-  const ytOpts='autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
-  const heroMedia = liveOn
+  /* 自動播放：瀏覽器只允許「靜音」自動播放，因此自動播放時一律先靜音，再給使用者開聲音的按鈕。
+     後台關閉自動播放時，顯示主視覺與 ▶ 播放鍵；由使用者按下播放（有互動）＝可直接有聲音。 */
+  const hasMedia = !!(liveOn||md.yt||md.video);
+  const autoOn   = md.auto!==false;            // 未設定的舊資料視為開啟
+  const play     = hasMedia&&(liveOn||autoOn||HERO_FORCE);   // 直播一律自動接上
+  const mute     = play&&!HERO_FORCE;          // 使用者手動按播放時不靜音
+  const ytOpts   = `autoplay=1&mute=${mute?1:0}&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`;
+  const heroMedia = !play ? ''
+    : liveOn
     ? `<iframe id="evEmbed" class="ev-embed" src="https://www.youtube.com/embed/${escH(md.live)}?${ytOpts}" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
     : md.yt ? `<iframe id="evEmbed" class="ev-embed" src="https://www.youtube.com/embed/${escH(md.yt)}?${ytOpts}&loop=1&playlist=${escH(md.yt)}" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-    : md.video ? `<video id="evEmbed" class="ev-embed" src="${escH(md.video)}" autoplay muted loop playsinline controls preload="auto" poster="${g.img}"></video>`
+    : md.video ? `<video id="evEmbed" class="ev-embed" src="${escH(md.video)}" autoplay ${mute?'muted':''} loop playsinline controls preload="auto" poster="${g.img}"></video>`
     : '';
-  const soundBtn = heroMedia?`<button class="snd-btn" id="sndBtn" onclick="toggleHeroSound()">🔇 開啟聲音</button>`:'';
+  HERO_MUTED=mute;
+  const soundBtn = heroMedia?`<button class="snd-btn" id="sndBtn" onclick="toggleHeroSound()">${mute?'🔇 開啟聲音':'🔊 關閉聲音'}</button>`
+    : (hasMedia?`<button class="play-big" onclick="playHero()" aria-label="播放影片">▶</button>`:'');
   box.innerHTML=`
     <div class="ev-hero ${heroMedia?'has-media':''}" style="background-image:url('${g.img}')">
       ${heroMedia}
