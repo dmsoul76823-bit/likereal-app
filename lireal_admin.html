@@ -719,8 +719,9 @@ const MAP={
 };
 const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout'];
 
+const ALL_PERMS=["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"];
 function normalizeDB(){
-  const ALL=["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"];
+  const ALL=ALL_PERMS;
   (DB.venues||[]).forEach(vv=>{vv.stage=normStage(vv);});
   (DB.events||[]).forEach(e=>{ if((e.tickets||[]).some(t=>Array.isArray(t.seats))){
     e.cap=e.tickets.reduce((s,t)=>s+(t.seats||[]).length,0);
@@ -831,6 +832,7 @@ $("liPass").addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
 async function enterShell(staffRow){
   ME=MAP.staff.fromRow(staffRow);
+  if(ME.role==='admin')ME.perms=ALL_PERMS.slice();   // 管理者補齊新功能權限
   const ok=await syncPull();
   $("login").style.display='none';$("shell").classList.add('on');
   $("whoName").textContent=ME.name||ME.email;
@@ -879,7 +881,8 @@ $("logout").onclick=async()=>{
     }
   }catch(e){}
 })();
-function can(k){return ME&&ME.perms.includes(k);}
+/* 管理者一律擁有全部權限（避免舊資料的 perms 缺少新功能而看不到選單） */
+function can(k){return !!ME&&(ME.role==='admin'||(ME.perms||[]).includes(k));}
 function buildNav(){
   $("navBox").innerHTML=NAV.filter(n=>can(n.k)).map(n=>
     `<div class="nav-i" data-k="${n.k}"><span class="ic">${n.i}</span>${n.t}</div>`).join('');
