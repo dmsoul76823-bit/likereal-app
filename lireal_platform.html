@@ -19,6 +19,17 @@
     var(--bg);
     color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
   a{color:inherit;text-decoration:none}
+  /* 捲軸：不佔版面寬度，畫面完整呈現（手機直接隱藏，桌機用細的半透明捲軸） */
+  html,body{overflow-x:hidden}
+  html{scrollbar-width:thin;scrollbar-color:rgba(139,111,202,.45) transparent}
+  ::-webkit-scrollbar{width:7px;height:7px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(139,111,202,.42);border-radius:99px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(139,111,202,.68)}
+  @media(max-width:900px){
+    html{scrollbar-width:none;-ms-overflow-style:none}
+    ::-webkit-scrollbar{width:0;height:0}
+  }
   .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
   .demo-flag{position:fixed;bottom:14px;left:14px;z-index:200;background:var(--brand-soft);border:1px solid var(--line);
     color:var(--brand3);font-size:11px;letter-spacing:1px;padding:6px 12px;border-radius:999px;backdrop-filter:blur(8px)}
