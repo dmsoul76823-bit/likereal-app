@@ -1247,11 +1247,22 @@ let FEATURED=[];      // 首頁精選節目（後台「首頁編排」指定；�
 const HOME_DEFAULT={programs:3,tickets:6,lives:6,creators:6,products:8,plans:2};
 function homeCfg(){
   const c=(ADB.home_layout&&typeof ADB.home_layout==='object')?ADB.home_layout:{};
+  PICK=(ADB.home_pick&&typeof ADB.home_pick==='object')?ADB.home_pick:{};
   return Object.assign({},HOME_DEFAULT,c);
 }
 let CURRENT='home';   // 目前分頁（提前宣告：renderAll 會用到，避免 TDZ 錯誤）
 /* 取前 N 筆；N 為 0 時回傳空陣列（未指定則全取） */
 function takeN(arr,n){return (typeof n==='number'&&n>=0)?arr.slice(0,n):arr;}
+/* 首頁精選：後台指定的項目排前面，其餘依原順序遞補 */
+let PICK={};
+function orderPick(arr,sec,keyFn){
+  const ids=(PICK&&Array.isArray(PICK[sec]))?PICK[sec]:[];
+  if(!ids.length)return arr;
+  const out=[];
+  ids.forEach(id=>{const it=arr.find(x=>keyFn(x)===id&&out.indexOf(x)<0);if(it)out.push(it);});
+  arr.forEach(x=>{if(out.indexOf(x)<0)out.push(x);});
+  return out;
+}
 /* 共用的字串跳脫工具（函式宣告會被提升，任何渲染函式都能安全使用） */
 function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function escAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
@@ -1346,7 +1357,12 @@ function applyADBCreators(){
   });
 }
 /* 後台（雲端）的圖片為準；本機自訂只保留雲端沒有的項目 */
-function syncImages(){ if(ADB.images) Object.keys(ADB.images).forEach(k=>{ OV[k]=ADB.images[k]; }); }
+function syncImages(){
+  if(!ADB.images)return;
+  Object.keys(ADB.images).forEach(k=>{ OV[k]=ADB.images[k]; });
+  // 存一份到瀏覽器：下次進站第一眼就是最新的圖，不會先閃舊圖再換新圖
+  try{saveOV();}catch(e){}
+}
 
 /* ===== 向量插畫生成器（可替換：日後把 img 換成真實照片 URL 即可） ===== */
 const PAL={
@@ -1442,7 +1458,10 @@ function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=takeN(programs,lim
     </div>
   </div>`).join("");}
 
-function renderLives(el,lim){(el||$("liveGrid")).innerHTML=takeN(lives,lim).map((l,i)=>`
+function renderLives(el,lim,sec){
+  let L=lives.map((l,i)=>({l,i}));
+  if(sec)L=orderPick(L,sec,o=>o.l.img);
+  (el||$("liveGrid")).innerHTML=takeN(L,lim).map(({l,i})=>`
   <div class="card">
     <div class="prog-thumb fitimg" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
@@ -1487,11 +1506,14 @@ function renderPrograms2(el,lim,useFeatured){
   const gs=groupTickets();
   let src=gs;
   // 首頁：若後台有指定精選節目，依指定順序顯示；不足或未指定時用最近場次遞補
-  if(useFeatured&&FEATURED.length){
-    const picked=[];
-    FEATURED.forEach(f=>{const g=gs.find(x=>x.name===f.name);if(g&&!picked.includes(g))picked.push(g);});
-    gs.forEach(g=>{if(!picked.includes(g))picked.push(g);});
-    src=picked;
+  if(useFeatured){
+    src=orderPick(gs,'programs',g=>g.name);
+    if(src===gs&&FEATURED.length){   // 相容舊的 program_art.featured
+      const picked=[];
+      FEATURED.forEach(f=>{const g=gs.find(x=>x.name===f.name);if(g&&!picked.includes(g))picked.push(g);});
+      gs.forEach(g=>{if(!picked.includes(g))picked.push(g);});
+      src=picked;
+    }
   }
   const list=takeN(src,lim);
   (el||$("ticketGrid")).innerHTML=list.length?list.map((g,i)=>`
@@ -1669,7 +1691,10 @@ function renderProgramDetail(){
   draw(false);
   updateFavUI();
 }
-function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=takeN(tickets,lim).map((t,i)=>`
+function renderTickets(el,lim,sec){
+  let T=tickets.map((t,i)=>({t,i}));
+  if(sec)T=orderPick(T,sec,o=>o.t.name);
+  (el||$("ticketGrid")).innerHTML=takeN(T,lim).map(({t,i})=>`
   <div class="ticket">
     <div class="tpic" style="background-image:url('${t.img||PROGRAM_ART[t.name]||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
       <div class="tdate-badge"><b>${t.d}</b><span>${t.m}</span></div>
@@ -1688,7 +1713,10 @@ function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=takeN(tickets,lim
     </div>
   </div>`).join("");}
 
-function renderShop(el,lim){(el||$("shopGrid")).innerHTML=takeN(products,lim).map((p,i)=>`
+function renderShop(el,lim,sec){
+  let P=products.map((p,i)=>({p,i}));
+  if(sec)P=orderPick(P,sec,o=>o.p.name);
+  (el||$("shopGrid")).innerHTML=takeN(P,lim).map(({p,i})=>`
   <div class="card">
     <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}');background-position:${posOf('p'+i)}">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
     <div class="prod-body">
@@ -1723,10 +1751,10 @@ applyADBCreators();   // 套用後台創作者資料
 function renderHome(){
   const c=homeCfg();
   renderPrograms2($("hProg"),c.programs,true);   // 精選優先
-  renderTickets($("hTicket"),c.tickets);
-  renderLives($("hLive"),c.lives);
-  renderOM($("hOM"),c.creators);
-  renderShop($("hShop"),c.products);
+  renderTickets($("hTicket"),c.tickets,'tickets');
+  renderLives($("hLive"),c.lives,'lives');
+  renderOM($("hOM"),c.creators,'creators');
+  renderShop($("hShop"),c.products,'products');
   renderPlans($("hPlan"),c.plans);
   // 數量設為 0 的區塊整段隱藏
   const secs=[['hProg',c.programs],['hTicket',c.tickets],['hLive',c.lives],
@@ -1750,7 +1778,7 @@ function renderAll(){
 function omURL(slug){return OM_BASE+"/character/"+slug;}
 function goOM(slug){window.location.href=omURL(slug);}   // 點卡片直接進入 OnlyMate 角色頁
 function enterOM(){window.location.href=OM_BASE;}
-function renderOM(el,lim){(el||$("omGrid")).innerHTML=takeN(creators,lim).map(c=>`
+function renderOM(el,lim,sec){(el||$("omGrid")).innerHTML=takeN(sec?orderPick(creators,sec,c=>c.slug):creators,lim).map(c=>`
   <div class="om-card" onclick="goOM('${c.slug}')" title="進入 ${c.name} 的 OnlyMate 角色頁">
     <div class="om-photo fitimg" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}')">
       <div class="tl">
@@ -2245,7 +2273,25 @@ renderCMS();
 /* 套用首頁主視覺（雲端圖片是非同步載入的，載完要重新套一次） */
 function applyHero(){
   const bg=document.getElementById('heroBg');
-  if(bg){const hv=thumb('hero','');if(hv){bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';}}
+  if(bg){
+    const hv=thumb('hero','');
+    if(hv&&bg.dataset.src!==hv){
+      // 先在背景把新圖載好再換上並淡入，避免畫面「舊圖 → 新圖」硬跳
+      const first=!bg.dataset.src;
+      const swap=()=>{
+        bg.dataset.src=hv;
+        bg.style.transition='opacity .45s ease, transform .18s ease-out';
+        if(first){   // 第一次直接上圖
+          bg.style.opacity='0';bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';
+          requestAnimationFrame(()=>{bg.style.opacity='1';});
+        }else{       // 之後（雲端更新）淡出再淡入
+          bg.style.opacity='0';
+          setTimeout(()=>{bg.style.backgroundImage="url('"+hv+"')";bg.style.transform='scale(1.1)';bg.style.opacity='1';},280);
+        }
+      };
+      const pre=new Image(); pre.onload=swap; pre.onerror=swap; pre.src=hv;
+    }
+  }
   // 關於頁與餐飲頁的圖位（後台可更換；未設定時用插畫墊底）
   const PICS=[
     ['aboutPic','about',["#3a2a6a","#120c22","#c6a6ff"]],

@@ -422,15 +422,9 @@
 
       <div class="panel">
         <div class="panel-head">
-          <div><h3>首頁精選節目</h3><div class="hint" style="margin:0">勾選要出現在首頁的節目，用 ↑↓ 調整順序；<b>完全沒勾選時，首頁會自動顯示最近場次的節目</b></div></div>
-          <div class="tools">
-            <input id="hfQ" placeholder="搜尋節目…">
-            <button class="btn btn-ghost btn-sm" id="hfClear">全部取消</button>
-          </div>
+          <div><h3>首頁精選項目</h3><div class="hint" style="margin:0">各區塊要出現在首頁的項目，用 ↑↓ 調整順序；<b>某一區完全沒勾選時，該區會自動顯示最新／最近的項目</b></div></div>
         </div>
-        <div id="hfPicked"></div>
-        <h3 style="font-size:15px;margin:22px 0 10px">所有節目</h3>
-        <div id="hfList" style="max-height:46vh;overflow:auto"></div>
+        <div id="hpBox"></div>
       </div>
     </section>
 
@@ -717,7 +711,7 @@ const MAP={
     toRow:s=>({id:s.id,email:s.email,name:s.name||'',role:s.role||'staff',perms:s.perms||[]}),
     fromRow:r=>({id:r.id,email:r.email,name:r.name||'',role:r.role||'staff',perms:r.perms||[]})}
 };
-const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout'];
+const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout','home_pick'];
 
 const ALL_PERMS=["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"];
 function normalizeDB(){
@@ -1237,68 +1231,86 @@ async function renderHomeLayout(){
   const cfg=(DB.home_layout&&typeof DB.home_layout==='object')?DB.home_layout
             :{programs:3,tickets:6,lives:6,creators:6,products:8,plans:2};
   HL_KEYS.forEach(k=>{const el=$("hl_"+k);if(el)el.value=cfg[k]!==undefined?cfg[k]:0;});
-  renderFeatured();
+  HPICK=(DB.home_pick&&typeof DB.home_pick==='object')?DB.home_pick:{};
+  // 舊資料相容：program_art.featured 轉成 programs 的精選清單
+  if(!HPICK.programs){
+    const old=PART.filter(p=>p.featured).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(p=>p.name);
+    if(old.length)HPICK.programs=old;
+  }
+  renderPickers();
 }
-function renderFeatured(){
-  const q=(v("hfQ")||'').toLowerCase();
-  const picked=PART.filter(p=>p.featured).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  const pbox=$("hfPicked");
-  pbox.innerHTML=picked.length?picked.map((p,i)=>`
-    <div class="img-slot">
-      <div class="thumb-sm" style="width:64px;height:40px;border-radius:7px;${p.img?`background-image:url('${p.img}')`:''}">${p.img?'':'<span style="font-size:10px;color:var(--muted);display:grid;place-items:center;height:100%">無圖</span>'}</div>
-      <div class="i"><b>${i+1}. ${esc(p.name)}</b><small>${eventCountOf(p.name)} 個場次</small></div>
-      <div class="row-act">
-        <button class="btn btn-ghost btn-sm" ${i===0?'disabled style="opacity:.4"':''} onclick="moveFeat('${esc(p.name).replace(/'/g,"\\'")}',-1)">↑</button>
-        <button class="btn btn-ghost btn-sm" ${i===picked.length-1?'disabled style="opacity:.4"':''} onclick="moveFeat('${esc(p.name).replace(/'/g,"\\'")}',1)">↓</button>
-        <button class="btn btn-danger btn-sm" onclick="toggleFeat('${esc(p.name).replace(/'/g,"\\'")}',false)">移除</button>
-      </div>
-    </div>`).join('')
-    :`<div class="spec">目前沒有指定精選節目 — 前台首頁會<b>自動顯示最近場次的節目</b>。勾選下方任一節目即可改為手動指定。</div>`;
 
-  const list=PART.filter(p=>!q||(p.name||'').toLowerCase().includes(q));
-  $("hfList").innerHTML=list.length?list.map(p=>`
-    <div class="img-slot">
-      <div class="thumb-sm" style="width:56px;height:35px;border-radius:6px;${p.img?`background-image:url('${p.img}')`:''}"></div>
-      <div class="i"><b>${esc(p.name)}</b><small>${eventCountOf(p.name)} 個場次</small></div>
-      <div class="row-act">
-        <label class="perm" style="margin:0"><label style="margin:0"><input type="checkbox" ${p.featured?'checked':''}
-          onchange="toggleFeat('${esc(p.name).replace(/'/g,"\\'")}',this.checked)"> 上首頁</label></label>
-      </div>
-    </div>`).join(''):'<div class="empty">沒有符合的節目</div>';
+/* ---- 各區塊精選項目 ---- */
+const PICK_SECS=[
+  {k:'programs',t:'沉浸影像',   hint:'首頁「沉浸節目」區要顯示哪幾檔'},
+  {k:'tickets', t:'場域售票',   hint:'首頁售票區優先顯示哪幾檔節目的場次'},
+  {k:'lives',   t:'直播創作者', hint:'首頁「直播大廳」優先顯示哪幾位'},
+  {k:'creators',t:'AI 女友',    hint:'首頁「AI 女友」優先顯示哪幾位'},
+  {k:'products',t:'電商產品',   hint:'首頁「裸視 3D」優先顯示哪幾項'}
+];
+let HPICK={};
+function pickItems(sec){
+  if(sec==='programs'||sec==='tickets')
+    return PART.map(p=>({id:p.name,label:p.name,sub:eventCountOf(p.name)+' 個場次',img:p.img||''}));
+  if(sec==='lives'||sec==='creators')
+    return (DB.creators||[]).map(c=>({id:c.slug,label:c.name,sub:c.type+(c.online===false?' · 離線':''),img:DB.images[c.slug]||''}));
+  if(sec==='products')
+    return (DB.products||[]).map(p=>({id:p.name,label:p.name,sub:'NT$'+(p.price||0).toLocaleString(),img:DB.images[p.key]||''}));
+  return [];
 }
-window.toggleFeat=async(name,on)=>{
-  const row=PART.find(p=>p.name===name); if(!row)return;
-  const maxOrder=Math.max(0,...PART.filter(p=>p.featured).map(p=>p.sort_order||0));
-  row.featured=on; if(on)row.sort_order=maxOrder+1;
+function renderPickers(){
+  $("hpBox").innerHTML=PICK_SECS.map(s=>{
+    const all=pickItems(s.k), sel=(HPICK[s.k]||[]).filter(id=>all.some(a=>a.id===id));
+    const q=`'${s.k}'`;
+    const picked=sel.map((id,i)=>{
+      const it=all.find(a=>a.id===id);
+      return `<div class="img-slot">
+        <div class="thumb-sm" style="width:56px;height:42px;border-radius:7px;background-size:cover;background-position:center;${it.img?`background-image:url('${it.img}')`:''}"></div>
+        <div class="i"><b>${i+1}. ${esc(it.label)}</b><small>${esc(it.sub)}</small></div>
+        <div class="row-act">
+          <button class="btn btn-ghost btn-sm" ${i===0?'disabled style="opacity:.4"':''} onclick="hpMove(${q},'${esc(id).replace(/'/g,"\\'")}',-1)">↑</button>
+          <button class="btn btn-ghost btn-sm" ${i===sel.length-1?'disabled style="opacity:.4"':''} onclick="hpMove(${q},'${esc(id).replace(/'/g,"\\'")}',1)">↓</button>
+          <button class="btn btn-danger btn-sm" onclick="hpToggle(${q},'${esc(id).replace(/'/g,"\\'")}',false)">移除</button>
+        </div></div>`;}).join('');
+    const list=all.map(a=>`<label class="img-slot" style="cursor:pointer">
+        <div class="thumb-sm" style="width:44px;height:33px;border-radius:6px;background-size:cover;background-position:center;${a.img?`background-image:url('${a.img}')`:''}"></div>
+        <div class="i"><b>${esc(a.label)}</b><small>${esc(a.sub)}</small></div>
+        <div class="row-act"><input type="checkbox" ${sel.includes(a.id)?'checked':''}
+          onchange="hpToggle(${q},'${esc(a.id).replace(/'/g,"\\'")}',this.checked)"></div>
+      </label>`).join('')||'<div class="empty">沒有可選項目</div>';
+    return `<div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <h3 style="font-size:15px;margin:0">${s.t}</h3>
+        <small style="color:var(--muted);font-size:11px">${s.hint}</small>
+        ${sel.length?`<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="hpClear(${q})">全部取消</button>`:''}
+      </div>
+      ${sel.length?picked:'<div class="spec">未指定 — 此區會自動顯示最新／最近的項目</div>'}
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--brand3);font-size:13px">選擇項目（${all.length}）</summary>
+        <div style="max-height:38vh;overflow:auto;margin-top:8px">${list}</div></details>
+    </div>`;
+  }).join('');
+}
+async function hpSave(msg){
+  DB.home_pick=HPICK;
   setSync('saving');
-  const {error}=await sb.from('program_art')
-    .upsert({name,featured:on,sort_order:row.sort_order||0,updated_at:new Date().toISOString()});
+  const {error}=await sb.from('settings').upsert({key:'home_pick',value:{v:HPICK}});
   if(error){setSync('err');toast('儲存失敗：'+error.message);return;}
-  renderFeatured();setSync('ok');toast(on?'已加入首頁':'已從首頁移除');
+  setSync('ok'); if(msg)toast(msg);
+}
+window.hpToggle=async(sec,id,on)=>{
+  const a=HPICK[sec]?HPICK[sec].slice():[];
+  const i=a.indexOf(id);
+  if(on&&i<0)a.push(id); else if(!on&&i>=0)a.splice(i,1);
+  HPICK[sec]=a; renderPickers(); await hpSave(on?'已加入首頁':'已從首頁移除');
 };
-window.moveFeat=async(name,dir)=>{
-  const picked=PART.filter(p=>p.featured).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-  const i=picked.findIndex(p=>p.name===name); const j=i+dir;
-  if(i<0||j<0||j>=picked.length)return;
-  [picked[i],picked[j]]=[picked[j],picked[i]];
-  picked.forEach((p,k)=>p.sort_order=k+1);
-  setSync('saving');
-  const {error}=await sb.from('program_art')
-    .upsert(picked.map(p=>({name:p.name,featured:true,sort_order:p.sort_order,updated_at:new Date().toISOString()})));
-  if(error){setSync('err');toast('排序失敗：'+error.message);return;}
-  renderFeatured();setSync('ok');
+window.hpMove=async(sec,id,dir)=>{
+  const a=(HPICK[sec]||[]).slice(); const i=a.indexOf(id), j=i+dir;
+  if(i<0||j<0||j>=a.length)return;
+  [a[i],a[j]]=[a[j],a[i]]; HPICK[sec]=a; renderPickers(); await hpSave();
 };
-$("hfQ").oninput=renderFeatured;
-$("hfClear").onclick=async()=>{
-  const picked=PART.filter(p=>p.featured);
-  if(!picked.length){toast('目前沒有精選節目');return;}
-  if(!confirm('取消所有精選節目？首頁將改為自動顯示最近場次。'))return;
-  setSync('saving');
-  const {error}=await sb.from('program_art')
-    .upsert(picked.map(p=>({name:p.name,featured:false,updated_at:new Date().toISOString()})));
-  if(error){setSync('err');toast('失敗：'+error.message);return;}
-  picked.forEach(p=>p.featured=false);
-  renderFeatured();setSync('ok');toast('已全部取消');
+window.hpClear=async sec=>{
+  if(!confirm('取消這一區的所有精選項目？該區將改為自動顯示。'))return;
+  HPICK[sec]=[]; renderPickers(); await hpSave('已全部取消');
 };
 $("hlSave").onclick=async()=>{
   const cfg={}; HL_KEYS.forEach(k=>cfg[k]=Math.max(0,+v("hl_"+k)||0));
