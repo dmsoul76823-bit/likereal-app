@@ -378,6 +378,12 @@
   /* 影音播放器 */
   .ev-hero.has-media{background:#000;aspect-ratio:16/9}
   .ev-embed{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;object-fit:cover}
+  .snd-btn{position:absolute;right:16px;bottom:16px;z-index:6;cursor:pointer;
+    padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+    background:rgba(12,10,20,.62);backdrop-filter:blur(8px);color:#fff;font-size:13px;font-weight:600;
+    transition:.2s}
+  .snd-btn:hover{background:rgba(124,77,255,.75);border-color:rgba(255,255,255,.45)}
+  @media(max-width:640px){.snd-btn{right:10px;bottom:10px;padding:6px 11px;font-size:12px}}
   .ev-title{margin-top:20px}
   .ev-title h1{font-size:30px;font-weight:800;line-height:1.25;margin-bottom:11px}
   .ev-title .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -1504,6 +1510,19 @@ function openProgram(name){
   showPage('event',false);
   renderProgramDetail();
 }
+/* 開/關主視覺影片聲音（YouTube 用 postMessage，一般影片直接切 muted） */
+let HERO_MUTED=true;
+function toggleHeroSound(){
+  const el=$("evEmbed"), btn=$("sndBtn"); if(!el)return;
+  HERO_MUTED=!HERO_MUTED;
+  if(el.tagName==='IFRAME'){
+    try{ el.contentWindow.postMessage(JSON.stringify({event:'command',func:HERO_MUTED?'mute':'unMute',args:[]}),'*'); }catch(e){}
+  }else{
+    el.muted=HERO_MUTED;
+    if(!HERO_MUTED){ el.volume=1; el.play().catch(()=>{}); }
+  }
+  if(btn)btn.textContent=HERO_MUTED?'🔇 開啟聲音':'🔊 關閉聲音';
+}
 function renderProgramDetail(){
   const box=$("evDetail"); if(!box)return;
   const g=groupTickets().find(x=>x.name===CUR_PROGRAM);
@@ -1511,14 +1530,18 @@ function renderProgramDetail(){
   const MON2={JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'};
   const md=PROGRAM_MEDIA[g.name]||{};
   const liveOn=md.isLive&&md.live;
+  /* 自動播放：瀏覽器只允許「靜音」自動播放，因此一律先靜音，再給使用者開聲音的按鈕 */
+  const ytOpts='autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1';
   const heroMedia = liveOn
-    ? `<iframe class="ev-embed" src="https://www.youtube.com/embed/${escH(md.live)}?autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
-    : md.yt ? `<iframe class="ev-embed" src="https://www.youtube.com/embed/${escH(md.yt)}" frameborder="0" allowfullscreen></iframe>`
-    : md.video ? `<video class="ev-embed" src="${escH(md.video)}" controls preload="metadata" poster="${g.img}"></video>`
+    ? `<iframe id="evEmbed" class="ev-embed" src="https://www.youtube.com/embed/${escH(md.live)}?${ytOpts}" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+    : md.yt ? `<iframe id="evEmbed" class="ev-embed" src="https://www.youtube.com/embed/${escH(md.yt)}?${ytOpts}&loop=1&playlist=${escH(md.yt)}" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+    : md.video ? `<video id="evEmbed" class="ev-embed" src="${escH(md.video)}" autoplay muted loop playsinline controls preload="auto" poster="${g.img}"></video>`
     : '';
+  const soundBtn = heroMedia?`<button class="snd-btn" id="sndBtn" onclick="toggleHeroSound()">🔇 開啟聲音</button>`:'';
   box.innerHTML=`
     <div class="ev-hero ${heroMedia?'has-media':''}" style="background-image:url('${g.img}')">
       ${heroMedia}
+      ${soundBtn}
       ${heroMedia?'':'<div class="ov"></div>'}
       ${liveOn?'<div class="live-tag"><span class="pulse"></span>LIVE 直播中</div>':''}
       ${heroMedia?'':`<div class="cap">
