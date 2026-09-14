@@ -126,6 +126,21 @@
   .tt input:focus{border-color:var(--brand)}
   .xbtn{background:rgba(255,80,110,.12);border:1px solid rgba(255,80,110,.3);color:#ff9db0;border-radius:9px;width:34px;height:34px;cursor:pointer;flex:none}
 
+  /* 影音設定 */
+  .live-box{border:1px solid var(--line2);border-radius:13px;padding:14px 16px;background:var(--bg2);transition:.2s}
+  .live-box.on{border-color:rgba(255,107,129,.5);background:rgba(255,107,129,.08)}
+  .live-sw{display:flex;align-items:center;gap:12px;cursor:pointer;margin:0}
+  .live-sw input{width:0;height:0;opacity:0;position:absolute}
+  .live-sw .dot{width:46px;height:26px;border-radius:999px;background:#2a2438;border:1px solid var(--line2);
+    position:relative;flex:none;transition:.2s}
+  .live-sw .dot::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:var(--muted);transition:.2s}
+  .live-sw input:checked+.dot{background:rgba(255,107,129,.35);border-color:var(--err)}
+  .live-sw input:checked+.dot::after{left:23px;background:var(--err);box-shadow:0 0 10px rgba(255,107,129,.8)}
+  .live-sw b{display:block;font-size:14px}
+  .live-sw small{color:var(--muted);font-size:12px}
+  .media-pre{border-radius:12px;overflow:hidden;border:1px solid var(--line2);background:#000;aspect-ratio:16/9}
+  .media-pre iframe,.media-pre video{width:100%;height:100%;display:block;border:0}
   /* 場次主視覺設定 */
   .evimg{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start}
   .evimg-pre{aspect-ratio:16/10;border-radius:12px;border:1px solid var(--line2);background:#120f1e center/cover no-repeat;
@@ -946,9 +961,36 @@ window.editProgram=name=>{
       </div>
       <div class="spec"><b>📐 建議規格</b>尺寸：<code>1200 × 750 px</code>（16:10）· 格式：<code>JPG / WebP</code> · 建議 &lt; 400 KB</div>
     </div>
+
+    <div class="fld full" style="margin-top:6px">
+      <label style="font-size:14px;color:var(--brand3);font-weight:700">🎬 影音設定</label>
+      <div class="live-box ${art.is_live?'on':''}" id="liveBox">
+        <label class="live-sw">
+          <input type="checkbox" id="pg_live" ${art.is_live?'checked':''}>
+          <span class="dot"></span>
+          <div><b>直播中</b><small>開啟後前台會顯示紅色 LIVE 標記，並優先播放直播畫面</small></div>
+        </label>
+      </div>
+    </div>
+    <div class="fld full"><label>直播連結（YouTube 直播 ID 或完整網址）</label>
+      <input id="pg_liveurl" value="${esc(art.live_url||'')}" placeholder="例：jfKfPfyJRdk 或 https://www.youtube.com/watch?v=...">
+      <small style="color:var(--muted);font-size:11px;display:block;margin-top:5px">直播中開啟時，節目介紹頁會即時嵌入這個直播畫面</small>
+    </div>
+    <div class="fld"><label>YouTube 影片 ID（預告／精華）</label>
+      <input id="pg_yt" value="${esc(art.yt_id||'')}" placeholder="LXb3EKWsInQ"></div>
+    <div class="fld"><label>影片檔網址（mp4 / webm）</label>
+      <input id="pg_video" value="${esc(art.video_url||'')}" placeholder="https://.../teaser.mp4"></div>
+    <div class="fld full">
+      <div class="spec"><b>🎬 播放優先順序</b>直播中（有直播連結）→ YouTube 影片 → 影片檔 → 主視覺圖<br>
+        影片檔建議 &lt; 20 MB、H.264 編碼；YouTube 只需填 ID，不用整串網址也可以</div>
+    </div>
+    <div class="fld full" id="mediaPreview"></div>
   </div>`,()=>{
     const nn=v("pg_name").trim(); if(!nn){toast('請填寫節目名稱');return false;}
-    const payload={name:nn,cat:v("pg_cat"),intro:v("pg_intro"),img:v("pg_img")};
+    const ytId=s=>{const m=/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{6,})/.exec(s||'');return m?m[1]:(s||'').trim();};
+    const payload={name:nn,cat:v("pg_cat"),intro:v("pg_intro"),img:v("pg_img"),
+      video_url:v("pg_video"),yt_id:ytId(v("pg_yt")),live_url:ytId(v("pg_liveurl")),
+      is_live:$("pg_live").checked};
     (async()=>{
       setSync('saving');
       try{
@@ -959,7 +1001,10 @@ window.editProgram=name=>{
         if(e1)throw e1;
         // 2) 節目主視覺
         const {error:e2}=await sb.from('program_art')
-          .upsert({name:payload.name,img:payload.img||null,intro:payload.intro,updated_at:new Date().toISOString()});
+          .upsert({name:payload.name,img:payload.img||null,intro:payload.intro,
+            video_url:payload.video_url||null,yt_id:payload.yt_id||null,
+            live_url:payload.live_url||null,is_live:payload.is_live,
+            updated_at:new Date().toISOString()});
         if(e2)throw e2;
         if(nn!==name){ await sb.from('program_art').delete().eq('name',name); }
         await loadProgramArt(); await loadEvLite(); await syncPull();
@@ -967,6 +1012,28 @@ window.editProgram=name=>{
       }catch(err){ setSync('err'); toast('儲存失敗：'+(err.message||err)); }
     })();
   });
+  // 影音即時預覽
+  (function(){
+    const box=$("mediaPreview"),liveBox=$("liveBox");
+    const ytId=s=>{const m=/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{6,})/.exec(s||'');return m?m[1]:(s||'').trim();};
+    const draw=()=>{
+      const live=$("pg_live").checked, lurl=ytId(v("pg_liveurl")), yt=ytId(v("pg_yt")), vid=v("pg_video");
+      liveBox.classList.toggle('on',live);
+      let html='',label='';
+      if(live&&lurl){label='🔴 直播中（前台會即時嵌入）';
+        html=`<iframe src="https://www.youtube.com/embed/${lurl}" frameborder="0" allowfullscreen></iframe>`;}
+      else if(yt){label='▶ YouTube 預告';
+        html=`<iframe src="https://www.youtube.com/embed/${yt}" frameborder="0" allowfullscreen></iframe>`;}
+      else if(vid){label='▶ 影片檔';
+        html=`<video src="${esc(vid)}" controls preload="metadata"></video>`;}
+      else {label='';html='';}
+      box.innerHTML=html?`<label style="display:block;font-size:12px;color:var(--muted);margin-bottom:7px">${label}</label>
+        <div class="media-pre">${html}</div>`:'';
+    };
+    ['pg_liveurl','pg_yt','pg_video'].forEach(id=>$(id).addEventListener('input',draw));
+    $("pg_live").addEventListener('change',draw);
+    draw();
+  })();
   // 主視覺上傳
   (function(){
     const pre=$("pgImgPre"),inp=$("pg_img"),file=$("pg_imgFile"),clr=$("pg_imgClear");

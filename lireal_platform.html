@@ -375,6 +375,22 @@
   .ev-hero{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line);
     aspect-ratio:21/9;min-height:260px;background:#151020 center/cover no-repeat;box-shadow:var(--shadow)}
   .ev-hero .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,18,.25),rgba(10,6,18,.92))}
+  /* 影音播放器 */
+  .ev-hero.has-media{background:#000;aspect-ratio:16/9}
+  .ev-embed{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;object-fit:cover}
+  .ev-title{margin-top:20px}
+  .ev-title h1{font-size:30px;font-weight:800;line-height:1.25;margin-bottom:11px}
+  .ev-title .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .ev-title .chips span{background:var(--brand-soft);border:1px solid var(--line);color:var(--brand3);
+    border-radius:999px;padding:6px 14px;font-size:12px}
+  .live-tag{position:absolute;top:16px;left:16px;z-index:5;display:flex;align-items:center;gap:7px;
+    background:var(--live);color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:9px;
+    letter-spacing:1px;box-shadow:0 6px 18px rgba(255,77,94,.45)}
+  .live-tag.sm{top:11px;left:11px;padding:5px 11px;font-size:11px}
+  .play-ic{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;
+    border-radius:50%;background:rgba(255,255,255,.16);backdrop-filter:blur(5px);
+    border:1px solid rgba(255,255,255,.4);display:grid;place-items:center;color:#fff;font-size:18px;pointer-events:none}
+  @media(max-width:900px){ .ev-title h1{font-size:23px} }
   .ev-hero .cap{position:absolute;left:0;right:0;bottom:0;padding:28px 26px}
   .ev-hero h1{font-size:32px;font-weight:800;line-height:1.25;margin-bottom:10px}
   .ev-hero .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -1209,6 +1225,7 @@ try{
 }catch(e){console.error('Supabase 初始化失敗',e);}
 
 let PROGRAM_ART={};   // 節目名稱 → 主視覺
+let PROGRAM_MEDIA={}; // 節目名稱 → {video, yt, live, isLive}
 let CURRENT='home';   // 目前分頁（提前宣告：renderAll 會用到，避免 TDZ 錯誤）
 /* 共用的字串跳脫工具（函式宣告會被提升，任何渲染函式都能安全使用） */
 function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -1237,10 +1254,17 @@ async function loadCloud(){
       sb.from('creators').select('*'), sb.from('products').select('*'),
       sb.from('settings').select('*')
     ]);
-    // 節目主視覺：同名場次共用一張圖
+    // 節目主視覺與影音：同名場次共用
     try{
-      const pa=await sb.from('program_art').select('name,img');
-      if(!pa.error){PROGRAM_ART={};(pa.data||[]).forEach(r=>{if(r.img)PROGRAM_ART[r.name]=r.img;});}
+      const pa=await sb.from('program_art').select('*');
+      if(!pa.error){
+        PROGRAM_ART={};PROGRAM_MEDIA={};
+        (pa.data||[]).forEach(r=>{
+          if(r.img)PROGRAM_ART[r.name]=r.img;
+          if(r.video_url||r.yt_id||r.live_url||r.is_live)
+            PROGRAM_MEDIA[r.name]={video:r.video_url||'',yt:r.yt_id||'',live:r.live_url||'',isLive:!!r.is_live};
+        });
+      }
     }catch(e){}
     if(ve.error||ev.error||cr.error||pr.error){console.warn('讀取線上資料失敗');return false;}
     const venues=(ve.data||[]).map(r=>({id:r.id,name:r.name,rows:r.n_rows,cols:r.n_cols,
@@ -1436,7 +1460,10 @@ function renderPrograms2(el,lim){
   (el||$("ticketGrid")).innerHTML=list.length?list.map((g,i)=>`
     <div class="pgcard" onclick="openProgram('${escAttr(g.name)}')">
       <div class="pic" style="background-image:url('${g.img}')">
-        <div class="badge-n">${g.count} 個場次</div>
+        ${(PROGRAM_MEDIA[g.name]||{}).isLive&&(PROGRAM_MEDIA[g.name]||{}).live
+          ? '<div class="live-tag sm"><span class="pulse"></span>LIVE</div>'
+          : `<div class="badge-n">${g.count} 個場次</div>`}
+        ${(PROGRAM_MEDIA[g.name]||{}).yt||(PROGRAM_MEDIA[g.name]||{}).video?'<div class="play-ic">▶</div>':''}
         ${favBtn('tk:'+g.idx[0])}
       </div>
       <div class="body">
@@ -1464,10 +1491,19 @@ function renderProgramDetail(){
   const g=groupTickets().find(x=>x.name===CUR_PROGRAM);
   if(!g){box.innerHTML='<div class="ev-box"><p>找不到這個節目，可能場次已結束。</p><a class="btn btn-brand" href="/ticket" data-route="ticket">回場域售票</a></div>';return;}
   const MON2={JAN:'01',FEB:'02',MAR:'03',APR:'04',MAY:'05',JUN:'06',JUL:'07',AUG:'08',SEP:'09',OCT:'10',NOV:'11',DEC:'12'};
+  const md=PROGRAM_MEDIA[g.name]||{};
+  const liveOn=md.isLive&&md.live;
+  const heroMedia = liveOn
+    ? `<iframe class="ev-embed" src="https://www.youtube.com/embed/${escH(md.live)}?autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
+    : md.yt ? `<iframe class="ev-embed" src="https://www.youtube.com/embed/${escH(md.yt)}" frameborder="0" allowfullscreen></iframe>`
+    : md.video ? `<video class="ev-embed" src="${escH(md.video)}" controls preload="metadata" poster="${g.img}"></video>`
+    : '';
   box.innerHTML=`
-    <div class="ev-hero" style="background-image:url('${g.img}')">
-      <div class="ov"></div>
-      <div class="cap">
+    <div class="ev-hero ${heroMedia?'has-media':''}" style="background-image:url('${g.img}')">
+      ${heroMedia}
+      ${heroMedia?'':'<div class="ov"></div>'}
+      ${liveOn?'<div class="live-tag"><span class="pulse"></span>LIVE 直播中</div>':''}
+      ${heroMedia?'':`<div class="cap">
         <h1 class="serif">${escH(g.name)}</h1>
         <div class="chips">
           ${g.cat?`<span>${escH(g.cat)}</span>`:''}
@@ -1475,8 +1511,17 @@ function renderProgramDetail(){
           <span>📍 ${escH(g.venues.join('、'))}</span>
           <span>NT$${g.min.toLocaleString()} 起</span>
         </div>
-      </div>
+      </div>`}
     </div>
+    ${heroMedia?`<div class="ev-title">
+      <h1 class="serif">${escH(g.name)}</h1>
+      <div class="chips">
+        ${g.cat?`<span>${escH(g.cat)}</span>`:''}
+        <span>${g.count} 個場次</span>
+        <span>📍 ${escH(g.venues.join('、'))}</span>
+        <span>NT$${g.min.toLocaleString()} 起</span>
+      </div>
+    </div>`:''}
 
     <div class="ev-grid">
       <div>
