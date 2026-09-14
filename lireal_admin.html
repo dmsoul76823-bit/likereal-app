@@ -1753,8 +1753,8 @@ function renderCreators(){
   const q=v("crQ").toLowerCase();
   const l=DB.creators.filter(c=>!q||c.name.toLowerCase().includes(q)||c.slug.includes(q));
   $("crTable").innerHTML=l.length?`<table><thead><tr><th>創作者</th><th>路徑</th><th>類型</th><th>標籤</th><th>粉絲</th><th>人氣</th><th>狀態</th><th></th></tr></thead><tbody>`+
-    l.map(c=>{const im=DB.images[c.slug]||'';return `<tr>
-      <td><div style="display:flex;align-items:center;gap:10px"><div class="thumb-sm" style="${im?`background-image:url('${im}')`:''}"></div>
+    l.map(c=>{const im=DB.images[c.slug]||'',po=DB.images[c.slug+'@pos']||'50% 20%';return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="thumb-sm" style="background-size:cover;background-position:${po};${im?`background-image:url('${im}')`:''}"></div>
       <div><b>${esc(c.name)}</b><br><small style="color:var(--muted)">${esc(c.desc)}</small></div></div></td>
       <td><code style="color:var(--brand3);font-size:12px">/character/${esc(c.slug)}</code></td>
       <td><span class="tag b">${esc(c.type)}</span></td><td><span class="tag ${c.tier==='精選'?'warn':'info'}">${esc(c.tier)}</span></td>
@@ -1766,6 +1766,81 @@ function renderCreators(){
 }
 $("crQ").oninput=renderCreators;
 $("crAdd").onclick=()=>editCr(null);
+/* ===== 圖片裁切器：上傳後可縮放/平移，存的是裁好的圖（前台不需再處理） ===== */
+const CROP={};
+function cropUI(p,ratio,boxW,tip){
+  const boxH=Math.round(boxW/ratio);
+  return `<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <canvas id="${p}_cv" width="${boxW*2}" height="${boxH*2}"
+      style="width:${boxW}px;height:${boxH}px;border-radius:12px;background:#0c0a14;border:1px solid var(--line2);flex:none;cursor:move"></canvas>
+    <div style="flex:1;min-width:230px;display:flex;flex-direction:column;gap:8px">
+      <div class="row-act">
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">上傳圖片<input type="file" accept="image/*" id="${p}_file" hidden></label>
+        <button class="btn btn-ghost btn-sm" id="${p}_reset">重設</button>
+        <button class="btn btn-danger btn-sm" id="${p}_clear">清除</button>
+      </div>
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:7px 10px;align-items:center;font-size:12px;color:var(--muted)">
+        <span>水平</span><input type="range" id="${p}_x" min="0" max="100" value="50">
+        <span>垂直</span><input type="range" id="${p}_y" min="0" max="100" value="50">
+        <span>縮放</span><input type="range" id="${p}_z" min="100" max="300" value="100">
+      </div>
+      <input id="${p}_url" placeholder="或直接貼上圖片網址 https://...">
+      <small style="color:var(--muted);font-size:11px">${tip}</small>
+      <input type="hidden" id="${p}_img">
+    </div>
+  </div>`;
+}
+function mountCrop(p,ratio,outW,initial){
+  const cv=$(p+"_cv"),cx=cv.getContext('2d'),out=$(p+"_img"),url=$(p+"_url");
+  const sx=$(p+"_x"),sy=$(p+"_y"),sz=$(p+"_z");
+  const st={src:null,raw:''};
+  const win=()=>{const s=st.src,z=+sz.value/100;
+    let cw=Math.min(s.naturalWidth,s.naturalHeight*ratio),ch=cw/ratio;
+    cw/=z;ch/=z;
+    return {cw,ch,ox:(s.naturalWidth-cw)*(+sx.value/100),oy:(s.naturalHeight-ch)*(+sy.value/100)};};
+  const draw=()=>{
+    cx.clearRect(0,0,cv.width,cv.height);
+    if(!st.src){cx.fillStyle='#6b6b80';cx.font='16px system-ui';cx.textAlign='center';
+      cx.fillText('尚未設定圖片',cv.width/2,cv.height/2);return;}
+    const w=win();
+    cx.drawImage(st.src,w.ox,w.oy,w.cw,w.ch,0,0,cv.width,cv.height);
+  };
+  const load=(u,keep)=>{
+    if(!u){st.src=null;st.raw='';draw();return;}
+    const im=new Image();
+    if(/^https?:/i.test(u))im.crossOrigin='anonymous';
+    im.onload=()=>{st.src=im;st.raw=u;if(!keep){sx.value=50;sy.value=ratio<1?30:50;sz.value=100;}draw();};
+    im.onerror=()=>{st.src=null;st.raw=u;draw();};
+    im.src=u;
+  };
+  sx.oninput=sy.oninput=sz.oninput=draw;
+  $(p+"_reset").onclick=()=>{sx.value=50;sy.value=ratio<1?30:50;sz.value=100;draw();};
+  $(p+"_clear").onclick=()=>{url.value='';load('');};
+  url.addEventListener('input',()=>load(url.value.trim()));
+  $(p+"_file").onchange=e=>{const f=e.target.files[0];if(!f)return;
+    const rd=new FileReader();rd.onload=()=>{url.value='';load(rd.result);};rd.readAsDataURL(f);e.target.value='';};
+  /* 拖曳平移 */
+  let drag=null;
+  cv.addEventListener('pointerdown',e=>{if(!st.src)return;drag={x:e.clientX,y:e.clientY,px:+sx.value,py:+sy.value};cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener('pointermove',e=>{if(!drag)return;
+    sx.value=Math.max(0,Math.min(100,drag.px-(e.clientX-drag.x)/cv.clientWidth*100));
+    sy.value=Math.max(0,Math.min(100,drag.py-(e.clientY-drag.y)/cv.clientHeight*100));draw();});
+  cv.addEventListener('pointerup',()=>drag=null);
+  cv.addEventListener('pointercancel',()=>drag=null);
+  load(initial||'',true);
+  CROP[p]={
+    /* 匯出裁好的圖；外部網址若無法讀取像素則原樣保留網址 */
+    value(){
+      if(!st.src)return st.raw&&!/^data:/.test(st.raw)?st.raw:'';
+      const w=win();
+      const ow=Math.max(320,Math.min(outW,Math.round(w.cw))), oh=Math.round(ow/ratio);
+      const c2=document.createElement('canvas');c2.width=ow;c2.height=oh;
+      c2.getContext('2d').drawImage(st.src,w.ox,w.oy,w.cw,w.ch,0,0,ow,oh);
+      try{return c2.toDataURL('image/jpeg',0.88);}catch(err){return st.raw;}
+    }};
+  draw();
+}
+
 window.editCr=id=>{
   const c=id?DB.creators.find(x=>x.id===id):{name:'',slug:'',type:'治癒系',online:true,fans:'0',hot:'0',tier:'NEW',desc:''};
   const cImg=(c.slug&&DB.images[c.slug])||'';
@@ -1780,43 +1855,21 @@ window.editCr=id=>{
     <div class="fld full"><label>簡介</label><textarea id="c_desc">${esc(c.desc)}</textarea></div>
     <div class="fld full">
       <label>角色照</label>
-      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
-        <div id="c_imgPre" class="thumb-sm" style="width:132px;height:176px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;${cImg?`background-image:url('${cImg}')`:''}">${cImg?'':'尚未設定'}</div>
-        <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px">
-          <div class="row-act">
-            <label class="btn btn-ghost btn-sm" style="cursor:pointer">上傳圖片<input type="file" accept="image/*" id="c_imgFile" hidden></label>
-            <button class="btn btn-danger btn-sm" id="c_imgClear">清除</button>
-          </div>
-          <input id="c_img" value="${esc(cImg)}" placeholder="或直接貼上圖片網址 https://...">
-        </div>
-      </div>
+      ${cropUI('c',3/4,138,'左邊的框就是前台卡片的實際比例：可直接拖曳畫面，或用縮放把人物拉進框內，存檔時會照這個範圍裁切')}
     </div>
     <div class="fld full"><div class="spec"><b>📐 角色照建議規格</b>尺寸：<code>900 × 1200 px</code>（比例 3:4）· 格式：<code>JPG / WebP</code> · 建議 &lt; 350 KB<br>人物置中、預留頭部空間，避免臉部被卡片裁切</div></div>
   </div>`,()=>{
     if(!v("c_name")||!v("c_slug")){toast('名稱與 slug 為必填');return false;}
     const o={name:v("c_name"),slug:v("c_slug"),type:v("c_type"),tier:v("c_tier"),fans:v("c_fans"),hot:v("c_hot"),online:v("c_on")==='1',desc:v("c_desc")};
     // 角色照存在 images 設定，key＝slug（改 slug 時一併搬移）
-    const img=$("c_img").value.trim();
-    if(c.slug&&c.slug!==o.slug)delete DB.images[c.slug];
-    if(img)DB.images[o.slug]=img; else delete DB.images[o.slug];
+    const img=CROP.c.value();
+    if(c.slug&&c.slug!==o.slug){delete DB.images[c.slug];delete DB.images[c.slug+'@pos'];}
+    if(img){DB.images[o.slug]=img;delete DB.images[o.slug+'@pos'];}
+    else {delete DB.images[o.slug];delete DB.images[o.slug+'@pos'];}
     if(id)Object.assign(DB.creators.find(x=>x.id===id),o); else DB.creators.unshift(Object.assign({id:Date.now()},o));
     renderCreators();toast(id?'創作者已更新':'創作者已新增');
   });
-  /* 角色照上傳／預覽 */
-  (function(){
-    const pre=$("c_imgPre"),inp=$("c_img"),file=$("c_imgFile"),clr=$("c_imgClear");
-    const setImg=u=>{inp.value=u||'';pre.style.backgroundImage=u?`url('${u}')`:'';pre.textContent=u?'':'尚未設定';};
-    inp.addEventListener('input',()=>setImg(inp.value.trim()));
-    clr.onclick=()=>setImg('');
-    file.onchange=e=>{const f=e.target.files[0];if(!f)return;
-      const rd=new FileReader();
-      rd.onload=()=>{const im=new Image();
-        im.onload=()=>{let w=im.width,h=im.height,M=900;if(w>M){h=Math.round(h*M/w);w=M;}
-          const cv=document.createElement('canvas');cv.width=w;cv.height=h;
-          cv.getContext('2d').drawImage(im,0,0,w,h);setImg(cv.toDataURL('image/jpeg',0.88));};
-        im.onerror=()=>setImg(rd.result);im.src=rd.result;};
-      rd.readAsDataURL(f);e.target.value='';};
-  })();
+  mountCrop('c',3/4,900,cImg);
 };
 window.delCr=id=>{if(confirm('確定刪除此創作者？')){DB.creators=DB.creators.filter(x=>x.id!==id);save();renderCreators();toast('已刪除');}};
 
@@ -1825,8 +1878,8 @@ function renderProducts(){
   const q=v("pdQ").toLowerCase();
   const l=DB.products.filter(p=>!q||p.name.toLowerCase().includes(q));
   $("pdTable").innerHTML=l.length?`<table><thead><tr><th>商品</th><th>售價</th><th>原價</th><th>庫存</th><th>標籤</th><th>上架</th><th></th></tr></thead><tbody>`+
-    l.map(p=>{const im=DB.images[p.key]||'';return `<tr>
-      <td><div style="display:flex;align-items:center;gap:10px"><div class="thumb-sm" style="height:44px;${im?`background-image:url('${im}')`:''}"></div><b>${esc(p.name)}</b></div></td>
+    l.map(p=>{const im=DB.images[p.key]||'',po=DB.images[p.key+'@pos']||'50% 50%';return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="thumb-sm" style="height:44px;background-size:cover;background-position:${po};${im?`background-image:url('${im}')`:''}"></div><b>${esc(p.name)}</b></div></td>
       <td style="color:var(--brand3);font-weight:700">NT$${p.price.toLocaleString()}</td>
       <td style="color:var(--muted)">${p.old?'NT$'+p.old.toLocaleString():'—'}</td>
       <td>${p.stock}${p.stock<50?' <span class="tag warn">低庫存</span>':''}</td>
@@ -1851,42 +1904,20 @@ window.editPd=id=>{
     <div class="fld"><label>上架狀態</label><select id="d_on"><option value="1" ${p.on?'selected':''}>上架</option><option value="0" ${!p.on?'selected':''}>下架</option></select></div>
     <div class="fld full">
       <label>商品圖</label>
-      <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
-        <div id="d_imgPre" class="thumb-sm" style="width:150px;height:150px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;${pImg?`background-image:url('${pImg}')`:''}">${pImg?'':'尚未設定'}</div>
-        <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px">
-          <div class="row-act">
-            <label class="btn btn-ghost btn-sm" style="cursor:pointer">上傳圖片<input type="file" accept="image/*" id="d_imgFile" hidden></label>
-            <button class="btn btn-danger btn-sm" id="d_imgClear">清除</button>
-          </div>
-          <input id="d_img" value="${esc(pImg)}" placeholder="或直接貼上圖片網址 https://...">
-        </div>
-      </div>
+      ${cropUI('d',1,150,'左邊的框就是前台商品卡的實際比例：可直接拖曳畫面或縮放，存檔時會照這個範圍裁切')}
     </div>
     <div class="fld full"><div class="spec"><b>📐 商品圖建議規格</b>尺寸：<code>1000 × 1000 px</code>（正方形 1:1）· 格式：<code>JPG / PNG（去背用 PNG）</code> · 建議 &lt; 300 KB<br>商品置中、深色或純色背景最能融入前台暗色版面</div></div>
   </div>`,()=>{
     if(!v("d_name")){toast('請填寫商品名稱');return false;}
     const o={key:v("d_key"),name:v("d_name"),badge:v("d_badge"),price:+v("d_price")||0,old:+v("d_old")||0,stock:+v("d_stock")||0,on:v("d_on")==='1'};
-    const img=$("d_img").value.trim();
-    if(p.key&&p.key!==o.key)delete DB.images[p.key];
-    if(img)DB.images[o.key]=img; else delete DB.images[o.key];
+    const img=CROP.d.value();
+    if(p.key&&p.key!==o.key){delete DB.images[p.key];delete DB.images[p.key+'@pos'];}
+    if(img){DB.images[o.key]=img;delete DB.images[o.key+'@pos'];}
+    else {delete DB.images[o.key];delete DB.images[o.key+'@pos'];}
     if(id)Object.assign(DB.products.find(x=>x.id===id),o); else DB.products.unshift(Object.assign({id:Date.now()},o));
     renderProducts();toast(id?'商品已更新':'商品已新增');
   });
-  /* 商品圖上傳／預覽 */
-  (function(){
-    const pre=$("d_imgPre"),inp=$("d_img"),file=$("d_imgFile"),clr=$("d_imgClear");
-    const setImg=u=>{inp.value=u||'';pre.style.backgroundImage=u?`url('${u}')`:'';pre.textContent=u?'':'尚未設定';};
-    inp.addEventListener('input',()=>setImg(inp.value.trim()));
-    clr.onclick=()=>setImg('');
-    file.onchange=e=>{const f=e.target.files[0];if(!f)return;
-      const rd=new FileReader();
-      rd.onload=()=>{const im=new Image();
-        im.onload=()=>{let w=im.width,h=im.height,M=1000;if(Math.max(w,h)>M){const s=M/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
-          const cv=document.createElement('canvas');cv.width=w;cv.height=h;
-          cv.getContext('2d').drawImage(im,0,0,w,h);setImg(cv.toDataURL('image/jpeg',0.88));};
-        im.onerror=()=>setImg(rd.result);im.src=rd.result;};
-      rd.readAsDataURL(f);e.target.value='';};
-  })();
+  mountCrop('d',1,1000,pImg);
 };
 window.delPd=id=>{if(confirm('確定刪除此商品？')){DB.products=DB.products.filter(x=>x.id!==id);save();renderProducts();toast('已刪除');}};
 

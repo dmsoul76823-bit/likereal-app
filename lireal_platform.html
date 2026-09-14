@@ -1357,6 +1357,8 @@ let OV={}; try{OV=JSON.parse(localStorage.getItem('OM_IMG_OV')||'{}')||{};}catch
 function saveOV(){try{localStorage.setItem('OM_IMG_OV',JSON.stringify(OV));}catch(e){}}
 syncImages(); applyADB();   // 套用後台資料（節目、商品、圖片）
 function thumb(key,fallback){return OV[key]||IMG[key]||fallback;}
+/* 圖片焦點：後台可拖曳決定人物要露出哪一塊，存成 "<key>@pos" = "50% 30%" */
+function posOf(key){const p=OV[key+'@pos']||IMG[key+'@pos'];return p||'center top';}
 function avatarSVG(p){return uri(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'>
 <defs>
 <linearGradient id='b' x1='0' y1='0' x2='0.55' y2='1'><stop offset='0' stop-color='${p[0]}'/><stop offset='1' stop-color='${p[1]}'/></linearGradient>
@@ -1436,7 +1438,7 @@ function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=takeN(programs,lim
 
 function renderLives(el,lim){(el||$("liveGrid")).innerHTML=takeN(lives,lim).map((l,i)=>`
   <div class="card">
-    <div class="prog-thumb" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}')">
+    <div class="prog-thumb" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}');background-position:${posOf(l.img)}">
       <div class="lb"><span class="pulse"></span>LIVE</div>
       <div class="pv">👁 ${l.v}</div>
       ${favBtn('live:'+i)}
@@ -1682,7 +1684,7 @@ function renderTickets(el,lim){(el||$("ticketGrid")).innerHTML=takeN(tickets,lim
 
 function renderShop(el,lim){(el||$("shopGrid")).innerHTML=takeN(products,lim).map((p,i)=>`
   <div class="card">
-    <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
+    <div class="prod-thumb" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}');background-position:${posOf('p'+i)}">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
     <div class="prod-body">
       <h4>${p.name}</h4><div class="sub">${p.sub}</div><div class="stars">${p.stars}</div>
       <div class="buy"><div class="price">${p.old?`<s>NT$${p.old}</s>`:""}NT$${p.price}</div>
@@ -1744,7 +1746,7 @@ function goOM(slug){window.location.href=omURL(slug);}   // 點卡片直接進�
 function enterOM(){window.location.href=OM_BASE;}
 function renderOM(el,lim){(el||$("omGrid")).innerHTML=takeN(creators,lim).map(c=>`
   <div class="om-card" onclick="goOM('${c.slug}')" title="進入 ${c.name} 的 OnlyMate 角色頁">
-    <div class="om-photo" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}')">
+    <div class="om-photo" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}');background-position:${posOf(c.slug)}">
       <div class="tl">
         <span class="om-tag ${c.tier}">${c.tier==='feat'?'精選':'NEW'}</span>
         <span class="om-tag type">${c.type}</span>
@@ -2350,7 +2352,7 @@ programs.forEach((p,i)=>FB['prog'+i]=posterSVG(p.pal));
 creators.forEach(c=>FB[c.slug]=avatarSVG(PAL[c.type]));
 products.forEach((p,i)=>FB['p'+i]=productSVG(p.kind,p.pal));
 function curURL(key){return OV[key]||IMG[key]||FB[key]||'';}
-function updateKey(key,url){document.querySelectorAll('[data-imgkey="'+key+'"]').forEach(el=>{el.style.backgroundImage="url('"+url+"')";});}
+function updateKey(key,url){document.querySelectorAll('[data-imgkey="'+key+'"]').forEach(el=>{el.style.backgroundImage="url('"+url+"')";el.style.backgroundPosition=posOf(key);});}
 function refreshAdThumb(key){const t=document.querySelector('[data-adthumb="'+key+'"]');if(t)t.style.backgroundImage="url('"+curURL(key)+"')";}
 function setKey(key,url){OV[key]=url;saveOV();updateKey(key,url);refreshAdThumb(key);}
 function resetKey(key){delete OV[key];saveOV();updateKey(key,IMG[key]||FB[key]||'');refreshAdThumb(key);}
