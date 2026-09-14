@@ -126,6 +126,11 @@
   .tt input:focus{border-color:var(--brand)}
   .xbtn{background:rgba(255,80,110,.12);border:1px solid rgba(255,80,110,.3);color:#ff9db0;border-radius:9px;width:34px;height:34px;cursor:pointer;flex:none}
 
+  /* 危險區 */
+  .danger-zone{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    border:1px solid rgba(255,107,129,.35);background:rgba(255,107,129,.07);border-radius:13px;padding:15px 18px;margin-top:6px}
+  .danger-zone b{display:block;font-size:14px;color:#ff9db0}
+  .danger-zone small{color:var(--muted);font-size:12px}
   /* 影音設定 */
   .live-box{border:1px solid var(--line2);border-radius:13px;padding:14px 16px;background:var(--bg2);transition:.2s}
   .live-box.on{border-color:rgba(255,107,129,.5);background:rgba(255,107,129,.08)}
@@ -938,15 +943,73 @@ function renderEvents(){
 }
 $("evQ").oninput=renderEvents;
 
+/* 依場地把座位自動分配給各票種：包廂票種分包廂，一般票種依排數由前而後平分 */
+function autoAssignSeats(vn,tiers){
+  const off=new Set(vn.off||[]);
+  const boxSeats=new Set();(vn.boxes||[]).forEach(b=>b.seats.forEach(s=>boxSeats.add(s)));
+  const boxTiers=tiers.filter(t=>t.unit==='box');
+  const seatTiers=tiers.filter(t=>t.unit!=='box');
+  boxTiers.forEach(t=>t.seats=[]);
+  (vn.boxes||[]).forEach((b,bi)=>{ if(boxTiers.length)boxTiers[bi%boxTiers.length].seats.push(...b.seats); });
+  const rows=[];
+  for(let r=0;r<vn.rows;r++){
+    const cells=[];
+    for(let c=0;c<vn.cols;c++){const id=r+'-'+c;if(!off.has(id)&&!boxSeats.has(id))cells.push(id);}
+    if(cells.length)rows.push(cells);
+  }
+  seatTiers.forEach(t=>t.seats=[]);
+  if(seatTiers.length){
+    const per=Math.ceil(rows.length/seatTiers.length);
+    rows.forEach((cells,ri)=>{
+      const ti=Math.min(seatTiers.length-1,Math.floor(ri/per));
+      seatTiers[ti].seats.push(...cells);
+    });
+  }
+  return tiers;
+}
+
 /* ---------- 編輯節目（套用到該節目所有場次） ---------- */
+let PG_TIERS=[], PG_VENUE=null;
+function pgTierRows(){
+  const vn=(DB.venues||[]).find(x=>x.id===PG_VENUE);
+  const box=document.getElementById('pgTierBox'); if(!box)return;
+  box.innerHTML=PG_TIERS.map((t,i)=>`
+    <div class="tk-row">
+      <div class="sw" style="background:${ZONE_COLORS[i%ZONE_COLORS.length]};border-color:transparent"></div>
+      <input placeholder="票種名稱" value="${esc(t.n||'')}" oninput="PG_TIERS[${i}].n=this.value">
+      <input type="number" placeholder="票價" value="${t.p||0}" oninput="PG_TIERS[${i}].p=+this.value||0">
+      <select onchange="PG_TIERS[${i}].unit=this.value;pgReassign()">
+        <option value="seat" ${t.unit!=='box'?'selected':''}>每席販售</option>
+        <option value="box" ${t.unit==='box'?'selected':''}>包廂整間</option>
+      </select>
+      <span class="cnt">${(t.seats||[]).length} 席</span>
+      <button class="xbtn" onclick="PG_TIERS.splice(${i},1);pgReassign()">✕</button>
+    </div>`).join('')
+    +`<div style="font-size:12px;color:var(--muted);margin-top:6px">
+        場地「${esc(vn?vn.name:'—')}」共 ${vn?(vn.rows*vn.cols-(vn.off||[]).length):0} 席 ·
+        已分配 ${PG_TIERS.reduce((s,t)=>s+(t.seats||[]).length,0)} 席</div>`;
+}
+window.pgReassign=()=>{
+  const vn=(DB.venues||[]).find(x=>x.id===PG_VENUE);
+  if(vn)autoAssignSeats(vn,PG_TIERS);
+  pgTierRows();
+};
 window.editProgram=name=>{
   const g=groupPrograms().find(x=>x.name===name); if(!g)return;
   const art=(PART.find(p=>p.name===name)||{})||{};
   const sample=(DB.events||[]).find(e=>e.name===name)||{};
+  const sessVenues=[...new Set(EVLITE.filter(e=>e.name===name).map(e=>e.venue_id))];
+  PG_VENUE=sessVenues[0]||null;
+  PG_TIERS=JSON.parse(JSON.stringify(sample.tickets||[]));
   openM('編輯節目 · '+name,`<div class="fgrid">
     <div class="fld full"><label>節目名稱（修改後會套用到全部 ${g.count} 個場次）</label><input id="pg_name" value="${esc(name)}"></div>
     <div class="fld"><label>類型</label><select id="pg_cat">${["沉浸場域","3D 場域","見面會","特展","派對","工作坊"].map(c=>`<option ${c===g.cat?'selected':''}>${c}</option>`).join('')}</select></div>
     <div class="fld"><label>場次數</label><input value="${g.count} 場（${g.first} ~ ${g.last}）" readonly style="opacity:.7"></div>
+    <div class="fld"><label>場地（套用到全部場次）</label>
+      <select id="pg_venue">${(DB.venues||[]).map(x=>`<option value="${x.id}" ${x.id===PG_VENUE?'selected':''}>${esc(x.name)}（${x.rows*x.cols-(x.off||[]).length} 席）</option>`).join('')}</select>
+      ${sessVenues.length>1?`<small style="color:var(--warn);font-size:11px;display:block;margin-top:5px">⚠ 此節目目前橫跨 ${sessVenues.length} 個場地，儲存後會統一為上方選擇的場地</small>`:''}
+    </div>
+    <div class="fld"><label>場地顯示名稱（前台）</label><input id="pg_venuetxt" value="${esc(sample.venue||'')}" placeholder="D 廳 · 微風廣場 9F"></div>
     <div class="fld tall full"><label>節目介紹</label><textarea id="pg_intro" placeholder="這段會套用到所有場次">${esc(art.intro||sample.intro||'')}</textarea></div>
     <div class="fld full"><label>主視覺（此節目所有場次共用）</label>
       <div class="evimg">
@@ -985,18 +1048,47 @@ window.editProgram=name=>{
         影片檔建議 &lt; 20 MB、H.264 編碼；YouTube 只需填 ID，不用整串網址也可以</div>
     </div>
     <div class="fld full" id="mediaPreview"></div>
+
+    <div class="fld full" style="margin-top:6px">
+      <label style="font-size:14px;color:var(--brand3);font-weight:700">🎟️ 票種與票價（套用到全部 ${g.count} 個場次）</label>
+      <div style="display:grid;grid-template-columns:auto 1.5fr .9fr .9fr auto auto;gap:9px;font-size:11px;color:var(--muted);margin:8px 2px 4px">
+        <span></span><span>票種名稱</span><span>票價</span><span>販售方式</span><span style="text-align:center">席次</span><span></span>
+      </div>
+      <div id="pgTierBox"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px"
+        onclick="PG_TIERS.push({n:'',p:0,unit:'seat',seats:[]});pgReassign()">＋ 新增票種</button>
+      <div class="spec"><b>💡 座位怎麼分配</b>「包廂整間」票種會分到場地的包廂；一般票種依<b>排數由前而後平分</b>（第一個票種在最前排）。<br>
+        調整場地或票種後會自動重新分配，需要細調某一場的座位範圍，可到「場次」裡用座位圖編輯。</div>
+    </div>
+
+    <div class="fld full">
+      <div class="danger-zone">
+        <div>
+          <b>刪除整檔節目</b>
+          <small>會一併刪除這 ${g.count} 個場次與其電子票券，無法復原</small>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteProgram('${esc(name).replace(/'/g,"\\'")}')">刪除節目</button>
+      </div>
+    </div>
   </div>`,()=>{
     const nn=v("pg_name").trim(); if(!nn){toast('請填寫節目名稱');return false;}
     const ytId=s=>{const m=/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{6,})/.exec(s||'');return m?m[1]:(s||'').trim();};
     const payload={name:nn,cat:v("pg_cat"),intro:v("pg_intro"),img:v("pg_img"),
       video_url:v("pg_video"),yt_id:ytId(v("pg_yt")),live_url:ytId(v("pg_liveurl")),
       is_live:$("pg_live").checked};
+    const tiers=PG_TIERS.filter(t=>(t.n||'').trim());
+    if(!tiers.length){toast('至少需要一種票種');return false;}
+    const cap=tiers.reduce((s,t)=>s+(t.seats||[]).length,0);
+    if(!cap){toast('票種沒有分配到座位，請確認場地設定');return false;}
+    const vid=+v("pg_venue")||PG_VENUE;
+    const vtxt=v("pg_venuetxt");
     (async()=>{
       setSync('saving');
       try{
-        // 1) 套用到所有同名場次
+        // 1) 套用到所有同名場次（含場地、票種、容量）
         const {error:e1}=await sb.from('events')
-          .update({name:payload.name,cat:payload.cat,intro:payload.intro})
+          .update({name:payload.name,cat:payload.cat,intro:payload.intro,
+                   venue_id:vid,venue:vtxt,tickets:tiers,cap:cap})
           .eq('name',name);
         if(e1)throw e1;
         // 2) 節目主視覺
@@ -1011,6 +1103,15 @@ window.editProgram=name=>{
         renderEvents(); setSync('ok'); toast(`已套用到 ${g.count} 個場次`);
       }catch(err){ setSync('err'); toast('儲存失敗：'+(err.message||err)); }
     })();
+  });
+  // 票種列表 + 場地切換
+  pgTierRows();
+  $("pg_venue").addEventListener('change',()=>{
+    PG_VENUE=+$("pg_venue").value;
+    const vn=(DB.venues||[]).find(x=>x.id===PG_VENUE);
+    if(vn&&!v("pg_venuetxt").trim())$("pg_venuetxt").value=vn.name;
+    pgReassign();
+    toast('已依新場地重新分配座位');
   });
   // 影音即時預覽
   (function(){
@@ -1049,6 +1150,31 @@ window.editProgram=name=>{
         im.onerror=()=>setImg(rd.result);im.src=rd.result;};
       rd.readAsDataURL(f);e.target.value='';};
   })();
+};
+
+/* 刪除整檔節目（含所有場次與票券） */
+window.deleteProgram=async name=>{
+  const rows=EVLITE.filter(e=>e.name===name);
+  const sold=rows.reduce((s,e)=>s+(e.sold||0),0);
+  let msg='確定刪除「'+name+'」？\n\n將刪除 '+rows.length+' 個場次';
+  if(sold>0)msg+='\n⚠ 其中已售出 '+sold+' 張票，票券也會一併刪除';
+  msg+='\n\n此動作無法復原。';
+  if(!confirm(msg))return;
+  if(sold>0&&!confirm('再次確認：這檔節目已經賣出 '+sold+' 張票，仍要刪除嗎？'))return;
+  setSync('saving');
+  try{
+    const ids=rows.map(r=>r.id);
+    for(let i=0;i<ids.length;i+=200){
+      const chunk=ids.slice(i,i+200);
+      await sb.from('passes').delete().in('event_id',chunk);
+      const {error}=await sb.from('events').delete().in('id',chunk);
+      if(error)throw error;
+    }
+    await sb.from('program_art').delete().eq('name',name);
+    closeM();
+    await loadProgramArt();await loadEvLite();await syncPull();
+    renderEvents();setSync('ok');toast('已刪除節目「'+esc(name)+'」與其 '+rows.length+' 個場次');
+  }catch(e){setSync('err');toast('刪除失敗：'+(e.message||e));}
 };
 
 /* ---------- 場次管理 ---------- */
