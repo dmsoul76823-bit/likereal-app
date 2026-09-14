@@ -90,6 +90,12 @@
   .card:hover{border-color:var(--line);box-shadow:var(--shadow)}
   /* 立體感：卡片跟隨滑鼠傾斜 + 縮圖 cover */
   .prog-thumb,.prod-thumb,.om-photo{background-size:cover;background-position:center top;background-repeat:no-repeat}
+  /* 完整呈現整張圖：圖片不裁切（contain），四周用同一張圖的模糊放大版填滿 */
+  .fitimg{position:relative;background-size:0 0}
+  .fitimg::before,.fitimg::after{content:'';position:absolute;inset:0;background-image:inherit;background-repeat:no-repeat;pointer-events:none}
+  .fitimg::before{background-size:cover;background-position:center;filter:blur(26px) brightness(.5) saturate(1.15);transform:scale(1.18)}
+  .fitimg::after{background-size:contain;background-position:center;z-index:1}
+  .fitimg>*{position:absolute;z-index:2}
   .grid{perspective:1100px}.om-grid{perspective:1100px}
   .card,.om-card{transform-style:preserve-3d;transform-style:preserve-3d;will-change:transform}
   .card .prog-body,.card .prod-body,.card .live-body,.om-card .om-body{transform:translateZ(30px)}
@@ -1438,7 +1444,7 @@ function renderPrograms(el,lim){(el||$("progGrid")).innerHTML=takeN(programs,lim
 
 function renderLives(el,lim){(el||$("liveGrid")).innerHTML=takeN(lives,lim).map((l,i)=>`
   <div class="card">
-    <div class="prog-thumb" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}');background-position:${posOf(l.img)}">
+    <div class="prog-thumb fitimg" data-imgkey="${l.img}" style="aspect-ratio:3/4;background-image:url('${thumb(l.img,avatarSVG(PAL[l.type]))}')">
       <div class="lb"><span class="pulse"></span>LIVE</div>
       <div class="pv">👁 ${l.v}</div>
       ${favBtn('live:'+i)}
@@ -1746,7 +1752,7 @@ function goOM(slug){window.location.href=omURL(slug);}   // 點卡片直接進�
 function enterOM(){window.location.href=OM_BASE;}
 function renderOM(el,lim){(el||$("omGrid")).innerHTML=takeN(creators,lim).map(c=>`
   <div class="om-card" onclick="goOM('${c.slug}')" title="進入 ${c.name} 的 OnlyMate 角色頁">
-    <div class="om-photo" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}');background-position:${posOf(c.slug)}">
+    <div class="om-photo fitimg" data-imgkey="${c.slug}" style="background-image:url('${thumb(c.slug,avatarSVG(PAL[c.type]))}')">
       <div class="tl">
         <span class="om-tag ${c.tier}">${c.tier==='feat'?'精選':'NEW'}</span>
         <span class="om-tag type">${c.type}</span>
