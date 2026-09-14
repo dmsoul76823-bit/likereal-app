@@ -30,6 +30,11 @@
     html{scrollbar-width:none;-ms-overflow-style:none}
     ::-webkit-scrollbar{width:0;height:0}
   }
+  /* 觸控裝置（手機／平板）一律不顯示捲軸，不論螢幕寬度 */
+  @media(hover:none),(pointer:coarse){
+    html,body{scrollbar-width:none;-ms-overflow-style:none}
+    ::-webkit-scrollbar{width:0;height:0;display:none}
+  }
   .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
   .demo-flag{position:fixed;bottom:14px;left:14px;z-index:200;background:var(--brand-soft);border:1px solid var(--line);
     color:var(--brand3);font-size:11px;letter-spacing:1px;padding:6px 12px;border-radius:999px;backdrop-filter:blur(8px)}
