@@ -269,6 +269,41 @@
   .cell.sold{background:#2a2438!important;opacity:.5;cursor:not-allowed}
   .cell.sel{background:linear-gradient(135deg,var(--brand),var(--rose))!important;border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
   .smodal{width:1000px}
+  /* 購票步驟 */
+  .step-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .step-bar span{padding:7px 14px;border-radius:999px;border:1px solid var(--line2)}
+  .step-bar span.on{background:var(--brand-soft);border-color:var(--line);color:var(--brand3);font-weight:700}
+  .step-bar i{opacity:.5;font-style:normal}
+  .tier-list{display:flex;flex-direction:column;gap:11px}
+  .tier{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;cursor:pointer;
+    background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);
+    border-radius:15px;padding:16px 18px;transition:.2s}
+  .tier:hover{border-color:var(--brand);transform:translateX(3px)}
+  .tier.out{opacity:.45;cursor:not-allowed}
+  .tier.out:hover{transform:none;border-color:var(--line2)}
+  .tier .sw{width:16px;height:16px;border-radius:5px;flex:none}
+  .tier .ti b{display:block;font-size:16px}
+  .tier .ti small{color:var(--muted);font-size:12px}
+  .tier .tp{text-align:right}
+  .tier .tp .p{font-size:19px;font-weight:800;color:var(--brand3)}
+  .tier .tp .lf{font-size:12px;margin-top:3px}
+  .tier .go{color:var(--brand3);font-size:13px;font-weight:600;white-space:nowrap}
+  .tier-note{margin-top:16px;background:var(--brand-soft);border:1px solid var(--line);
+    border-radius:11px;padding:11px 14px;font-size:12px;color:var(--brand3)}
+  .tier-now{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;
+    background:var(--brand-soft);border:1px solid var(--line);border-radius:12px;padding:11px 15px}
+  .tier-now .sw{width:14px;height:14px;border-radius:4px;flex:none}
+  .tier-now b{font-size:15px}
+  .tier-now .pp{color:var(--brand3);font-size:13px}
+  .tier-now .chg{margin-left:auto;background:none;border:1px solid var(--line);color:var(--brand3);
+    border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;font-family:inherit}
+  .tier-now .chg:hover{background:rgba(139,111,202,.2)}
+  .cell.dim{opacity:.2;cursor:not-allowed}
+  .cell.dim:hover{transform:none;border-color:rgba(255,255,255,.12)}
+  @media(max-width:560px){
+    .tier{grid-template-columns:auto 1fr auto;gap:10px;padding:14px}
+    .tier .go{display:none}
+  }
   .legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(255,255,255,.12)}
@@ -732,7 +767,7 @@
 <section class="hsec" data-page="home"><div class="wrap">
   <div class="sec-head">
     <div><span class="tag">IMMERSIVE PROGRAMS · 沉浸節目</span><h2 class="serif">正在沉浸放送</h2></div>
-    <a class="more" href="/programs" data-route="programs">觀看更多 →</a>
+    <a class="more" href="/programs" data-route="programs">全部節目 →</a>
   </div>
   <div class="hg hg-3" id="hProg"></div>
 </div></section>
@@ -779,8 +814,8 @@
 
 <section id="programs" data-page="programs"><div class="wrap">
   <div class="sec-head">
-    <div><span class="tag">IMMERSIVE PROGRAMS · 沉浸節目表</span><h2 class="serif">正在沉浸放送</h2></div>
-    <a class="more" href="#">全部節目 →</a>
+    <div><span class="tag">IMMERSIVE PROGRAMS · 沉浸節目</span><h2 class="serif">節目總覽</h2></div>
+    <a class="more" href="/ticket" data-route="ticket">近期場次 →</a>
   </div>
   <div class="grid g3" id="progGrid"></div>
 </div></section>
@@ -1577,15 +1612,18 @@ let creators=[
 ];
 applyADBCreators();   // 套用後台創作者資料
 function renderHome(){
-  renderPrograms($("hProg"),3);
-  renderPrograms2($("hTicket"),6);
+  renderPrograms2($("hProg"),3);     // 首頁沉浸節目預覽
+  renderTickets($("hTicket"),6);     // 首頁近期場次預覽
   renderLives($("hLive"),6);
   renderOM($("hOM"),6);
   renderShop($("hShop"),8);
   renderPlans($("hPlan"),2);
 }
 function renderAll(){
-  renderPrograms();renderLives();renderPrograms2();renderShop();renderPlans();renderOM();
+  renderPrograms2($("progGrid"));   // 沉浸節目＝資料庫節目總覽（後台「節目管理」維護）
+  renderLives();
+  renderTickets();                  // 場域售票＝近期場次列表
+  renderShop();renderPlans();renderOM();
   renderHome();
   if(CURRENT==='event')renderProgramDetail();
   bindTilt();
@@ -1713,9 +1751,10 @@ function normStage(v){
 const MARGIN=4;                 // 四周留白格數
 let U=24;                       // 格子單位 = 座位寬 + 4px gap（手機會放大）
 function cellUnit(){ return window.innerWidth<640 ? 28 : 24; }
-function gridHTML(v,zm,sold,sel){
+function gridHTML(v,zm,sold,sel,activeTier){
   U=cellUnit();
   const CW=U-4;                 // 實際座位寬
+  const only=(activeTier===undefined||activeTier===null||activeTier<0)?null:activeTier;
   const off=new Set(v.off||[]);
   let cells=`<div class="sgrid" style="left:${MARGIN*U}px;top:${MARGIN*U}px;grid-template-columns:${CW}px repeat(${v.cols},${CW}px)">`;
   cells+=`<div></div>`+[...Array(v.cols).keys()].map(c=>`<div class="cl">${c+1}</div>`).join('');
@@ -1724,7 +1763,9 @@ function gridHTML(v,zm,sold,sel){
       if(off.has(id)){cells+=`<div class="cell off"></div>`;continue;}
       const z=zm[id];const bx=boxOf(v,id);
       if(!z){cells+=`<div class="cell na" title="不販售"></div>`;continue;}
-      let cls='cell';if(bx)cls+=' box';if(sold.has(id))cls+=' sold';else if(sel.has(id))cls+=' sel';
+      let cls='cell';if(bx)cls+=' box';
+      if(only!==null&&z.i!==only)cls+=' dim';            // 非所選票種：暗示不可選
+      if(sold.has(id))cls+=' sold';else if(sel.has(id))cls+=' sel';
       cells+=`<div class="${cls}" data-id="${id}" style="--zc:${z.col}" title="${escH(z.t.n)} ${seatLabelOf(id)}${bx?' · '+escH(bx.name):''}"></div>`;}
   }
   cells+='</div>';
@@ -1737,24 +1778,79 @@ function gridHTML(v,zm,sold,sel){
       <span><i style="background:#2a2438;opacity:.6"></i>已售</span><span><i style="background:linear-gradient(135deg,var(--brand),var(--rose))"></i>已選</span>
       <span><i style="box-shadow:inset 0 0 0 2px rgba(240,192,106,.75)"></i>包廂</span></div></div>`;
 }
-let SM={ev:null,v:null,zm:{},sel:new Set(),sold:new Set()};
+let SM={ev:null,v:null,zm:{},sel:new Set(),sold:new Set(),step:'tier',tier:-1};
 const SEAT_MAX=4;
 function openSeats(i){
   const t=tickets[i];const e=t.ev;const v=e&&venueOf(e);
   if(!e||!v||!(e.tickets||[]).some(x=>(x.seats||[]).length)){addCart('ticket',i);return;}
-  SM={ev:e,v,zm:zoneMap(e),sel:new Set(),sold:soldSet(e),tk:t};
+  SM={ev:e,v,zm:zoneMap(e),sel:new Set(),sold:soldSet(e),tk:t,step:'tier',tier:-1};
   $("smTitle").textContent=e.name;$("smSub").textContent=(t.venue||v.name||'')+' · '+(t.meta||'');
-  drawSeats();$("smodal").classList.add('on');$("smask").classList.add('on');
+  drawStep();$("smodal").classList.add('on');$("smask").classList.add('on');
 }
+/* 依步驟繪製：先選票種，再選座位 */
+function drawStep(){ SM.step==='tier' ? drawTiers() : drawSeats(); }
+
+/* 步驟 1：選票種 */
+function tierStat(idx){
+  const t=SM.ev.tickets[idx]||{};const seats=t.seats||[];
+  const left=seats.filter(s=>!SM.sold.has(s)).length;
+  if(t.unit==='box'){
+    const boxes=(SM.v.boxes||[]).filter(b=>b.seats.some(s=>seats.includes(s)));
+    const freeBoxes=boxes.filter(b=>b.seats.every(s=>!SM.sold.has(s)));
+    return {total:boxes.length,left:freeBoxes.length,unit:'間'};
+  }
+  return {total:seats.length,left,unit:'席'};
+}
+function drawTiers(){
+  const ts=SM.ev.tickets||[];
+  $("smBody").innerHTML=`
+    <div class="step-bar"><span class="on">1 選票種</span><i>→</i><span>2 選座位</span><i>→</i><span>3 填資料</span></div>
+    <div class="tier-list">${ts.map((t,i)=>{
+      const s=tierStat(i);const soldOut=s.left<=0;
+      return `<div class="tier ${soldOut?'out':''}" ${soldOut?'':`onclick="pickTier(${i})"`}>
+        <span class="sw" style="background:${ZONE_COLORS[i%ZONE_COLORS.length]}"></span>
+        <div class="ti">
+          <b>${escH(t.n)}</b>
+          <small>${t.unit==='box'?'整間販售':'單席販售'} · 共 ${s.total} ${s.unit}</small>
+        </div>
+        <div class="tp">
+          <div class="p">NT$${(+t.p||0).toLocaleString()}</div>
+          <div class="lf" style="color:${soldOut?'var(--rose)':(s.left<=s.total*0.1?'var(--warn)':'var(--muted)')}">
+            ${soldOut?'已售完':'剩 '+s.left+' '+s.unit}</div>
+        </div>
+        <span class="go">${soldOut?'—':'選座位 →'}</span>
+      </div>`;}).join('')}</div>
+    <div class="tier-note">選定票種後，座位圖只會亮起該票種的區域，其他區域無法點選。</div>`;
+  $("smPicked").innerHTML='請先選擇票種';
+  $("smTot").textContent='NT$0';
+  $("smAdd").style.display='none';
+  $("smCancel").textContent='取消';
+}
+window.pickTier=i=>{SM.tier=i;SM.step='seats';drawStep();};
+window.backToTiers=()=>{SM.tier=-1;SM.sel=new Set();SM.step='tier';drawStep();};
+
+/* 步驟 2：選座位（限定在所選票種範圍內） */
 function drawSeats(){
-  $("smBody").innerHTML=gridHTML(SM.v,SM.zm,SM.sold,SM.sel);
-  $("smBody").querySelectorAll('.cell[data-id]:not(.sold)').forEach(s=>s.onclick=()=>toggleSeat(s.dataset.id));
+  const t=SM.ev.tickets[SM.tier]||{};
+  $("smBody").innerHTML=`
+    <div class="step-bar"><span>1 選票種</span><i>→</i><span class="on">2 選座位</span><i>→</i><span>3 填資料</span></div>
+    <div class="tier-now">
+      <span class="sw" style="background:${ZONE_COLORS[SM.tier%ZONE_COLORS.length]}"></span>
+      <b>${escH(t.n)}</b><span class="pp">NT$${(+t.p||0).toLocaleString()}${t.unit==='box'?'／整間':'／席'}</span>
+      <button class="chg" onclick="backToTiers()">更換票種</button>
+    </div>`
+    + gridHTML(SM.v,SM.zm,SM.sold,SM.sel,SM.tier);
+  $("smBody").querySelectorAll('.cell[data-id]:not(.sold):not(.dim)').forEach(s=>s.onclick=()=>toggleSeat(s.dataset.id));
+  $("smAdd").style.display='';
+  $("smCancel").textContent='返回';
   seatFoot();
 }
 // 一個「單位」= 一席，或包廂整間（票種為整間販售時）
 function unitOf(id){const z=SM.zm[id];const bx=boxOf(SM.v,id);
   if(z&&z.t.unit==='box'&&bx)return bx.seats.filter(x=>SM.zm[x]&&SM.zm[x].i===z.i);return [id];}
 function toggleSeat(id){
+  const z=SM.zm[id];
+  if(SM.tier>=0&&z&&z.i!==SM.tier){toast('這個位置屬於其他票種');return;}
   const unit=unitOf(id);const on=SM.sel.has(id);
   if(on){unit.forEach(x=>SM.sel.delete(x));}
   else{
@@ -1762,7 +1858,7 @@ function toggleSeat(id){
     const units=selUnits().length; if(units>=SEAT_MAX){toast('一次最多選 '+SEAT_MAX+' 個單位');return;}
     unit.forEach(x=>SM.sel.add(x));
   }
-  drawSeats();
+  drawStep();
 }
 function selUnits(){const seen=new Set(),units=[];[...SM.sel].forEach(id=>{if(seen.has(id))return;const u=unitOf(id);u.forEach(x=>seen.add(x));units.push(u);});return units;}
 function unitName(u){const z=SM.zm[u[0]];const bx=boxOf(SM.v,u[0]);
@@ -1774,7 +1870,8 @@ function seatFoot(){
   $("smTot").textContent='NT$'+us.reduce((s,u)=>s+unitPrice(u),0).toLocaleString();
 }
 function closeSeats(){$("smodal").classList.remove('on');$("smask").classList.remove('on');}
-$("smX").onclick=closeSeats;$("smCancel").onclick=closeSeats;$("smask").onclick=closeSeats;
+$("smX").onclick=closeSeats;$("smask").onclick=closeSeats;
+$("smCancel").onclick=()=>{ if(SM.step==='seats')backToTiers(); else closeSeats(); };
 $("smAdd").onclick=()=>{
   const us=selUnits();if(!us.length){toast('請先點選座位');return;}
   us.forEach(u=>cart.push({emoji:"🎟️",name:SM.ev.name+' · '+unitName(u),sub:'場域門票 · 座位',price:unitPrice(u),evId:SM.ev.id,seatIds:u}));
