@@ -516,6 +516,22 @@
       </div>
 
       <div class="panel">
+        <h3>購買須知（商品說明頁）</h3>
+        <div class="hint">顯示在每一個商品說明頁下方，一行一點，換行會自動分段；留空會使用系統預設文字</div>
+        <div class="fgrid">
+          <div class="fld full"><label>🚚 到貨與運送</label>
+            <textarea id="spShip" style="min-height:110px" placeholder="• 台灣本島：付款後 1–3 個工作天出貨…"></textarea></div>
+          <div class="fld full"><label>🔄 退換貨須知</label>
+            <textarea id="spRet" style="min-height:110px" placeholder="• 貨到日起 7 天鑑賞期…"></textarea></div>
+          <div class="fld full"><label>💳 付款與金流</label>
+            <textarea id="spPay" style="min-height:110px" placeholder="• 信用卡／行動支付／ATM 轉帳…"></textarea></div>
+          <div class="fld full"><label>ℹ️ 其他說明（可留空）</label>
+            <textarea id="spNote" style="min-height:70px"></textarea></div>
+        </div>
+        <button class="btn btn-brand btn-sm" data-save="shop_policy" style="margin-top:6px">儲存購買須知</button>
+      </div>
+
+      <div class="panel">
         <h3>圖片素材管理</h3><div class="hint">更換各版位圖片，變更儲存在此瀏覽器；可匯出設定給前台套用</div>
         <div class="tools" style="margin-bottom:14px">
           <button class="btn btn-brand btn-sm" id="seedBtn">匯入示範資料到資料庫</button>
@@ -697,8 +713,10 @@ const MAP={
     toRow:c=>({id:c.id,name:c.name,slug:c.slug,ctype:c.type,tier:c.tier,online:c.online!==false,fans:c.fans||'',hot:c.hot||'',descr:c.desc||''}),
     fromRow:r=>({id:r.id,name:r.name,slug:r.slug,type:r.ctype,tier:r.tier,online:r.online!==false,fans:r.fans||'',hot:r.hot||'',desc:r.descr||''})},
   products:{tbl:'products',
-    toRow:p=>({id:p.id,img_key:p.key||'',name:p.name,price:p.price||0,old_price:p.old||0,stock:p.stock||0,badge:p.badge||'',on_sale:p.on!==false}),
-    fromRow:r=>({id:r.id,key:r.img_key||'',name:r.name,price:r.price||0,old:r.old_price||0,stock:r.stock||0,badge:r.badge||'',on:r.on_sale!==false})},
+    toRow:p=>({id:p.id,img_key:p.key||'',name:p.name,price:p.price||0,old_price:p.old||0,stock:p.stock||0,badge:p.badge||'',on_sale:p.on!==false,
+      sub:p.sub||null,intro:p.intro||null,spec:p.spec||null,yt_id:p.yt||null}),
+    fromRow:r=>({id:r.id,key:r.img_key||'',name:r.name,price:r.price||0,old:r.old_price||0,stock:r.stock||0,badge:r.badge||'',on:r.on_sale!==false,
+      sub:r.sub||'',intro:r.intro||'',spec:r.spec||'',yt:r.yt_id||''})},
   orders:{tbl:'orders',
     toRow:o=>({id:o.id,name:o.name||'',phone:o.phone||'',email:o.email||'',item:o.item||'',amt:o.amt||0,
       status:o.status||'待付款',pay:o.pay||'',order_date:o.date||'',used:!!o.used}),
@@ -711,7 +729,7 @@ const MAP={
     toRow:s=>({id:s.id,email:s.email,name:s.name||'',role:s.role||'staff',perms:s.perms||[]}),
     fromRow:r=>({id:r.id,email:r.email,name:r.name||'',role:r.role||'staff',perms:r.perms||[]})}
 };
-const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout','home_pick'];
+const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout','home_pick','shop_policy'];
 
 const ALL_PERMS=["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"];
 function normalizeDB(){
@@ -1912,7 +1930,7 @@ function renderProducts(){
 $("pdQ").oninput=renderProducts;
 $("pdAdd").onclick=()=>editPd(null);
 window.editPd=id=>{
-  const p=id?DB.products.find(x=>x.id===id):{key:'p'+DB.products.length,name:'',price:0,old:0,stock:0,badge:'',on:true};
+  const p=id?DB.products.find(x=>x.id===id):{key:'p'+DB.products.length,name:'',price:0,old:0,stock:0,badge:'',on:true,sub:'',intro:'',spec:'',yt:''};
   const pImg=(p.key&&DB.images[p.key])||'';
   openM(id?'編輯商品':'新增商品',`<div class="fgrid">
     <div class="fld full"><label>商品名稱</label><input id="d_name" value="${esc(p.name)}"></div>
@@ -1922,6 +1940,14 @@ window.editPd=id=>{
     <div class="fld"><label>原價 NT$（0 表不顯示）</label><input id="d_old" type="number" value="${p.old}"></div>
     <div class="fld"><label>庫存</label><input id="d_stock" type="number" value="${p.stock}"></div>
     <div class="fld"><label>上架狀態</label><select id="d_on"><option value="1" ${p.on?'selected':''}>上架</option><option value="0" ${!p.on?'selected':''}>下架</option></select></div>
+    <div class="fld full"><label>副標（一句話，顯示在名稱下方）</label>
+      <input id="d_sub" value="${esc(p.sub||'')}" placeholder="例：0.3mm 超薄裸視 3D 光柵膜"></div>
+    <div class="fld full"><label>商品說明（換行會自動分段）</label>
+      <textarea id="d_intro" style="min-height:130px" placeholder="產品特色、使用情境、材質與保固…">${esc(p.intro||'')}</textarea></div>
+    <div class="fld full"><label>規格（換行會自動分段，可留空）</label>
+      <textarea id="d_spec" style="min-height:90px" placeholder="尺寸：…&#10;材質：…&#10;適用機型：…">${esc(p.spec||'')}</textarea></div>
+    <div class="fld full"><label>YouTube 影片 ID（商品說明頁崁入，可留空）</label>
+      <input id="d_yt" value="${esc(p.yt||'')}" placeholder="LXb3EKWsInQ 或整串網址"></div>
     <div class="fld full">
       <label>商品圖</label>
       ${cropUI('d',1,150,'左邊的框就是前台商品卡的實際比例：可直接拖曳畫面或縮放，存檔時會照這個範圍裁切')}
@@ -1929,7 +1955,9 @@ window.editPd=id=>{
     <div class="fld full"><div class="spec"><b>📐 商品圖建議規格</b>尺寸：<code>1000 × 1000 px</code>（正方形 1:1）· 格式：<code>JPG / PNG（去背用 PNG）</code> · 建議 &lt; 300 KB<br>商品置中、深色或純色背景最能融入前台暗色版面</div></div>
   </div>`,()=>{
     if(!v("d_name")){toast('請填寫商品名稱');return false;}
-    const o={key:v("d_key"),name:v("d_name"),badge:v("d_badge"),price:+v("d_price")||0,old:+v("d_old")||0,stock:+v("d_stock")||0,on:v("d_on")==='1'};
+    const ytId=s=>{const m=/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{6,})/.exec(s||'');return m?m[1]:(s||'').trim();};
+    const o={key:v("d_key"),name:v("d_name"),badge:v("d_badge"),price:+v("d_price")||0,old:+v("d_old")||0,stock:+v("d_stock")||0,on:v("d_on")==='1',
+      sub:v("d_sub"),intro:v("d_intro"),spec:v("d_spec"),yt:ytId(v("d_yt"))};
     const img=CROP.d.value();
     if(p.key&&p.key!==o.key){delete DB.images[p.key];delete DB.images[p.key+'@pos'];}
     if(img){DB.images[o.key]=img;delete DB.images[o.key+'@pos'];}
@@ -2098,6 +2126,9 @@ const IMG_SLOTS=[
 ];
 function renderSettings(){
   $("stMarquee").value=DB.marquee||'';
+  const sp=(DB.shop_policy&&typeof DB.shop_policy==='object')?DB.shop_policy:{};
+  $("spShip").value=sp.ship||''; $("spRet").value=sp.ret||'';
+  $("spPay").value=sp.pay||'';   $("spNote").value=sp.note||'';
   $("anTable").innerHTML=DB.announcements.length?`<table><thead><tr><th>標題</th><th>分類</th><th>日期</th><th>內容</th><th></th></tr></thead><tbody>`+
     DB.announcements.map(a=>`<tr><td><b>${esc(a.title)}</b></td><td><span class="tag b">${esc(a.tag)}</span></td>
       <td style="color:var(--muted)">${a.date}</td><td style="color:var(--muted);font-size:12px">${esc(a.body)}</td>
@@ -2178,6 +2209,7 @@ document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{
   const t=b.dataset.save;
   if(t==='marquee'){DB.marquee=v("stMarquee");save();toast('跑馬燈已儲存');}
   if(t==='seo'){DB.seo={t:v("seoT"),d:v("seoD"),k:v("seoK"),u:v("seoU"),ga:v("seoGA"),sc:v("seoSC"),og:v("seoOG")};save();toast('SEO 設定已儲存');}
+  if(t==='shop_policy'){DB.shop_policy={ship:v("spShip"),ret:v("spRet"),pay:v("spPay"),note:v("spNote")};save();toast('購買須知已儲存');}
 });
 
 /* ================= SEO ================= */

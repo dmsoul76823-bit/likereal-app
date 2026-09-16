@@ -391,6 +391,45 @@
     .about-txt p{font-size:14.5px;line-height:1.85}
     .about-feats{grid-template-columns:1fr}
   }
+  /* 商品說明頁 */
+  .pd-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start;margin-bottom:26px}
+  .pd-pic{aspect-ratio:1;border-radius:20px;overflow:hidden;border:1px solid var(--line);
+    background:#151020 center/cover no-repeat;box-shadow:var(--shadow);position:relative}
+  .pd-pic .badge{position:absolute;top:12px;left:12px;background:var(--brand-soft);border:1px solid var(--line);
+    color:var(--brand3);font-size:11px;padding:4px 10px;border-radius:7px}
+  .pd-info h1{font-size:30px;line-height:1.3;margin-bottom:8px}
+  .pd-info .sub{color:var(--muted);font-size:14px;margin-bottom:8px}
+  .pd-info .stars{color:#ecc766;font-size:14px;letter-spacing:2px}
+  .pd-price{margin:14px 0 6px;font-size:15px;color:var(--muted)}
+  .pd-price s{margin-right:10px;opacity:.7}
+  .pd-price b{font-size:31px;color:var(--brand3);font-weight:800}
+  .pd-stock{font-size:13px;color:#6fe0b0;margin-bottom:14px}
+  .pd-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 14px}
+  .pd-acts .add{padding:11px 20px;font-size:14px}
+  .pd-acts .fav{position:static;width:42px;height:42px;flex:none}
+  .pd-quick{display:flex;gap:8px;flex-wrap:wrap}
+  .pd-quick span{font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);
+    border:1px solid var(--line2);padding:5px 11px;border-radius:999px}
+  .pd-video{border-radius:18px;overflow:hidden;border:1px solid var(--line);aspect-ratio:16/9;background:#000;margin:8px 0 26px}
+  .pd-video iframe{width:100%;height:100%;border:0;display:block}
+  .pd-sec{margin:0 0 26px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px}
+  .pd-sec h3{font-size:19px;margin-bottom:12px}
+  .pd-sec p{color:var(--muted);font-size:14.5px;line-height:1.9;margin-bottom:8px}
+  .pd-acc{border:1px solid var(--line2);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .pd-acc summary{cursor:pointer;padding:13px 16px;font-size:14px;font-weight:600;
+    background:rgba(255,255,255,.03);list-style:none}
+  .pd-acc summary::-webkit-details-marker{display:none}
+  .pd-acc summary::after{content:'＋';float:right;color:var(--brand3)}
+  .pd-acc[open] summary::after{content:'－'}
+  .pd-acc>div{padding:14px 16px 16px}
+  .pd-acc p{margin-bottom:6px;font-size:14px}
+  @media(max-width:820px){
+    .pd-top{grid-template-columns:1fr;gap:20px}
+    .pd-info h1{font-size:24px}
+    .pd-price b{font-size:27px}
+    .pd-sec{padding:18px 16px}
+    .pd-acts .add{flex:1;text-align:center}
+  }
   /* 節目介紹頁 */
   .backlink{display:inline-block;color:var(--muted);font-size:13px;margin:18px 0 14px}
   .backlink:hover{color:var(--brand3)}
@@ -994,6 +1033,12 @@
   <div id="evDetail"></div>
 </div></section>
 
+<!-- ===== 商品說明頁 ===== -->
+<section id="product" data-page="product"><div class="wrap">
+  <a class="backlink" href="/shop" data-route="shop">← 回裸視 3D 精選</a>
+  <div id="pdDetail"></div>
+</div></section>
+
 <!-- ===== 沉浸餐飲 ===== -->
 <section id="dining" data-page="dining"><div class="wrap">
   <div class="dine-hero">
@@ -1331,7 +1376,8 @@ async function loadCloud(){
     if((cr.data||[]).length)ADB.creators=(cr.data||[]).map(r=>({id:r.id,name:r.name,slug:r.slug,
       type:r.ctype,tier:r.tier,online:r.online!==false,fans:r.fans||'',hot:r.hot||'',desc:r.descr||''}));
     if((pr.data||[]).length)ADB.products=(pr.data||[]).map(r=>({id:r.id,key:r.img_key||'',name:r.name,
-      price:r.price||0,old:r.old_price||0,stock:r.stock||0,badge:r.badge||'',on:r.on_sale!==false}));
+      price:r.price||0,old:r.old_price||0,stock:r.stock||0,badge:r.badge||'',on:r.on_sale!==false,
+      sub:r.sub||'',intro:r.intro||'',spec:r.spec||'',yt:r.yt_id||''}));
     if(!st.error)(st.data||[]).forEach(row=>{
       if(row.value&&Object.prototype.hasOwnProperty.call(row.value,'v')&&row.value.v!=null)ADB[row.key]=row.value.v;
     });
@@ -1356,8 +1402,9 @@ function applyADB(){
   if(Array.isArray(ADB.products)&&ADB.products.length){
     products=ADB.products.filter(p=>p.on!==false).map((p,i)=>{
       const b=BASE_PRODUCTS.find(x=>x.name===p.name)||BASE_PRODUCTS[i]||BASE_PRODUCTS[0];
-      return {kind:b.kind,pal:b.pal,name:p.name,sub:b.sub||'',price:p.price||0,
-        old:p.old||null,stars:b.stars||'★★★★★',badge:p.badge||'',key:p.key||('p'+i)};
+      return {kind:b.kind,pal:b.pal,name:p.name,sub:p.sub||b.sub||'',price:p.price||0,
+        old:p.old||null,stars:b.stars||'★★★★★',badge:p.badge||'',key:p.key||('p'+i),
+        intro:p.intro||'',spec:p.spec||'',yt:p.yt||'',stock:(p.stock!=null?p.stock:null)};
     });
   }
 }
@@ -1711,7 +1758,7 @@ function renderTickets(el,lim,sec){
   let T=tickets.map((t,i)=>({t,i}));
   if(sec)T=orderPick(T,sec,o=>o.t.name);
   (el||$("ticketGrid")).innerHTML=takeN(T,lim).map(({t,i})=>`
-  <div class="ticket">
+  <div class="ticket" style="cursor:pointer" onclick="openProgram('${escAttr(t.name)}')">
     <div class="tpic" style="background-image:url('${t.img||PROGRAM_ART[t.name]||posterSVG(TICKET_PALS[i%TICKET_PALS.length])}')">
       <div class="tdate-badge"><b>${t.d}</b><span>${t.m}</span></div>
       ${favBtn('tk:'+i)}
@@ -1724,7 +1771,7 @@ function renderTickets(el,lim,sec){
       </div>
       <div class="tbuy">
         <div class="tp"><div class="p">${t.price}<small>起</small></div><div class="left">${t.left}</div></div>
-        <button class="add buy-now" onclick="openSeats(${i})">選位購票</button>
+        <button class="add buy-now" onclick="event.stopPropagation();openProgram('${escAttr(t.name)}')">查看節目 →</button>
       </div>
     </div>
   </div>`).join("");}
@@ -1733,14 +1780,85 @@ function renderShop(el,lim,sec){
   let P=products.map((p,i)=>({p,i}));
   if(sec)P=orderPick(P,sec,o=>o.p.name);
   (el||$("shopGrid")).innerHTML=takeN(P,lim).map(({p,i})=>`
-  <div class="card">
+  <div class="card" style="cursor:pointer" onclick="openProduct('${escAttr(p.name)}')">
     <div class="prod-thumb fitimg" data-imgkey="p${i}" style="background-image:url('${thumb('p'+i,productSVG(p.kind,p.pal))}')">${p.badge?`<div class="badge">${p.badge}</div>`:""}${favBtn('pd:'+i)}</div>
     <div class="prod-body">
       <h4>${p.name}</h4><div class="sub">${p.sub}</div><div class="stars">${p.stars}</div>
       <div class="buy"><div class="price">${p.old?`<s>NT$${p.old}</s>`:""}NT$${p.price}</div>
-        <button class="add" onclick="addCart('product',${i})">加入購物車</button></div>
+        <button class="add" onclick="event.stopPropagation();addCart('product',${i})">加入購物車</button></div>
     </div>
   </div>`).join("");}
+
+/* ================= 商品說明頁 ================= */
+let CUR_PRODUCT='';
+function openProduct(name){
+  CUR_PRODUCT=name;
+  history.pushState({page:'product',p:name},'','/product?p='+encodeURIComponent(name));
+  showPage('product',false);
+  renderProductDetail();
+}
+function shopPolicy(){
+  const d=(ADB.shop_policy&&typeof ADB.shop_policy==='object')?ADB.shop_policy:{};
+  return {
+    ship:d.ship||'• 台灣本島：訂單完成付款後 1–3 個工作天出貨，宅配到府約 2–4 個工作天。\n• 外島／偏遠地區：約 5–7 個工作天。\n• 出貨後會以 Email 與簡訊通知物流單號，可線上查詢配送進度。\n• 單筆訂單滿 NT$1,500 免運費，未滿酌收運費 NT$120。',
+    ret:d.ret||'• 依消費者保護法，享有貨到日起 7 天鑑賞期（不等於試用期）。\n• 退換貨商品需保持全新完整，含原廠包裝、配件、贈品與發票。\n• 已撕除保護膜背膠、裁切或有使用痕跡者，恕無法辦理退換。\n• 非人為因素之瑕疵，收到後 7 天內可申請免費換貨。\n• 申請方式：會員中心 → 我的訂單 → 申請退換，或來信客服。',
+    pay:d.pay||'• 信用卡（VISA / MasterCard / JCB）一次付清、3 / 6 / 12 期分期。\n• 行動支付：Apple Pay、Google Pay、LINE Pay。\n• ATM 虛擬帳號轉帳（3 日內完成付款，逾期訂單自動取消）。\n• 超商代碼繳費。\n• 所有交易皆透過第三方金流加密處理，LiReal 不會保存您的卡號。',
+    note:d.note||''
+  };
+}
+function renderProductDetail(){
+  const box=$("pdDetail"); if(!box)return;
+  const i=products.findIndex(x=>x.name===CUR_PRODUCT);
+  if(i<0){box.innerHTML='<div class="ev-box"><p>找不到這項商品。</p><a class="btn btn-brand" href="/shop" data-route="shop">回裸視 3D 精選</a></div>';return;}
+  const p=products[i], img=thumb('p'+i,productSVG(p.kind,p.pal));
+  const pol=shopPolicy();
+  const yt=p.yt?`<div class="pd-video"><iframe src="https://www.youtube.com/embed/${escH(p.yt)}?rel=0&modestbranding=1&playsinline=1" frameborder="0" allow="encrypted-media;picture-in-picture" allowfullscreen></iframe></div>`:'';
+  const para=s=>String(s||'').split(/\n+/).filter(Boolean).map(t=>`<p>${escH(t)}</p>`).join('');
+  box.innerHTML=`
+    <div class="pd-top">
+      <div class="pd-pic fitimg" style="background-image:url('${img}')">${p.badge?`<div class="badge">${escH(p.badge)}</div>`:''}</div>
+      <div class="pd-info">
+        <h1 class="serif">${escH(p.name)}</h1>
+        <div class="sub">${escH(p.sub||'')}</div>
+        <div class="stars">${escH(p.stars||'★★★★★')}</div>
+        <div class="pd-price">${p.old?`<s>NT$${p.old}</s>`:''}<b>NT$${p.price}</b></div>
+        ${p.stock!=null?`<div class="pd-stock">${p.stock>0?'✓ 現貨供應中':'暫時缺貨'}</div>`:''}
+        <div class="pd-acts">
+          <button class="add buy-now" onclick="addCart('product',${i})">加入購物車</button>
+          <button class="add" onclick="addCart('product',${i});toggleCart(true)">立即購買</button>
+          ${favBtn('pd:'+i)}
+        </div>
+        <div class="pd-quick">
+          <span>🚚 滿 NT$1,500 免運</span><span>🔄 7 天鑑賞期</span><span>🔒 第三方金流加密</span>
+        </div>
+      </div>
+    </div>
+    ${yt}
+    <div class="pd-sec">
+      <h3 class="serif">商品說明</h3>
+      ${p.intro?para(p.intro):`<p>${escH(p.sub||'')}</p><p>LiReal 裸視 3D 系列，專為沉浸式場域觀影體驗設計。</p>`}
+    </div>
+    ${p.spec?`<div class="pd-sec"><h3 class="serif">規格</h3>${para(p.spec)}</div>`:''}
+    <div class="pd-sec">
+      <h3 class="serif">購買須知</h3>
+      <details class="pd-acc" open><summary>🚚 到貨與運送</summary><div>${para(pol.ship)}</div></details>
+      <details class="pd-acc"><summary>🔄 退換貨須知</summary><div>${para(pol.ret)}</div></details>
+      <details class="pd-acc"><summary>💳 付款與金流</summary><div>${para(pol.pay)}</div></details>
+      ${pol.note?`<details class="pd-acc"><summary>ℹ️ 其他說明</summary><div>${para(pol.note)}</div></details>`:''}
+    </div>
+    <div class="pd-sec">
+      <h3 class="serif">其他商品</h3>
+      <div class="hg hg-4" id="pdMore"></div>
+    </div>`;
+  const more=products.map((x,k)=>({p:x,i:k})).filter(o=>o.i!==i).slice(0,4);
+  $("pdMore").innerHTML=more.map(({p:x,i:k})=>`
+    <div class="card" style="cursor:pointer" onclick="openProduct('${escAttr(x.name)}')">
+      <div class="prod-thumb fitimg" data-imgkey="p${k}" style="background-image:url('${thumb('p'+k,productSVG(x.kind,x.pal))}')"></div>
+      <div class="prod-body"><h4>${escH(x.name)}</h4>
+        <div class="buy"><div class="price">NT$${x.price}</div></div></div>
+    </div>`).join('');
+  updateFavUI();
+}
 
 function renderPlans(el,lim){(el||$("planGrid")).innerHTML=takeN(plans,lim).map(p=>`
   <div class="plan ${p.feat?'feat':''}">
@@ -1788,6 +1906,7 @@ function renderAll(){
   renderShop();renderPlans();renderOM();
   renderHome();
   if(CURRENT==='event')renderProgramDetail();
+  if(CURRENT==='product')renderProductDetail();
   bindTilt();
   updateFavUI();
 }
@@ -2337,7 +2456,8 @@ const ROUTES={
   vip:    {title:'會員儲值 · LiReal'},
   about:  {title:'關於 LiReal · 沉浸式場域品牌'},
   dining: {title:'沉浸餐飲 · LiReal'},
-  event:  {title:'節目介紹 · LiReal'}
+  event:  {title:'節目介紹 · LiReal'},
+  product:{title:'商品介紹 · LiReal'}
 };
 function routeFromPath(p){
   const seg=(p||location.pathname).replace(/^\/+|\/+$/g,'').toLowerCase();
@@ -2347,7 +2467,10 @@ function routeFromPath(p){
 // 進入 /event?p=節目名稱 時記住是哪一檔
 function syncProgramFromURL(){
   const m=/[?&]p=([^&]+)/.exec(location.search);
-  if(m){try{CUR_PROGRAM=decodeURIComponent(m[1]);}catch(e){}}
+  if(m){try{
+    const val=decodeURIComponent(m[1]);
+    if(/^\/product/.test(location.pathname))CUR_PRODUCT=val; else CUR_PROGRAM=val;
+  }catch(e){}}
 }
 function showPage(name,push){
   if(!ROUTES[name])name='home';
@@ -2358,13 +2481,16 @@ function showPage(name,push){
   document.querySelectorAll('[data-route]').forEach(a=>{
     a.classList.toggle('on', a.dataset.route===name);
   });
-  document.title=name==='event'&&CUR_PROGRAM?CUR_PROGRAM+' · LiReal':ROUTES[name].title;
+  document.title=(name==='event'&&CUR_PROGRAM)?CUR_PROGRAM+' · LiReal'
+                :(name==='product'&&CUR_PRODUCT)?CUR_PRODUCT+' · LiReal'
+                :ROUTES[name].title;
   $("mobnav").classList.remove('open');
   if(push){
     const url=name==='home'?'/':'/'+name;
     if(location.pathname!==url)history.pushState({page:name},'',url);
   }
   if(name==='event')renderProgramDetail();
+  if(name==='product')renderProductDetail();
   window.scrollTo({top:0,behavior:'instant'in document.documentElement.style?'instant':'auto'});
 }
 // 攔截所有內部連結
