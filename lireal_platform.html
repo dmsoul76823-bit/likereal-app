@@ -391,6 +391,37 @@
     .about-txt p{font-size:14.5px;line-height:1.85}
     .about-feats{grid-template-columns:1fr}
   }
+  /* 我的票券 */
+  .mp-form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:20px}
+  .mp-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .mp-row .fld{flex:1;min-width:170px;display:flex;flex-direction:column;gap:6px}
+  .mp-row label{font-size:12px;color:var(--muted)}
+  .mp-row input{background:#100c1c;border:1px solid var(--line2);color:var(--text);
+    padding:11px 13px;border-radius:11px;font-size:14px;width:100%}
+  .mp-row input:focus{outline:none;border-color:var(--brand)}
+  .mp-or{color:var(--muted);font-size:12px;padding-bottom:12px}
+  .mp-row .btn{padding:11px 22px}
+  .mp-note{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.8;
+    background:rgba(139,111,202,.08);border:1px solid var(--line2);border-radius:12px;padding:11px 14px}
+  .mp-card{display:flex;gap:18px;align-items:center;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:12px}
+  .mp-card .qr{width:104px;height:104px;background:#fff;border-radius:10px;padding:6px;flex:none}
+  .mp-card .qr img,.mp-card .qr canvas{width:100%;height:100%;display:block}
+  .mp-i{flex:1;min-width:210px}
+  .mp-i h4{font-size:16px;margin-bottom:4px}
+  .mp-i .m{font-size:13px;color:var(--muted);line-height:1.8}
+  .mp-a{display:flex;flex-direction:column;gap:9px;align-items:flex-end;min-width:130px}
+  .mp-a .tag{font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid var(--line2);color:var(--muted)}
+  .mp-a .tag.ok{color:#6fe0b0;border-color:rgba(111,224,176,.4);background:rgba(111,224,176,.1)}
+  .mp-a .tag.used{color:var(--muted)}
+  .mp-a .tag.off{color:var(--rose);border-color:rgba(255,120,150,.35)}
+  @media(max-width:620px){
+    .mp-row .btn{width:100%}
+    .mp-or{display:none}
+    .mp-card{gap:12px}
+    .mp-a{align-items:stretch;width:100%}
+    .mp-a .add{width:100%}
+  }
   /* 商品說明頁 */
   .pd-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start;margin-bottom:26px}
   .pd-pic{aspect-ratio:1;border-radius:20px;overflow:hidden;border:1px solid var(--line);
@@ -794,6 +825,7 @@
       <a href="/live" data-route="live">直播</a>
       <a href="/ai" data-route="ai">AI 女友</a>
       <a href="/ticket" data-route="ticket">場域售票</a>
+      <a href="/mypass" data-route="mypass">我的票券</a>
       <a href="/shop" data-route="shop">3D 精選</a>
       <a href="/vip" data-route="vip">會員儲值</a>
       <a href="/dining" data-route="dining">沉浸餐飲</a>
@@ -812,6 +844,7 @@
     <a href="/live" data-route="live">直播</a>
     <a href="/ai" data-route="ai">AI 女友</a>
     <a href="/ticket" data-route="ticket">場域售票</a>
+    <a href="/mypass" data-route="mypass">我的票券</a>
     <a href="/shop" data-route="shop">3D 精選</a>
     <a href="/vip" data-route="vip">會員儲值</a>
     <a href="/dining" data-route="dining">沉浸餐飲</a>
@@ -1037,6 +1070,25 @@
 <section id="product" data-page="product"><div class="wrap">
   <a class="backlink" href="/shop" data-route="shop">← 回裸視 3D 精選</a>
   <div id="pdDetail"></div>
+</div></section>
+
+<!-- ===== 票券查詢／換位 ===== -->
+<section id="mypass" data-page="mypass"><div class="wrap">
+  <a class="backlink" href="/ticket" data-route="ticket">← 回場域售票</a>
+  <div class="sec-head" style="margin-bottom:10px">
+    <div><h2 class="serif">我的票券</h2><p>查詢電子票券、出示 QR Code，或辦理換位／升級</p></div>
+  </div>
+  <div class="mp-form">
+    <div class="mp-row">
+      <div class="fld"><label>票券編號</label><input id="mpCode" placeholder="LR-2026-0007-1-A3F9"></div>
+      <div class="mp-or">或</div>
+      <div class="fld"><label>Email</label><input id="mpEmail" placeholder="購票時填的 Email"></div>
+      <div class="fld"><label>手機</label><input id="mpPhone" placeholder="購票時填的手機"></div>
+      <button class="btn btn-brand" id="mpGo">查詢票券</button>
+    </div>
+    <div class="mp-note">🔁 每張票券提供 <b>一次</b> 換位／升級票種的機會；升級需補差額，不受理降級退費。已入場或演出結束後不可換位。</div>
+  </div>
+  <div id="mpList"></div>
 </div></section>
 
 <!-- ===== 沉浸餐飲 ===== -->
@@ -2001,6 +2053,100 @@ function toggleFavDrawer(o){$("favDrawer").classList.toggle('open',o);$("backdro
 function clearFav(){ if(!FAV.length){toast('收藏是空的');return;} if(confirm('確定清空所有收藏？')){FAV=[];saveFav();updateFavUI();toast('已清空收藏');} }
 $("favTop").onclick=()=>toggleFavDrawer(true);
 
+/* ================= 我的票券：查詢與換位 ================= */
+let MYPASS=[];
+async function lookupPasses(){
+  if(!ONLINE){toast('尚未連線到資料庫');return;}
+  const code=$("mpCode").value.trim(), em=$("mpEmail").value.trim(), ph=$("mpPhone").value.trim();
+  if(!code&&!(em&&ph)){toast('請輸入票券編號，或 Email 與手機');return;}
+  const btn=$("mpGo");btn.disabled=true;btn.textContent='查詢中…';
+  try{
+    const {data,error}=await sb.rpc('find_passes',{p_code:code||null,p_email:em||null,p_phone:ph||null});
+    if(error)throw error;
+    MYPASS=data||[];
+    renderMyPass();
+    if(!MYPASS.length)toast('查無票券，請確認輸入的資料');
+  }catch(e){toast('查詢失敗：'+(e.message||e));}
+  finally{btn.disabled=false;btn.textContent='查詢票券';}
+}
+function renderMyPass(){
+  const box=$("mpList"); if(!box)return;
+  if(!MYPASS.length){box.innerHTML='';return;}
+  box.innerHTML=MYPASS.map((p,i)=>`
+    <div class="mp-card">
+      <div class="qr" data-qr="${escH(p.code)}"></div>
+      <div class="mp-i">
+        <h4>${escH(p.event_name||'')}</h4>
+        <div class="m">${escH(p.show_date||'')} ${escH((p.show_time||'').slice(0,5))} · ${escH(p.venue||'')}</div>
+        <div class="m"><b>${escH(p.ticket_name||'')}</b> · 座位 <b>${escH(p.seat_label||'')}</b> · NT$${(+p.price||0).toLocaleString()}</div>
+        ${p.changed?`<div class="m" style="color:var(--warn)">已換位（原：${escH(p.orig_ticket||'')} ${escH(p.orig_seat_label||'')}）</div>`:''}
+        <div class="m" style="font-size:11px;color:var(--muted)">票券編號 ${escH(p.code)}　購票人 ${escH(p.buyer||'')}</div>
+      </div>
+      <div class="mp-a">
+        <span class="tag ${p.used?'used':(p.can_change?'ok':'off')}">${p.used?'已入場':(p.can_change?'可換位':'不可換位')}</span>
+        ${p.can_change
+          ? `<button class="add buy-now" onclick="startChange(${i})">換位／升級</button>`
+          : `<small style="color:var(--muted)">${escH(p.reason||'')}</small>`}
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('.qr[data-qr]').forEach(el=>drawQR(el,el.getAttribute('data-qr')));
+}
+$("mpGo").onclick=lookupPasses;
+['mpCode','mpEmail','mpPhone'].forEach(id=>{
+  const el=$(id); if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')lookupPasses();});
+});
+/* 進入換位流程：載入該場次 → 開座位圖（限同級或升級票種、只能選 1 席） */
+async function startChange(i){
+  const p=MYPASS[i]; if(!p)return;
+  let e=(tickets.find(t=>t.ev&&t.ev.id===p.event_id)||{}).ev;
+  if(!e){
+    try{
+      const {data,error}=await sb.from('events').select('*').eq('id',p.event_id).maybeSingle();
+      if(error||!data)throw error||new Error('找不到場次');
+      e={id:data.id,name:data.name,venue:data.venue||'',venueId:data.venue_id,date:data.show_date||'',
+         time:data.show_time||'',cat:data.cat||'',status:data.status||'',sold:data.sold||0,cap:data.cap||0,
+         tickets:data.tickets||[],soldSeats:data.sold_seats||[],intro:data.intro||'',img:data.img||''};
+    }catch(err){toast('無法載入場次資料：'+(err.message||err));return;}
+  }
+  const v=venueOf(e);
+  if(!v||!(e.tickets||[]).some(x=>(x.seats||[]).length)){toast('這個場次沒有座位圖，請聯絡客服辦理換位');return;}
+  const sold=soldSet(e); sold.delete(p.seat);   // 原座位先視為空（但不允許選回同一位）
+  SM={ev:e,v,zm:zoneMap(e),sel:new Set(),sold,tk:null,step:'tier',tier:-1,
+      change:{code:p.code,oldPrice:+p.price||0,oldSeat:p.seat,oldLabel:p.seat_label,oldTicket:p.ticket_name}};
+  $("smTitle").textContent='換位／升級 · '+e.name;
+  $("smSub").textContent=`原座位 ${p.ticket_name} ${p.seat_label}（NT$${(+p.price||0).toLocaleString()}）· 每張票僅限一次`;
+  drawStep();$("smodal").classList.add('on');$("smask").classList.add('on');
+}
+/* 送出換位 */
+async function submitChange(){
+  const us=selUnits(); if(!us.length){toast('請先點選新座位');return;}
+  const u=us[0];
+  if(u.length>1){toast('換位一次只能選一個座位（包廂請聯絡客服）');return;}
+  const seat=u[0], z=SM.zm[seat], price=+z.t.p||0;
+  const c=SM.change;
+  if(price<c.oldPrice){toast('僅提供同級或升級換位');return;}
+  const diff=price-c.oldPrice;
+  const msg='確認換位？\n\n原座位：'+c.oldTicket+' '+c.oldLabel+'\n新座位：'+z.t.n+' '+seatLabelOf(seat)+
+    (diff>0?('\n\n需補差額：NT$'+diff.toLocaleString()):'\n\n無需補差額')+
+    '\n\n⚠ 每張票券僅限換位一次，確認後無法再更改。';
+  if(!confirm(msg))return;
+  const btn=$("smAdd");btn.disabled=true;btn.textContent='處理中…';
+  try{
+    const {data,error}=await sb.rpc('change_seat',{
+      p_code:c.code,p_seat:seat,p_label:seatLabelOf(seat),p_ticket:z.t.n,p_price:price});
+    if(error)throw error;
+    closeSeats();
+    toast((data&&data.msg)||'換位成功');
+    if(diff>0){
+      const ord=(data&&data.diff_order)?('：'+data.diff_order):'';
+      alert('換位成功！\n\n需補差額 NT$'+diff.toLocaleString()+
+        '\n已為您建立補款訂單'+ord+'，客服會與您聯繫完成補款。');
+    }
+    await lookupPasses();
+  }catch(e){toast('換位失敗：'+(e.message||e));}
+  finally{btn.disabled=false;btn.textContent='加入購物車';}
+}
+
 /* ===== 選位購票（場地格子模型，與後台一致） ===== */
 const ZONE_COLORS=["rgba(139,111,202,.6)","rgba(224,143,192,.55)","rgba(122,168,255,.55)","rgba(95,230,192,.5)","rgba(240,192,106,.55)","rgba(255,140,120,.55)","rgba(180,120,255,.55)","rgba(120,220,255,.5)"];
 const RL=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;};
@@ -2084,10 +2230,14 @@ function tierStat(idx){
 }
 function drawTiers(){
   const ts=SM.ev.tickets||[];
+  const chg=SM.change;
   $("smBody").innerHTML=`
-    <div class="step-bar"><span class="on">1 選票種</span><i>→</i><span>2 選座位</span><i>→</i><span>3 填資料</span></div>
+    <div class="step-bar"><span class="on">1 選票種</span><i>→</i><span>2 選座位</span><i>→</i>${chg?'<span>3 確認換位</span>':'<span>3 填資料</span>'}</div>
+    ${chg?`<div class="tier-note" style="margin:0 0 12px">原票種 <b>${escH(chg.oldTicket)}</b>（NT$${chg.oldPrice.toLocaleString()}）— 只能選擇<b>同價或更高</b>的票種，差額另行補款。</div>`:''}
     <div class="tier-list">${ts.map((t,i)=>{
-      const s=tierStat(i);const soldOut=s.left<=0;
+      const s=tierStat(i);
+      const low=chg&&(+t.p||0)<chg.oldPrice;
+      const soldOut=s.left<=0||low;
       return `<div class="tier ${soldOut?'out':''}" ${soldOut?'':`onclick="pickTier(${i})"`}>
         <span class="sw" style="background:${ZONE_COLORS[i%ZONE_COLORS.length]}"></span>
         <div class="ti">
@@ -2099,7 +2249,7 @@ function drawTiers(){
           <div class="lf" style="color:${soldOut?'var(--rose)':(s.left<=s.total*0.1?'var(--warn)':'var(--muted)')}">
             ${soldOut?'已售完':'剩 '+s.left+' '+s.unit}</div>
         </div>
-        <span class="go">${soldOut?'—':'選座位 →'}</span>
+        <span class="go">${low?'低於原票價':(soldOut?'—':'選座位 →')}</span>
       </div>`;}).join('')}</div>
     <div class="tier-note">選定票種後，座位圖只會亮起該票種的區域，其他區域無法點選。</div>`;
   $("smPicked").innerHTML='請先選擇票種';
@@ -2113,8 +2263,10 @@ window.backToTiers=()=>{SM.tier=-1;SM.sel=new Set();SM.step='tier';drawStep();};
 /* 步驟 2：選座位（限定在所選票種範圍內） */
 function drawSeats(){
   const t=SM.ev.tickets[SM.tier]||{};
+  const chg=SM.change;
   $("smBody").innerHTML=`
-    <div class="step-bar"><span>1 選票種</span><i>→</i><span class="on">2 選座位</span><i>→</i><span>3 填資料</span></div>
+    <div class="step-bar"><span>1 選票種</span><i>→</i><span class="on">2 選座位</span><i>→</i>${chg?'<span>3 確認換位</span>':'<span>3 填資料</span>'}</div>
+    ${chg?`<div class="tier-note" style="margin:0 0 10px">原座位 <b>${escH(chg.oldTicket)} ${escH(chg.oldLabel)}</b>　差額 <b>NT$${Math.max(0,(+t.p||0)-chg.oldPrice).toLocaleString()}</b>／席　·　只能選 1 個座位</div>`:''}
     <div class="tier-now">
       <span class="sw" style="background:${ZONE_COLORS[SM.tier%ZONE_COLORS.length]}"></span>
       <b>${escH(t.n)}</b><span class="pp">NT$${(+t.p||0).toLocaleString()}${t.unit==='box'?'／整間':'／席'}</span>
@@ -2123,6 +2275,7 @@ function drawSeats(){
     + gridHTML(SM.v,SM.zm,SM.sold,SM.sel,SM.tier);
   $("smBody").querySelectorAll('.cell[data-id]:not(.sold):not(.dim)').forEach(s=>s.onclick=()=>toggleSeat(s.dataset.id));
   $("smAdd").style.display='';
+  $("smAdd").textContent=chg?'確認換位':'加入購物車';
   $("smCancel").textContent='返回';
   seatFoot();
 }
@@ -2132,6 +2285,12 @@ function unitOf(id){const z=SM.zm[id];const bx=boxOf(SM.v,id);
 function toggleSeat(id){
   const z=SM.zm[id];
   if(SM.tier>=0&&z&&z.i!==SM.tier){toast('這個位置屬於其他票種');return;}
+  if(SM.change){                                   // 換位：只能選 1 席，且不能選回原座位
+    if(id===SM.change.oldSeat){toast('這就是你原本的座位');return;}
+    const had=SM.sel.has(id);
+    SM.sel=new Set(); if(!had)SM.sel.add(id);
+    drawStep(); return;
+  }
   const unit=unitOf(id);const on=SM.sel.has(id);
   if(on){unit.forEach(x=>SM.sel.delete(x));}
   else{
@@ -2154,6 +2313,7 @@ function closeSeats(){$("smodal").classList.remove('on');$("smask").classList.re
 $("smX").onclick=closeSeats;$("smask").onclick=closeSeats;
 $("smCancel").onclick=()=>{ if(SM.step==='seats')backToTiers(); else closeSeats(); };
 $("smAdd").onclick=()=>{
+  if(SM.change){submitChange();return;}
   const us=selUnits();if(!us.length){toast('請先點選座位');return;}
   us.forEach(u=>cart.push({emoji:"🎟️",name:SM.ev.name+' · '+unitName(u),sub:'場域門票 · 座位',price:unitPrice(u),evId:SM.ev.id,seatIds:u}));
   renderCart();toast(`已加入 <b>${us.length}</b> 個座位單位`);closeSeats();
@@ -2457,7 +2617,8 @@ const ROUTES={
   about:  {title:'關於 LiReal · 沉浸式場域品牌'},
   dining: {title:'沉浸餐飲 · LiReal'},
   event:  {title:'節目介紹 · LiReal'},
-  product:{title:'商品介紹 · LiReal'}
+  product:{title:'商品介紹 · LiReal'},
+  mypass: {title:'我的票券 · LiReal'}
 };
 function routeFromPath(p){
   const seg=(p||location.pathname).replace(/^\/+|\/+$/g,'').toLowerCase();

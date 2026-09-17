@@ -11,6 +11,7 @@
     { "source": "/event", "destination": "/lireal_platform" },
     { "source": "/shop", "destination": "/lireal_platform" },
     { "source": "/product", "destination": "/lireal_platform" },
+    { "source": "/mypass", "destination": "/lireal_platform" },
     { "source": "/vip", "destination": "/lireal_platform" },
     { "source": "/dining", "destination": "/lireal_platform" },
     { "source": "/about", "destination": "/lireal_platform" },
