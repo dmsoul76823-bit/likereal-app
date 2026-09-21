@@ -391,6 +391,33 @@
     .about-txt p{font-size:14.5px;line-height:1.85}
     .about-feats{grid-template-columns:1fr}
   }
+  /* ===== 裸視 3D 立體感：圖片微凸 + 紅／青分色邊（一眼看出是 VR/3D 場域） ===== */
+  .grid,.om-grid,.hg,.promo-grid,.tk-grid{perspective:1200px}
+  .card,.om-card,.ticket,.pgcard,.promo{transform-style:preserve-3d}
+  .prog-thumb,.prod-thumb,.om-photo,.tpic,.pgcard .pic,.pd-pic,.promo{
+    transition:transform .32s cubic-bezier(.2,.7,.3,1),box-shadow .32s ease;
+    box-shadow:inset 2px 0 0 rgba(255,74,74,.22),inset -2px 0 0 rgba(70,216,255,.22),
+               0 10px 28px rgba(0,0,0,.34)}
+  .card:hover .prog-thumb,.card:hover .prod-thumb,.om-card:hover .om-photo,
+  .ticket:hover .tpic,.pgcard:hover .pic,.pd-pic:hover{
+    transform:translateZ(40px) scale(1.035);
+    box-shadow:inset 3px 0 0 rgba(255,74,74,.5),inset -3px 0 0 rgba(70,216,255,.5),
+               0 28px 64px rgba(0,0,0,.52)}
+  /* 卡片文字也跟著浮起一層，形成前後景深 */
+  .card:hover .prog-body,.card:hover .prod-body,.om-card:hover .om-body,.ticket:hover .tbody{
+    transform:translateZ(58px)}
+  .prog-body,.prod-body,.om-body,.tbody{transition:transform .32s cubic-bezier(.2,.7,.3,1)}
+  /* 觸控裝置沒有 hover：保留分色邊，靠微幅浮起維持立體感 */
+  @media(hover:none){
+    .prog-thumb,.prod-thumb,.om-photo,.tpic,.pgcard .pic,.pd-pic{
+      transform:translateZ(16px) scale(1.012);
+      box-shadow:inset 2px 0 0 rgba(255,74,74,.3),inset -2px 0 0 rgba(70,216,255,.3),
+                 0 12px 30px rgba(0,0,0,.4)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .prog-thumb,.prod-thumb,.om-photo,.tpic,.pgcard .pic,.pd-pic,.promo,
+    .prog-body,.prod-body,.om-body,.tbody{transition:none}
+  }
   /* 首頁 16:9 導引版位 */
   .promo-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
   .promo-grid.one{grid-template-columns:1fr;max-width:860px}
@@ -2532,7 +2559,9 @@ renderCart();
 /* ===== 3D 立體互動 ===== */
 // 卡片跟隨滑鼠傾斜
 function bindTilt(){
-  const cards=document.querySelectorAll('.card:not([data-tilt]),.om-card:not([data-tilt])');
+  const cards=document.querySelectorAll(
+    '.card:not([data-tilt]),.om-card:not([data-tilt]),.ticket:not([data-tilt]),'+
+    '.pgcard:not([data-tilt]),.promo:not([data-tilt])');
   const MAX=9;
   cards.forEach(el=>{
     el.setAttribute('data-tilt','1');
