@@ -413,7 +413,25 @@
       transform:translateZ(16px) scale(1.012);
       box-shadow:inset 2px 0 0 rgba(255,74,74,.3),inset -2px 0 0 rgba(70,216,255,.3),
                  0 12px 30px rgba(0,0,0,.4)}
+    /* 手機傾斜連動：整張卡跟著手機角度轉，圖片再反向位移做出視差景深 */
+    html.tilt-on .card,html.tilt-on .om-card,html.tilt-on .ticket,
+    html.tilt-on .pgcard,html.tilt-on .promo{
+      transform:rotateY(calc(var(--tiltx,0) * 1deg)) rotateX(calc(var(--tilty,0) * -1deg));
+      transition:transform .12s linear}
+    html.tilt-on .prog-thumb,html.tilt-on .prod-thumb,html.tilt-on .om-photo,
+    html.tilt-on .tpic,html.tilt-on .pgcard .pic,html.tilt-on .pd-pic{
+      transform:translateZ(26px) scale(1.035)
+                translate(calc(var(--tiltx,0) * -0.9px),calc(var(--tilty,0) * 0.7px));
+      transition:transform .12s linear}
+    html.tilt-on .prog-body,html.tilt-on .prod-body,
+    html.tilt-on .om-body,html.tilt-on .tbody{transform:translateZ(44px)}
   }
+  /* 開啟 3D 傾斜的提示鈕（僅 iOS 需要授權時出現） */
+  .tilt-btn{position:fixed;left:14px;bottom:54px;z-index:210;display:none;align-items:center;gap:7px;
+    background:rgba(18,13,30,.82);backdrop-filter:blur(10px);border:1px solid var(--line);
+    color:var(--brand3);font-size:12.5px;font-weight:600;padding:9px 15px;border-radius:999px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);cursor:pointer}
+  .tilt-btn.on{display:flex}
   @media(prefers-reduced-motion:reduce){
     .prog-thumb,.prod-thumb,.om-photo,.tpic,.pgcard .pic,.pd-pic,.promo,
     .prog-body,.prod-body,.om-body,.tbody{transition:none}
@@ -1292,6 +1310,8 @@
     <div style="display:flex;gap:10px"><button class="btn btn-ghost" id="tPrint">列印 / 存成 PDF</button><button class="btn btn-brand" id="tClose">完成</button></div>
   </div>
 </div>
+
+<button class="tilt-btn" id="tiltBtn">🕶️ 開啟 3D 傾斜</button>
 
 <!-- 圖片後台 -->
 <button class="admin-fab" id="adminFab" title="編輯圖片">⚙</button>
@@ -2573,6 +2593,52 @@ function bindTilt(){
     el.addEventListener('mouseleave',()=>{el.style.transform='';});
   });
 }
+/* ===== 手機傾斜 → 3D 視差（陀螺儀） ===== */
+(function(){
+  if(!window.matchMedia||!matchMedia('(hover:none)').matches)return;   // 只在觸控裝置啟用
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const root=document.documentElement, btn=$("tiltBtn");
+  const clamp=(v,m)=>v<-m?-m:(v>m?m:v);
+  let base=null, raf=0, running=false;
+  function onOri(e){
+    const g=e.gamma, b=e.beta;
+    if(g==null&&b==null)return;
+    if(!base)base={g:g||0,b:b||0};
+    // 基準緩慢跟隨，讓使用者換姿勢後畫面會自動回正
+    base.g+=((g||0)-base.g)*0.015;
+    base.b+=((b||0)-base.b)*0.015;
+    const tx=clamp(((g||0)-base.g)*0.5,7), ty=clamp(((b||0)-base.b)*0.5,7);
+    if(!raf)raf=requestAnimationFrame(()=>{
+      raf=0;
+      root.style.setProperty('--tiltx',tx.toFixed(2));
+      root.style.setProperty('--tilty',ty.toFixed(2));
+    });
+  }
+  function start(){
+    if(running)return; running=true;
+    window.addEventListener('deviceorientation',onOri,true);
+    root.classList.add('tilt-on');
+    if(btn)btn.classList.remove('on');
+    try{localStorage.setItem('LIREAL_TILT','1');}catch(e){}
+  }
+  const needPerm=typeof DeviceOrientationEvent!=='undefined'
+    && typeof DeviceOrientationEvent.requestPermission==='function';
+  if(!needPerm){ start(); return; }                 // Android / 一般瀏覽器直接啟用
+  // iOS 需要使用者手勢授權
+  const ask=async()=>{
+    try{
+      const res=await DeviceOrientationEvent.requestPermission();
+      if(res==='granted')start();
+      else if(btn){btn.classList.remove('on');toast('已略過 3D 傾斜效果');}
+    }catch(e){ if(btn)btn.classList.remove('on'); }
+  };
+  if(btn){ btn.classList.add('on'); btn.onclick=ask; }
+  // 之前已允許過：第一次觸碰畫面時直接再要一次（iOS 會安靜通過）
+  let granted=false; try{granted=localStorage.getItem('LIREAL_TILT')==='1';}catch(e){}
+  if(granted)document.addEventListener('touchend',function once(){
+    document.removeEventListener('touchend',once); ask();
+  },{once:true,passive:true});
+})();
 /* 初始渲染改到腳本最後（見檔尾 boot()），確保所有函式與變數都已定義 */
 // Hero 播放器景深視差
 (function(){
