@@ -411,13 +411,26 @@
         <div class="fgrid">
           <div class="fld"><label>沉浸節目</label><input id="hl_programs" type="number" min="0" max="24" value="3"></div>
           <div class="fld"><label>場域售票（場次）</label><input id="hl_tickets" type="number" min="0" max="24" value="6"></div>
-          <div class="fld"><label>直播大廳</label><input id="hl_lives" type="number" min="0" max="24" value="6"></div>
-          <div class="fld"><label>AI 女友創作者</label><input id="hl_creators" type="number" min="0" max="24" value="6"></div>
           <div class="fld"><label>裸視 3D 商品</label><input id="hl_products" type="number" min="0" max="24" value="8"></div>
           <div class="fld"><label>會員儲值方案</label><input id="hl_plans" type="number" min="0" max="24" value="2"></div>
         </div>
         <button class="btn btn-brand btn-sm" id="hlSave" style="margin-top:6px">儲存區塊數量</button>
         <div class="spec" style="margin-top:12px"><b>💡 設為 0</b> 該區塊就不會出現在首頁。</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>首頁導引版位（2 片 16:9）</h3>
+            <div class="hint" style="margin:0">取代原本的「直播大廳」與「AI 女友」區；可放圖片或影片，點擊導到其他站台</div></div>
+        </div>
+        <div class="fgrid">
+          <div class="fld"><label>區塊小標（英文）</label><input id="prTag" placeholder="EXPERIENCE · 延伸體驗"></div>
+          <div class="fld"><label>區塊標題</label><input id="prTitle" placeholder="直播與 AI 夥伴"></div>
+        </div>
+        <div id="prBox"></div>
+        <button class="btn btn-brand btn-sm" id="prSave" style="margin-top:8px">儲存導引版位</button>
+        <div class="spec" style="margin-top:12px"><b>📐 建議素材</b>圖片 <code>1600 × 900 px</code>（16:9）· 影片可用 YouTube ID 或 mp4 網址（會自動靜音循環播放）<br>
+          兩片都停用時，整個區塊不會出現在首頁。</div>
       </div>
 
       <div class="panel">
@@ -729,7 +742,7 @@ const MAP={
     toRow:s=>({id:s.id,email:s.email,name:s.name||'',role:s.role||'staff',perms:s.perms||[]}),
     fromRow:r=>({id:r.id,email:r.email,name:r.name||'',role:r.role||'staff',perms:r.perms||[]})}
 };
-const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout','home_pick','shop_policy'];
+const SETTING_KEYS=['marquee','seo','announcements','banners','images','home_layout','home_pick','shop_policy','promos','promos_head'];
 
 const ALL_PERMS=["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"];
 function normalizeDB(){
@@ -1241,7 +1254,7 @@ window.deleteProgram=async name=>{
 };
 
 /* ================= 首頁編排 ================= */
-const HL_KEYS=['programs','tickets','lives','creators','products','plans'];
+const HL_KEYS=['programs','tickets','products','plans'];
 async function renderHomeLayout(){
   await loadProgramArt();
   await loadEvLite();
@@ -1256,14 +1269,56 @@ async function renderHomeLayout(){
     if(old.length)HPICK.programs=old;
   }
   renderPickers();
+  renderPromoEditor();
 }
+
+/* ---- 首頁 16:9 導引版位 ---- */
+const PROMO_BLANK={title:'',sub:'',cta:'前往 →',url:'',yt:'',video:'',img:'',on:true};
+let PROMOS=[];
+function renderPromoEditor(){
+  const head=(DB.promos_head&&typeof DB.promos_head==='object')?DB.promos_head:{};
+  $("prTag").value=head.tag||''; $("prTitle").value=head.title||'';
+  PROMOS=(Array.isArray(DB.promos)?DB.promos:[]).slice(0,2);
+  while(PROMOS.length<2)PROMOS.push(Object.assign({},PROMO_BLANK));
+  $("prBox").innerHTML=PROMOS.map((p,i)=>`
+    <div style="border:1px solid var(--line2);border-radius:14px;padding:16px;margin-top:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <b style="font-size:14px">版位 ${i+1}</b>
+        <label class="perm" style="margin:0 0 0 auto"><input type="checkbox" id="pr${i}_on" ${p.on!==false?'checked':''}> 顯示</label>
+      </div>
+      <div class="fgrid">
+        <div class="fld"><label>標題</label><input id="pr${i}_title" value="${esc(p.title||'')}" placeholder="LiReal 直播大廳"></div>
+        <div class="fld"><label>副標</label><input id="pr${i}_sub" value="${esc(p.sub||'')}" placeholder="24 小時沉浸直播"></div>
+        <div class="fld"><label>按鈕文字</label><input id="pr${i}_cta" value="${esc(p.cta||'前往 →')}"></div>
+        <div class="fld"><label>連結網址（目的地）</label><input id="pr${i}_url" value="${esc(p.url||'')}" placeholder="https://..."></div>
+        <div class="fld"><label>YouTube 影片 ID（優先播放）</label><input id="pr${i}_yt" value="${esc(p.yt||'')}" placeholder="LXb3EKWsInQ"></div>
+        <div class="fld"><label>影片檔網址 mp4（次之）</label><input id="pr${i}_video" value="${esc(p.video||'')}" placeholder="https://.../loop.mp4"></div>
+        <div class="fld full"><label>背景圖（沒有影片時顯示，也當作影片封面）</label>
+          ${cropUI('pr'+i,16/9,300,'左邊就是前台版位的實際比例，可拖曳或縮放後裁切')}</div>
+      </div>
+    </div>`).join('');
+  PROMOS.forEach((p,i)=>mountCrop('pr'+i,16/9,1600,p.img||''));
+}
+$("prSave").onclick=async()=>{
+  const list=PROMOS.map((_,i)=>({
+    title:v("pr"+i+"_title"), sub:v("pr"+i+"_sub"), cta:v("pr"+i+"_cta"),
+    url:v("pr"+i+"_url"), yt:ytIdOf(v("pr"+i+"_yt")), video:v("pr"+i+"_video"),
+    img:CROP['pr'+i]?CROP['pr'+i].value():'', on:$("pr"+i+"_on").checked
+  }));
+  DB.promos=list;
+  DB.promos_head={tag:v("prTag"),title:v("prTitle")};
+  setSync('saving');
+  const a=await sb.from('settings').upsert({key:'promos',value:{v:list}});
+  const b=await sb.from('settings').upsert({key:'promos_head',value:{v:DB.promos_head}});
+  if(a.error||b.error){setSync('err');toast('儲存失敗：'+((a.error||b.error).message));return;}
+  setSync('ok');toast('導引版位已更新');
+};
+function ytIdOf(s){const m=/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{6,})/.exec(s||'');return m?m[1]:(s||'').trim();}
 
 /* ---- 各區塊精選項目 ---- */
 const PICK_SECS=[
   {k:'programs',t:'沉浸影像',   hint:'首頁「沉浸節目」區要顯示哪幾檔'},
   {k:'tickets', t:'場域售票',   hint:'首頁售票區優先顯示哪幾檔節目的場次'},
-  {k:'lives',   t:'直播創作者', hint:'首頁「直播大廳」優先顯示哪幾位'},
-  {k:'creators',t:'AI 女友',    hint:'首頁「AI 女友」優先顯示哪幾位'},
   {k:'products',t:'電商產品',   hint:'首頁「裸視 3D」優先顯示哪幾項'}
 ];
 let HPICK={};
