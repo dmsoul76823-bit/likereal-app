@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LiReal 後台管理系統</title>
+<title>Wonder V 後台管理系統</title>
 <style>
   :root{
     --bg:#0c0a12; --bg2:#141020; --card:#181227; --card2:#1f1834; --card3:#241c3d;
@@ -327,9 +327,9 @@
 <!-- ======== LOGIN ======== -->
 <div class="login" id="login">
   <div class="login-card">
-    <div class="brand"><div class="mark">L</div><h1 class="serif">LiReal</h1></div>
+    <div class="brand"><div class="mark">L</div><h1 class="serif">Wonder V</h1></div>
     <div class="sub">沉浸式場域 · 後台管理系統</div>
-    <div class="fld"><label>電子信箱</label><input id="liEmail" type="email" placeholder="admin@lireal.com"></div>
+    <div class="fld"><label>電子信箱</label><input id="liEmail" type="email" placeholder="admin@wonderv.com"></div>
     <div class="fld"><label>密碼</label><input id="liPass" type="password" placeholder="任意密碼即可（示範）"></div>
     <button class="btn btn-brand" style="width:100%" id="liBtn">登入後台</button>
     <div class="demo">
@@ -344,12 +344,12 @@
 <div class="shell" id="shell">
   <div class="mobbar">
     <button class="mb-burger" id="sideToggle" aria-label="選單">☰</button>
-    <div class="mb-title" id="mbTitle">LiReal 後台</div>
+    <div class="mb-title" id="mbTitle">Wonder V 後台</div>
     <div id="mbSync" style="font-size:11px;color:var(--muted)"></div>
   </div>
   <div class="side-mask" id="sideMask"></div>
   <aside class="side" id="side">
-    <div class="brand"><div class="mark">L</div><h1 class="serif">LiReal</h1></div>
+    <div class="brand"><div class="mark">L</div><h1 class="serif">Wonder V</h1></div>
     <div id="navBox"></div>
     <div class="sp"></div>
     <div class="who">
@@ -574,9 +574,9 @@
       <div class="panel"><h3>顯示預覽</h3><div class="hint">實際在搜尋與社群上的樣子</div>
         <div class="fgrid">
           <div><small style="color:var(--muted);font-size:12px">Google 搜尋結果</small>
-            <div class="seo-prev"><div class="u" id="pvU">lireal.com</div><div class="t" id="pvT">—</div><div class="d" id="pvD">—</div></div></div>
+            <div class="seo-prev"><div class="u" id="pvU">wonderv.com</div><div class="t" id="pvT">—</div><div class="d" id="pvD">—</div></div></div>
           <div><small style="color:var(--muted);font-size:12px">Facebook / LINE 分享</small>
-            <div class="fb-prev"><div class="im" id="pvI"></div><div class="b"><div class="h" id="pvH">lireal.com</div><div class="t" id="pvT2">—</div><div class="d" id="pvD2">—</div></div></div></div>
+            <div class="fb-prev"><div class="im" id="pvI"></div><div class="b"><div class="h" id="pvH">wonderv.com</div><div class="t" id="pvT2">—</div><div class="d" id="pvD2">—</div></div></div></div>
         </div>
       </div>
     </section>
@@ -678,9 +678,9 @@ const SEED={
     {id:5,name:"張哲瑋",email:"zw@mail.com",phone:"0966-773-284",vip:"星紫卡",wallet:120,orders:1,join:"2026-07-21"}
   ],
   staff:[
-    {id:1,name:"Aden",email:"admin@lireal.com",role:"admin",perms:["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"]},
-    {id:2,name:"內容編輯",email:"editor@lireal.com",role:"editor",perms:["dash","events","venues","creators","products","orders","settings","seo"]},
-    {id:3,name:"現場驗票",email:"staff@lireal.com",role:"staff",perms:["checkin","orders"]}
+    {id:1,name:"Aden",email:"admin@wonderv.com",role:"admin",perms:["dash","events","venues","home","creators","products","orders","members","checkin","settings","seo","staff"]},
+    {id:2,name:"內容編輯",email:"editor@wonderv.com",role:"editor",perms:["dash","events","venues","creators","products","orders","settings","seo"]},
+    {id:3,name:"現場驗票",email:"staff@wonderv.com",role:"staff",perms:["checkin","orders"]}
   ],
   announcements:[
     {id:1,title:"9/12 星夜沉浸劇場 售票開跑",tag:"系統公告",date:"2026-08-25",body:"VIP 沉浸席限量 100 席，售完為止。"},
@@ -688,12 +688,12 @@ const SEED={
     {id:3,title:"裸視 3D 觀看模式上線",tag:"新功能",date:"2026-08-14",body:"搭配裸視 3D 手機膜即可享立體觀看體驗。"}
   ],
   banners:[
-    {id:1,pos:"頂部",title:"沉浸 · 無極限",sub:"LiReal 全息場域首映",link:"#",on:true},
+    {id:1,pos:"頂部",title:"沉浸 · 無極限",sub:"Wonder V 全息場域首映",link:"#",on:true},
     {id:2,pos:"底部",title:"裸視 3D 精選",sub:"沉浸觀看裝備 9 折起",link:"#shop",on:true}
   ],
   marquee:"🎫 星夜沉浸劇場 售票中，剩 42 席｜🕶️ 裸視 3D 手機膜 限時 9 折｜📢 AI 夥伴見面會 Vol.3 開放預約",
-  seo:{t:"LiReal 沉浸式場域 | 虛擬與現實整合劇場",d:"LiReal 提供沉浸式場域節目、直播互動、AI 夥伴陪伴與裸視 3D 精選商品，打造虛實整合的娛樂體驗。",
-       k:"沉浸式劇場,裸視3D,沉浸式體驗,AI陪伴,場域售票",u:"https://lireal.com",ga:"",sc:"",og:""},
+  seo:{t:"Wonder V 沉浸式場域 | 虛擬與現實整合劇場",d:"Wonder V 提供沉浸式場域節目、直播互動、AI 夥伴陪伴與裸視 3D 精選商品，打造虛實整合的娛樂體驗。",
+       k:"沉浸式劇場,裸視3D,沉浸式體驗,AI陪伴,場域售票",u:"https://wonderv.com",ga:"",sc:"",og:""},
   images:{}
 };
 let DB=JSON.parse(JSON.stringify(SEED));
@@ -1287,7 +1287,7 @@ function renderPromoEditor(){
         <label class="perm" style="margin:0 0 0 auto"><input type="checkbox" id="pr${i}_on" ${p.on!==false?'checked':''}> 顯示</label>
       </div>
       <div class="fgrid">
-        <div class="fld"><label>標題</label><input id="pr${i}_title" value="${esc(p.title||'')}" placeholder="LiReal 直播大廳"></div>
+        <div class="fld"><label>標題</label><input id="pr${i}_title" value="${esc(p.title||'')}" placeholder="Wonder V 直播大廳"></div>
         <div class="fld"><label>副標</label><input id="pr${i}_sub" value="${esc(p.sub||'')}" placeholder="24 小時沉浸直播"></div>
         <div class="fld"><label>按鈕文字</label><input id="pr${i}_cta" value="${esc(p.cta||'前往 →')}"></div>
         <div class="fld"><label>連結網址（目的地）</label><input id="pr${i}_url" value="${esc(p.url||'')}" placeholder="https://..."></div>
@@ -2150,7 +2150,7 @@ async function verify(code){
 /* ================= 場域設定 ================= */
 const IMG_SLOTS=[
   {k:"hero",t:"首頁主視覺 Hero",s:"1920 × 820 px（21:9）· JPG / WebP · < 500 KB"},
-  {k:"about",t:"關於 LiReal 主圖",s:"1600 × 1100 px（16:11）· JPG / WebP · < 500 KB"},
+  {k:"about",t:"關於 Wonder V 主圖",s:"1600 × 1100 px（16:11）· JPG / WebP · < 500 KB"},
   {k:"dine_food",t:"餐飲 · 料理風格圖",s:"1200 × 900 px（4:3）· JPG / WebP · < 400 KB"},
   {k:"dine_drink",t:"餐飲 · 飲品種類圖",s:"1200 × 900 px（4:3）· JPG / WebP · < 400 KB"},
   {k:"dine_s1",t:"飲品特色 · 茶+咖啡",s:"600 × 600 px（1:1 圓形裁切）· JPG · < 200 KB"},
@@ -2274,7 +2274,7 @@ function renderSeo(){
   seoPrev();
 }
 function seoPrev(){
-  const t=v("seoT")||'（未設定標題）',d=v("seoD")||'（未設定描述）',u=v("seoU")||'https://lireal.com',og=v("seoOG");
+  const t=v("seoT")||'（未設定標題）',d=v("seoD")||'（未設定描述）',u=v("seoU")||'https://wonderv.com',og=v("seoOG");
   $("pvT").textContent=t;$("pvD").textContent=d;$("pvU").textContent=u;
   $("pvT2").textContent=t;$("pvD2").textContent=d;$("pvH").textContent=u.replace(/^https?:\/\//,'');
   $("pvI").style.backgroundImage=og?`url('${og}')`:'';

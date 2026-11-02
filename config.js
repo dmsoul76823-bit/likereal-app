@@ -1,5 +1,5 @@
 /* ============================================================
-   LiReal — Supabase 連線設定
+   Wonder V — Supabase 連線設定
    把下面兩行的引號內容換成你自己的
    （Supabase 左下角齒輪 Project Settings → API）
 

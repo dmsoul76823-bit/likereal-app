@@ -1,4 +1,4 @@
-/* LiReal 本地測試伺服器 — 純 Node，不需安裝任何套件
+/* Wonder V 本地測試伺服器 — 純 Node，不需安裝任何套件
    啟動：node server.js   或直接雙擊「啟動本地伺服器.bat」 */
 const http = require('http');
 const fs   = require('fs');
@@ -69,7 +69,7 @@ server.on('error', (e) => {
 server.listen(PORT, () => {
   console.log('');
   console.log('  ==========================================');
-  console.log('    LiReal 本地測試伺服器已啟動');
+  console.log('    Wonder V 本地測試伺服器已啟動');
   console.log('  ==========================================');
   console.log('');
   console.log('    首頁：http://localhost:' + PORT + '/');
